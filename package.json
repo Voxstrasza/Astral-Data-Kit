@@ -1,0 +1,34 @@
+{
+  "name": "astral-data-kit",
+  "version": "1.0.0",
+  "description": "Astral — a 3.3.5a Data Kit. Builds WotLK item tooltips, spell tooltips, NPC target frames, achievement cards and chat scripts from your own game client.",
+  "private": false,
+  "main": "electron/main.js",
+  "scripts": {
+    "app": "electron .",
+    "serve": "node server.js --open",
+    "icon": "node tools/make-icon.js",
+    "extract-art": "node tools/extract-ui-art.js",
+    "dist": "electron-builder --win",
+    "dist:portable": "electron-builder --win portable",
+    "package": "node tools/package-win.js",
+    "extract-fonts": "node tools/extract-fonts.js"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^25.1.8",
+    "rcedit": "^5.0.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "mysql2": "^3.23.3"
+  },
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Voxstrasza/Astral-Data-Kit.git"
+  },
+  "author": "Voxstrasza"
+}

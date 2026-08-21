@@ -1,0 +1,35 @@
+{
+  "appId": "com.voxwotlk.astral",
+  "productName": "Astral",
+  "copyright": "Fan-made tool. World of Warcraft assets are property of Blizzard Entertainment.",
+  "directories": {
+    "output": "dist",
+    "buildResources": "build"
+  },
+  "files": [
+    "electron/**/*",
+    "public/**/*",
+    "package.json",
+    "!public/**/*.map"
+  ],
+  "win": {
+    "icon": "build/icon.ico",
+    "target": [
+      { "target": "nsis", "arch": ["x64"] },
+      { "target": "portable", "arch": ["x64"] }
+    ]
+  },
+  "portable": {
+    "artifactName": "Astral-${version}-portable.exe"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Astral",
+    "artifactName": "Astral-${version}-setup.exe"
+  },
+  "compression": "maximum"
+}

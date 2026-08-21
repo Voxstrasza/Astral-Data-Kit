@@ -1,0 +1,1425 @@
+/*
+ * Figtree, for the program's own furniture.
+ *
+ * Nothing to do with the game fonts: FRIZQT__ and MORPHEUS belong to what is being drawn on the
+ * canvas, and swapping the interface to a face of Blizzard's would make the tool look like a
+ * mod of the game rather than a program that builds for it. This is the variable font, one file
+ * covering every weight the interface uses, served from the app rather than from Google so the
+ * packaged program needs no connection to render its own labels.
+ */
+@font-face {
+  font-family: "Figtree";
+  src: url("ui-fonts/Figtree-VariableFont_wght.ttf") format("truetype-variations");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("ui-fonts/Figtree-Italic-VariableFont_wght.ttf") format("truetype-variations");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/*
+ * Three themes, chosen in Settings and applied as data-theme on <html>.
+ *
+ * Dark is the default and stays on bare :root so the app still renders if the attribute never
+ * gets set. Every surface that used to be a hardcoded hex is a variable now — the top bar, the
+ * preview stage and its checkerboard, and the highlighted fieldset — because those were the parts
+ * that would have stayed dark under a light palette.
+ */
+:root,
+:root[data-theme="dark"] {
+  --bg: #0d0f16;
+  --panel: #151823;
+  --panel-2: #1c2030;
+  --line: #2a2f42;
+  --text: #dfe3ee;
+  --muted: #8992ab;
+  --accent: #ffd100;
+  --accent-dim: #8a7320;
+  --focus: #4a9eff;
+  --on-accent: #fff;
+  --topbar-a: #191d2b;
+  --topbar-b: #12151f;
+  --highlight: #1b1a12;
+  --stage: #0a0c12;
+  --checker-a: #15171f;
+  --checker-b: #1e2130;
+}
+
+/* Deeper than dark: near-black and cooler, for working at night. */
+:root[data-theme="midnight"] {
+  --bg: #04050a;
+  --panel: #090b12;
+  --panel-2: #0f121b;
+  --line: #191d29;
+  --text: #c8cede;
+  --muted: #626b80;
+  --accent: #ffd100;
+  --accent-dim: #6b5917;
+  --focus: #3d86e0;
+  --on-accent: #fff;
+  --topbar-a: #0b0e16;
+  --topbar-b: #05070c;
+  --highlight: #13120c;
+  --stage: #000105;
+  --checker-a: #0a0c12;
+  --checker-b: #12151d;
+}
+
+/*
+ * The gold has to darken for light mode: #ffd100 on white is unreadable, and it is used for
+ * legends and for the active tab's background behind white text.
+ */
+:root[data-theme="light"] {
+  --bg: #eef0f6;
+  --panel: #ffffff;
+  --panel-2: #e9ecf4;
+  --line: #cfd4e1;
+  --text: #171a23;
+  --muted: #5a6274;
+  --accent: #7a5f14;
+  --accent-dim: #8a6d1f;
+  --focus: #2563eb;
+  --on-accent: #fff;
+  --topbar-a: #ffffff;
+  --topbar-b: #e6e9f2;
+  --highlight: #fbf5e2;
+  --stage: #dfe3ee;
+  --checker-a: #e7e9f1;
+  --checker-b: #d6dae6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * The hidden attribute wins over any display this stylesheet sets.
+ *
+ * The browser's own [hidden] rule is a plain "display: none" in the user-agent sheet, so any
+ * author rule beats it — and this file sets display on a lot of things. That bit four times: a
+ * label, the preview column, the boss-member dropdown and the icon upload row all set their own
+ * display and so ignored being hidden, each time looking like the JavaScript had failed when it
+ * had done exactly what it was told.
+ */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* ------------------------------------------------------------------ top bar */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 20px;
+  background: linear-gradient(180deg, var(--topbar-a), var(--topbar-b));
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* The logo is the app's identity, so it leads the window at the top left. */
+.topbar .brand {
+  height: 68px;
+  width: auto;
+  display: block;
+  flex: none;
+  /* The art carries its own dark vignette; a slight lift keeps it from muddying into the bar. */
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 60%));
+}
+
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.kind-switch {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.kind-switch button {
+  background: var(--panel);
+  color: var(--muted);
+  border: 0;
+  padding: 6px 16px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.kind-switch button.active {
+  background: var(--accent-dim);
+  color: var(--on-accent);
+}
+
+/* -------------------------------------------------------------------- layout */
+
+main {
+  display: grid;
+  grid-template-columns: minmax(360px, 460px) 1fr;
+  gap: 20px;
+  padding: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------- editor */
+
+.editor {
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /*
+   * The column is the height of the window whatever it holds.
+   *
+   * Without the minimum it ended wherever its last fieldset did, so a short window — Texts with
+   * two lines in it — left the left third of the app as bare background below the panels, which
+   * read as the page having failed to finish drawing rather than as a short form.
+   */
+  min-height: calc(100vh - 110px);
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/*
+ * The surface behind that column, so its full height is visible rather than implied.
+ */
+main:not(.no-preview) .editor {
+  background: linear-gradient(180deg, rgb(255 255 255 / 2%), transparent 240px);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 12px 0;
+}
+
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px 14px 14px;
+  margin: 0 0 14px;
+}
+
+fieldset.highlight {
+  border-color: var(--accent-dim);
+  background: linear-gradient(180deg, var(--highlight), var(--panel));
+}
+
+/*
+ * A legend naming three tooltip lines is a label, not a heading — in gold it shouted louder than
+ * the sections that actually matter, so those opt out.
+ */
+legend.plain {
+  color: var(--muted);
+}
+
+legend {
+  color: var(--accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 0 6px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+label.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: 13px;
+  margin-right: 14px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="search"],
+select,
+textarea {
+  width: 100%;
+  margin-top: 3px;
+  padding: 6px 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.row > label {
+  flex: 1 1 130px;
+}
+
+.row > label.narrow {
+  flex: 0 1 90px;
+}
+
+.grow {
+  flex: 1;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 11.5px;
+  margin: 2px 0 8px;
+  flex-basis: 100%;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button.add {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin: 2px 4px 6px 0;
+}
+
+button.add:hover {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+button.ghost:hover {
+  color: var(--text);
+}
+
+button.primary {
+  background: var(--accent-dim);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 9px 18px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------- repeatable rows */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.list-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.list-row > * {
+  margin: 0;
+}
+
+.list-row input,
+.list-row select {
+  margin-top: 0;
+}
+
+.list-row .del {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 16px;
+  padding: 0 6px;
+  line-height: 1;
+}
+
+.list-row .del:hover {
+  color: #ff6b6b;
+}
+
+.list-row .socket-art {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.socket-adders {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------------- preview */
+
+.preview {
+  position: sticky;
+  top: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stage {
+  min-height: 240px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--stage);
+}
+
+.stage.checker {
+  background-color: var(--checker-a);
+  background-image:
+    linear-gradient(45deg, var(--checker-b) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--checker-b) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checker-b) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--checker-b) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+
+#canvas-host canvas {
+  display: block;
+  /* The canvas is rendered at device scale then shown at CSS size, so it stays crisp. */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.export {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 14px;
+}
+
+.export .buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.export button:not(.primary) {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 16px;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 12px;
+  min-height: 16px;
+  margin: 8px 0 0;
+}
+
+/* --------------------------------------------------------------- icon picker */
+
+.icon-btn {
+  width: 62px;
+  height: 62px;
+  flex: none;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.icon-btn:hover {
+  border-color: var(--accent-dim);
+}
+
+.icon-btn img {
+  width: 44px;
+  height: 44px;
+  display: none;
+}
+
+.icon-btn img[src] {
+  display: block;
+}
+
+.icon-btn img[src] + .icon-hint {
+  display: none;
+}
+
+.icon-hint {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.icon-row {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+#icon-dialog {
+  width: min(760px, 92vw);
+  max-height: 82vh;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0;
+}
+
+#icon-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.dialog-head {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+}
+
+.dialog-head input {
+  margin-top: 0;
+}
+
+#icon-dialog .hint {
+  padding: 0 14px;
+  margin: 8px 0 0;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
+  padding: 14px;
+  overflow-y: auto;
+  max-height: 58vh;
+}
+
+.icon-grid button {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+
+.icon-grid button:hover {
+  border-color: var(--accent);
+}
+
+.icon-grid img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ---------------------------------------------------- settings, NPC search, model viewer */
+
+.badge {
+  font-size: 11.5px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.badge.ok {
+  color: #7ddc7d;
+  border-color: #2c5c2c;
+}
+
+.badge.warn {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+#settings-dialog,
+#model-dialog,
+#instance-dialog {
+  width: min(720px, 94vw);
+  max-height: 88vh;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0;
+}
+
+#settings-dialog::backdrop,
+#model-dialog::backdrop,
+#instance-dialog::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+
+.dialog-head strong {
+  flex: 1;
+  align-self: center;
+  /* The title is the one thing here that must not wrap; the status beside it can. */
+  white-space: nowrap;
+}
+
+.dialog-body {
+  padding: 14px;
+  overflow-y: auto;
+  max-height: 72vh;
+}
+
+.dialog-body fieldset {
+  margin-bottom: 14px;
+}
+
+code {
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.npc-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.npc-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 9px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+}
+
+.npc-row:hover {
+  border-color: var(--accent-dim);
+}
+
+.npc-row .npc-name {
+  flex: 1;
+}
+
+.npc-row .npc-sub {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.npc-row .npc-meta {
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+/*
+ * An achievement result carries its icon, which the NPC and spell rows do not: the icon is half
+ * of how one is recognised, and it is already indexed for the picker, so showing it costs a URL.
+ */
+.ach-row {
+  align-items: center;
+}
+
+.ach-row-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+/*
+ * Both halves have to be allowed to shrink. A flex item defaults to min-width:auto, so the meta's
+ * nowrap category name set the row's minimum width, and with the icon added that pushed the whole
+ * left column wider than the panel — the hint paragraphs above it were clipped mid-sentence.
+ */
+.ach-row .npc-name,
+.ach-row .npc-meta {
+  min-width: 0;
+}
+
+.ach-row .npc-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Where a browsed list sits in the tree, said once above it rather than on all 36 rows. */
+.ach-path {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+/*
+ * Square on purpose. The viewer sizes its canvas to the container width and renders 1:1, so a
+ * wide-but-short stage produced a canvas taller than the box and clipped most of the model out
+ * of sight — which looked like it had failed to render at all.
+ */
+#model-stage {
+  position: relative;
+  width: 420px;
+  height: 420px;
+  max-width: 100%;
+  margin: 0 auto 12px;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#model-stage > div {
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * The portrait guide. The captured image is drawn into a circular clip, so anything outside this
+ * ring is discarded — posing against it avoids capturing a model that ends up half cropped.
+ * Everything outside the circle is dimmed with a huge inset shadow, which needs no extra element.
+ */
+#model-guide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/*
+ * The circle matches the crop exactly. The capture is squeezed into the portrait ring's bounding
+ * square and clipped to the inscribed circle, so what survives is a full-width centred circle —
+ * only the four corners are lost. An arbitrary smaller ring would have understated the framing.
+ */
+#model-guide::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 2px dashed rgb(255 209 0 / 70%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 55%);
+}
+
+#model-stage.no-guide #model-guide {
+  display: none;
+}
+
+#model-stage canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------- dungeon & raid browser */
+
+.xpac-picker {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+/*
+ * The logos carry their own art, so the button is only a hit area and a selection state — a
+ * visible border around a transparent logo reads as a box around the artwork rather than a
+ * control.
+ */
+.xpac-picker button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  opacity: 0.45;
+  filter: grayscale(0.7);
+  transition: opacity 120ms, filter 120ms, border-color 120ms;
+}
+
+.xpac-picker button:hover {
+  opacity: 0.85;
+  filter: grayscale(0.2);
+}
+
+.xpac-picker button.active {
+  opacity: 1;
+  filter: none;
+  border-color: var(--accent-dim);
+  background: var(--panel-2);
+}
+
+.xpac-picker img {
+  display: block;
+  width: 150px;
+  height: auto;
+}
+
+.instance-browser {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.instance-list,
+.boss-list {
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.instance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid var(--line);
+  padding-right: 12px;
+}
+
+.instance-list h4,
+.boss-list h4 {
+  margin: 10px 0 4px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.instance-list h4:first-child {
+  margin-top: 0;
+}
+
+.instance-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 9px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+}
+
+.instance-row:hover {
+  border-color: var(--accent-dim);
+}
+
+.instance-row.active {
+  border-color: var(--accent);
+}
+
+.instance-row .instance-meta {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.boss-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  padding: 7px 2px;
+}
+
+.boss-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.boss-row .boss-name {
+  flex: 1;
+}
+
+/* Marks the seven encounters that exist only on Heroic, so a single button reads as intent. */
+.boss-flag {
+  color: var(--accent);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--accent-dim);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+/* The creatures inside a multi-creature fight, indented under its name. */
+.boss-members {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 14px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+}
+
+.boss-member {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.boss-member .boss-name {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.boss-row .boss-meta {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-style: italic;
+}
+
+.boss-difficulties {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+/*
+ * One button per difficulty the instance actually offers, so a Classic dungeon shows a single
+ * Normal and Icecrown shows four. The base difficulty is marked because it is the one the search
+ * would have given you.
+ */
+.boss-difficulties .difficulty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  white-space: nowrap;
+  min-width: 62px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.2;
+}
+
+.boss-difficulties .difficulty:hover {
+  border-color: var(--accent);
+}
+
+.boss-difficulties .difficulty.base {
+  border-color: var(--accent-dim);
+}
+
+
+/* Wider than the other dialogs: an instance list beside a boss list with four buttons each. */
+#instance-dialog {
+  width: min(1000px, 95vw);
+}
+
+/* -------------------------------------------------- theme + step pickers */
+
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.chip-row button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font: inherit;
+}
+
+.chip-row button:hover {
+  border-color: var(--accent-dim);
+}
+
+.chip-row button.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--on-accent);
+}
+
+/* ------------------------------------------------------ custom icon uploads */
+
+#icon-categories {
+  padding: 0 14px;
+}
+
+.icon-upload {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.icon-upload .row {
+  align-items: flex-end;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-bottom: 8px;
+}
+
+.upload-btn input[type="file"] {
+  width: 190px;
+  font-size: 12px;
+}
+
+/* A boss name that opens to reveal the creatures inside the encounter. */
+.boss-name.has-members {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.boss-name.has-members::before {
+  content: "\25B8";
+  display: inline-block;
+  width: 12px;
+  color: var(--muted);
+  transition: transform 120ms;
+}
+
+.boss-name.has-members.open::before {
+  transform: rotate(90deg);
+}
+
+.boss-name.has-members:hover {
+  color: var(--accent);
+}
+
+/* The NPC finder sits above the preview rather than in the editing column. */
+.npc-finder {
+  margin-bottom: 0;
+}
+
+.npc-finder .row {
+  align-items: center;
+}
+
+.npc-finder .npc-results {
+  max-height: 190px;
+}
+
+/* The category select in the achievement finder, keeping its caption above it in a centred row. */
+.finder-select {
+  flex: 0 0 auto;
+  max-width: 45%;
+}
+
+.finder-select select {
+  max-width: 100%;
+}
+
+.npc-finder .add {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+
+/* ------------------------------------------------------- home and placeholders */
+
+/* With no preview to sit beside, the page is a single readable column. */
+main.no-preview .preview {
+  display: none;
+}
+
+main.no-preview {
+  grid-template-columns: minmax(0, 900px);
+  justify-content: center;
+}
+
+main.no-preview .editor {
+  max-height: none;
+}
+
+[data-panel="home"] .hint,
+[data-panel="achievement"] .hint,
+[data-panel="raid"] .hint,
+[data-panel="text"] .hint {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+[data-panel="home"] code,
+[data-panel="achievement"] code,
+[data-panel="raid"] code,
+[data-panel="text"] code {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+/* The per-window reset sits with the export buttons but is not one of them. */
+.export .reset-window {
+  margin-left: auto;
+}
+
+/* ------------------------------------------------ custom folder chips + delete */
+
+/* A folder reads as a place, the create action as an action. */
+.chip-row button.folder-chip {
+  border-style: dashed;
+}
+
+.chip-row button.create-chip {
+  color: var(--accent);
+  border-style: dashed;
+}
+
+button.danger {
+  background: var(--panel-2);
+  color: #ff6b6b;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-left: auto;
+}
+
+button.danger:hover {
+  border-color: #ff6b6b;
+}
+
+button.danger[data-armed="yes"] {
+  background: #ff6b6b;
+  color: #fff;
+  border-color: #ff6b6b;
+}
+
+#upload-target {
+  flex: 0 1 auto;
+  margin: 0;
+}
+
+/* ----------------------------------------------------------- home backdrop */
+
+/*
+ * The Lich King's throne behind the Home page.
+ *
+ * Kept faint on purpose: it should register as atmosphere and never compete with the text sitting
+ * on it, so it goes in a pseudo-element behind the content at a per-theme opacity rather than as
+ * a background on the panel itself. Light mode takes less of it — a dark image over a white page
+ * turns grey long before it turns subtle.
+ */
+:root,
+:root[data-theme="dark"] {
+  --home-art: 0.17;
+}
+
+:root[data-theme="midnight"] {
+  --home-art: 0.15;
+}
+
+:root[data-theme="light"] {
+  --home-art: 0.13;
+}
+
+/*
+ * The throne fills the whole Home window rather than sitting in a band behind the text.
+ *
+ * Fixed to the viewport, not to the panel: the panel is only as tall as its content and scrolls,
+ * so anchoring the art to it left the page below the last fieldset bare and slid the image up as
+ * you scrolled. Fixed, it stays put and covers everything under the top bar, which paints over it
+ * with its own opaque gradient.
+ */
+main.home::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("ui/home-art.png") no-repeat center center / cover;
+  opacity: var(--home-art);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/*
+ * A vignette on top of it, so the middle stays readable and the edges fall away instead of
+ * ending on a hard crop.
+ */
+main.home::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 42%, transparent 30%, var(--bg) 92%);
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* The content sits above both layers. */
+main.home > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------- roadmap */
+
+/*
+ * The roadmap render at the foot of the Home page.
+ *
+ * It is 3200x3828, so it is fitted to the column and read by scrolling the page; the Full size
+ * button hands it back its real width inside a box that scrolls on both axes rather than letting
+ * a 3200px image widen the whole layout.
+ */
+.roadmap-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+/*
+ * A fieldset takes its min-width from its content, so without this the 3200px picture widens the
+ * panel at full size instead of scrolling inside it.
+ */
+#roadmap {
+  min-width: 0;
+}
+
+.roadmap-frame {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.roadmap-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.roadmap-frame.zoom {
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+}
+
+.roadmap-frame.zoom img {
+  width: auto;
+  max-width: none;
+}
+
+/*
+ * A badge that is off rather than wrong.
+ *
+ * "Not connected" is a state, not a warning — the program works without either connection — so it
+ * sits in the muted colour rather than the accent one the warn badge uses.
+ */
+.badge.off {
+  color: var(--muted);
+  border-color: var(--line);
+  opacity: 0.75;
+}
+
+/*
+ * Both badges read as a pair, so they are the same width with their text centred inside.
+ *
+ * Centred both ways, and the vertical half is the one that needs saying: the top bar is a flex
+ * row, so a badge is stretched to the height of the Settings button beside it — 35px — while its
+ * text is a 17px line sitting at the top of that. Text-align alone left it riding high in the
+ * pill. Making the badge its own centring box puts the line in the middle of whatever height the
+ * row gives it.
+ */
+#client-badge,
+#db-badge {
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------- item finder rows */
+
+/*
+ * An item result leads with its icon.
+ *
+ * A creature is found by reading its name; an item is recognised by its icon before the name is
+ * read at all, which is why these rows carry one and the NPC rows do not.
+ */
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  flex: 0 0 auto;
+  image-rendering: auto;
+}
+
+.item-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.item-row-text .npc-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The way back from a drop list to the roster it came from. */
+.loot-back {
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  padding: 0 0 6px;
+  cursor: pointer;
+}
+
+.loot-back:hover {
+  text-decoration: underline;
+}
+
+/* The wizard's readout, which is the point of the panel rather than decoration. */
+.wizard-note {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.wizard-note.warn {
+  color: var(--accent);
+}
+
+.wizard-note.bad {
+  color: #ff6b6b;
+}
+
+/* ------------------------------------------------------- preview parts (spell + aura) */
+
+/*
+ * A spell with an aura previews as two windows with a caption on each, the way a database page
+ * labels its Aura block. The caption is the program talking about the picture, so it sits outside
+ * the canvas and never lands in what gets saved.
+ */
+#canvas-host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.preview-part {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.preview-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+/* The secondary pickers sit as a wrapped row of small checkboxes, not a column of labels. */
+.wizard-secondaries {
+  gap: 4px 12px;
+  margin: 2px 0 4px;
+}
+
+.wizard-secondaries .check {
+  margin-right: 0;
+  font-size: 12px;
+}

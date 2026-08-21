@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Astral — a 3.3.5a Data Kit</title>
+    <link rel="icon" href="logo.png" />
+    <link rel="stylesheet" href="app.css" />
+    <script>
+      /*
+       * Runs before the first paint, so the window never flashes the default palette on the way
+       * to the chosen one. editor/theme.js owns the picker; this only restores what it stored.
+       */
+      try {
+        var saved = localStorage.getItem('astral-theme');
+        document.documentElement.dataset.theme =
+          ['light', 'dark', 'midnight'].indexOf(saved) === -1 ? 'dark' : saved;
+      } catch (err) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <img class="brand" src="logo.png" alt="Astral — a 3.3.5a Data Kit" />
+
+      <div class="kind-switch" role="tablist" aria-label="Window">
+        <button type="button" role="tab" data-kind="home" class="active">Home</button>
+        <button type="button" role="tab" data-kind="item">Item</button>
+        <button type="button" role="tab" data-kind="spell">Spell</button>
+        <button type="button" role="tab" data-kind="unit">NPC</button>
+        <button type="button" role="tab" data-kind="achievement">Achievement</button>
+        <button type="button" role="tab" data-kind="text">Texts</button>
+        <button type="button" role="tab" data-kind="raid">Raid Wizard</button>
+      </div>
+
+      <div class="topbar-actions">
+        <span id="client-badge" class="badge" title="Where assets are coming from"></span>
+        <span id="db-badge" class="badge" title="The world database connection"></span>
+        <button type="button" id="btn-settings" class="ghost">Settings</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ------------------------------------------------------------------ editor -->
+      <section class="editor" aria-label="Tooltip settings">
+        <!-- Home ------------------------------------------------------------------ -->
+        <div data-panel="home">
+          <fieldset class="highlight">
+            <legend>Astral — a 3.3.5a Data Kit</legend>
+            <p class="hint">
+              Astral builds the things a Wrath of the Lich King server needs pictures of:
+              <strong>item tooltips</strong>, <strong>spell tooltips</strong>,
+              <strong>NPC target frames</strong>, <strong>achievement cards</strong> and
+              <strong>chat scripts</strong> &mdash; each drawn the way the game draws it, then
+              exported as a PNG.
+            </p>
+            <p class="hint">
+              Every icon, font and border comes straight out of your own game client, so what you
+              build looks like the real thing rather than an approximation of it. Nothing of
+              Blizzard's ships with the program: it reads the client you already have.
+            </p>
+            <p class="hint">
+              Connect a world database as well and it will read your server's real items,
+              creatures and loot tables, so a custom piece can start from the one it sits beside.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Initialization</legend>
+            <p class="hint">
+              Open <strong>Settings</strong> and point at your 3.3.5a folder &mdash; the one
+              containing <code>Data\</code>. Indexing takes a moment the first time and is cached
+              afterwards. That one step turns on the real icons, the real fonts, the client's spell
+              and achievement tables, and the dungeon browser.
+            </p>
+            <p class="hint">
+              Connecting a <strong>world database</strong> in the same dialog is optional and adds
+              the finders: creature search, item search, a boss's real drop list, and the health
+              and mana pools behind the dungeon browser. Everything else works without it.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>The editors</legend>
+            <p class="hint">
+              <strong>Item</strong> &mdash; quality, binding, slot and weapon type, damage with a
+              calculated DPS, stats, sockets, set bonuses and green
+              <code>Equip:</code>/<code>Use:</code> lines with the exact in-game wording as presets.
+              The Type field follows the slot, so a Head can only be an armour class and a Main Hand
+              only a weapon. <strong>Find an item</strong> searches your database by name or entry,
+              or browses loot boss by boss, and loads a real drop into the editor to work from.
+            </p>
+            <p class="hint">
+              <strong>Spell</strong> &mdash; search the client's <code>Spell.dbc</code> by name or
+              id and pull a real spell in complete with its rank, cost, range, cast time, cooldown,
+              icon and description, then edit any of it. A spell can carry its
+              <strong>accompanying buff</strong>, which draws as a second tooltip and exports as its
+              own image, the way the game shows the aura separately from the spell that applies it.
+            </p>
+            <p class="hint">
+              <strong>NPC</strong> &mdash; the target frame: portrait, health and power bars, name,
+              level and classification in the client's own border art. Search creatures by name or
+              entry, or browse dungeons and raids by expansion, where each boss offers a button per
+              difficulty the instance really has. Custom scaling invents a harder version of any of
+              them, and portraits can be captured from the live 3D model.
+            </p>
+            <p class="hint">
+              <strong>Achievement</strong> &mdash; the achievement card in the client's own
+              parchment, earned or unearned, with points, reward line and criteria. Search the
+              client's achievements and load one in to edit.
+            </p>
+            <p class="hint">
+              <strong>Texts</strong> &mdash; what a creature says, drawn as the chat frame prints
+              it. Name the speaker, pick say, yell, whisper or emote, and the colour follows the
+              client's own. Add a line per thing spoken and two NPCs hold a conversation.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Icons</legend>
+            <p class="hint">
+              The picker reads all 6,300 client icons, sorted into categories and searchable. The
+              <strong>Custom</strong> tab takes your own PNGs, organised into folders &mdash;
+              in-game icons are 64&times;64, and anything else is scaled.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Exporting</legend>
+            <p class="hint">
+              Every editor exports a PNG at 1x&ndash;4x with an optional transparent background, or
+              copies the image straight to the clipboard. A spell carrying an aura saves two files
+              rather than one, since they are two tooltips in the game.
+            </p>
+            <p class="hint">
+              The address bar always holds a permalink to exactly what you are looking at, and it
+              reopens still editable rather than as a flat image &mdash; copy it from the address
+              bar to share a build.
+            </p>
+            <p class="hint">
+              Preview and export options are remembered per window, so a transparent target frame
+              does not quietly change how your items export.
+            </p>
+          </fieldset>
+          <fieldset id="roadmap">
+            <legend>Roadmap</legend>
+            <p class="hint">
+              What is built and what is coming, in the order it was worked out. Everything with a
+              stamp on it is in the program already.
+            </p>
+
+            <div class="roadmap-actions">
+              <button type="button" id="btn-roadmap-zoom" class="ghost" aria-pressed="false">Full size &#10530;</button>
+            </div>
+
+            <!--
+              Fit to the column by default and scroll inside its own box at full size: the render is
+              3200px wide, so letting it size the page would put a horizontal scrollbar under every
+              other window as well.
+            -->
+            <div class="roadmap-frame">
+              <img id="roadmap-img" src="roadmap.png" alt="Astral roadmap" loading="lazy" />
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Achievement ------------------------------------------------------------ -->
+        <div data-panel="achievement" hidden>
+          <fieldset>
+            <legend>Custom achievement</legend>
+
+            <div class="row icon-row">
+              <button type="button" id="icon-btn-ach" class="icon-btn" title="Choose an icon">
+                <img id="icon-preview-ach" alt="" />
+                <span class="icon-hint">Icon</span>
+              </button>
+
+              <div class="grow">
+                <label>Title<input type="text" data-bind="achTitle" placeholder="The Undying" /></label>
+                <label class="narrow">Points<select data-bind="achPoints" data-number></select></label>
+              </div>
+            </div>
+
+            <label>Description<textarea data-bind="achDescription" rows="3" placeholder="Within one raid lockout period, defeat every boss in Naxxramas…"></textarea></label>
+            <label>Reward<input type="text" data-bind="achReward" placeholder="Title Reward: The Undying" /></label>
+
+            <div class="row">
+              <label class="grow">Category<select data-bind="achCategory" data-number></select></label>
+              <p class="hint grow">
+                Where it is filed, read from the client's own category tree. Nothing on the card
+                shows it — it is what an achievement list sorts by, and loading a real one brings
+                its category in with it.
+              </p>
+            </div>
+
+            <div class="row">
+              <label class="check">
+                <input type="checkbox" data-bind="achEarned" />
+                Earned
+              </label>
+              <p class="hint grow">
+                Unearned draws the desaturated parchment and shield — both are real textures in
+                the client, so nothing is being faded here.
+              </p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Criteria</legend>
+            <p class="hint">
+              The lines under the description, each with its tick. A criterion with many siblings
+              lays out in columns, as the game's own list does for a "Glory of…" meta-achievement.
+            </p>
+
+            <div data-list="achCriteria"></div>
+            <button type="button" class="add" data-add="achCriteria">+ Add criterion</button>
+          </fieldset>
+        </div>
+
+        <!-- Raid Wizard ------------------------------------------------------------ -->
+        <div data-panel="raid" hidden>
+          <fieldset class="highlight">
+            <legend>Raid wizard — TBD</legend>
+            <p class="hint">
+              Not built yet. The plan is a place to put what the other windows make: create a raid,
+              give it a name and a logo out of the icon picker, then fill it by copying finished
+              work in. A target frame becomes a boss, a spell becomes an ability, an item becomes a
+              drop &mdash; a raid is a document you paste into rather than a form you fill in.
+            </p>
+            <p class="hint">
+              Opening a boss opens its fight: phase by phase, each phase holding the spells cast in
+              it, the adds summoned in it and the lines spoken in it, with a proposed loot list and
+              any achievements saved alongside the boss they belong to.
+            </p>
+            <p class="hint">
+              Raids save to your own data folder beside the custom icons, so they are still there
+              next session and survive a reinstall. Then simulate it: the raid DPS needed to beat
+              an enrage timer, played back with the target frame draining as the simulated raid
+              damages it.
+            </p>
+          </fieldset>
+        </div>
+
+        <!-- Texts ------------------------------------------------------------------ -->
+        <div data-panel="text" hidden>
+          <fieldset class="highlight">
+            <legend>Texts</legend>
+            <p class="hint">
+              What a creature says, drawn the way the chat frame prints it. Name the speaker, pick
+              whether it is said, yelled, whispered or emoted, and the colour follows &mdash; a say
+              is the pale yellow the game uses for creatures, a yell red, an emote orange.
+            </p>
+            <p class="hint">
+              Add a line per thing spoken and they read as one exchange, so two NPCs can hold a
+              conversation in the order it happens.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Lines</legend>
+            <div data-list="textLines"></div>
+            <button type="button" class="add" data-add="textLines">+ Add line</button>
+          </fieldset>
+        </div>
+
+        <!-- Item ------------------------------------------------------------------ -->
+        <div data-panel="item">
+          <fieldset>
+            <legend>Identity</legend>
+
+            <div class="row icon-row">
+              <button type="button" id="icon-btn" class="icon-btn" title="Choose an icon">
+                <img id="icon-preview" alt="" />
+                <span class="icon-hint">Icon</span>
+              </button>
+
+              <div class="grow">
+                <label>Name<input type="text" data-bind="name" placeholder="Shadowmourne" /></label>
+                <label>Quality<select data-bind="quality" data-number></select></label>
+              </div>
+            </div>
+
+            <div class="row">
+              <label class="check"><input type="checkbox" data-bind="heroic" /> Heroic</label>
+              <label class="check"><input type="checkbox" data-bind="conjured" /> Conjured</label>
+            </div>
+
+            <div class="row">
+              <label>Binding
+                <select data-bind="binding">
+                  <option value="none">None</option>
+                  <option value="bop">Binds when picked up</option>
+                  <option value="boe">Binds when equipped</option>
+                  <option value="bou">Binds when used</option>
+                  <option value="boa">Binds to account</option>
+                  <option value="quest">Quest Item</option>
+                </select>
+              </label>
+              <label>Unique
+                <select data-bind="unique">
+                  <option value="none">None</option>
+                  <option value="unique">Unique</option>
+                  <option value="unique-equipped">Unique-Equipped</option>
+                  <option value="unique-n">Unique (N)</option>
+                </select>
+              </label>
+              <label class="narrow">Count<input type="number" data-bind="uniqueN" min="1" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Slot &amp; combat</legend>
+
+            <div class="row">
+              <label>Slot<select data-bind="slot"></select></label>
+              <label id="type-field">Type<select data-bind="itemType"></select></label>
+            </div>
+
+            <label class="check"><input type="checkbox" data-bind="hasWeapon" /> Weapon damage</label>
+
+            <div class="row" data-when="hasWeapon">
+              <label class="narrow">Min<input type="number" data-bind="dmgMin" /></label>
+              <label class="narrow">Max<input type="number" data-bind="dmgMax" /></label>
+              <label class="narrow">Speed<input type="number" step="0.01" data-bind="speed" /></label>
+              <p class="hint">DPS is calculated for you.</p>
+            </div>
+
+            <div class="row">
+              <label class="narrow">Armor<input type="number" data-bind="armor" /></label>
+              <label class="narrow">Block<input type="number" data-bind="block" /></label>
+              <label class="narrow">Durability<input type="number" data-bind="durability" /></label>
+            </div>
+
+            <div class="row">
+              <label class="narrow">Req. level<input type="number" data-bind="reqLevel" /></label>
+              <label class="narrow">Item level<input type="number" data-bind="itemLevel" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Stats</legend>
+            <div class="list" data-list="stats"></div>
+            <button type="button" class="add" data-add="stats">+ Add stat</button>
+
+            <div class="list" data-list="resistances"></div>
+            <button type="button" class="add" data-add="resistances">+ Add resistance</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Sockets</legend>
+            <div class="list" data-list="sockets"></div>
+            <div class="socket-adders">
+              <button type="button" class="add" data-socket="red">+ Red</button>
+              <button type="button" class="add" data-socket="yellow">+ Yellow</button>
+              <button type="button" class="add" data-socket="blue">+ Blue</button>
+              <button type="button" class="add" data-socket="meta">+ Meta</button>
+              <button type="button" class="add" data-socket="prismatic">+ Prismatic</button>
+            </div>
+            <label>Socket bonus<input type="text" data-bind="socketBonus" placeholder="+4 Strength" /></label>
+          </fieldset>
+
+          <fieldset class="highlight">
+            <legend class="plain">Equip / Use / Chance on Hit</legend>
+            <p class="hint">
+              Pick a preset for the exact in-game wording (armor penetration, haste, resilience&nbsp;…)
+              then fill in the number, or write your own. Add as many as you like.
+            </p>
+            <div class="list" data-list="effects"></div>
+            <button type="button" class="add" data-add="effects">Add</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Requirements</legend>
+            <div class="list" data-list="requires"></div>
+            <button type="button" class="add" data-add="requires">+ Add requirement</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Set</legend>
+            <label>Set name<input type="text" data-bind="setName" placeholder="Shadowblade Battlegear" /></label>
+            <div class="list" data-list="setPieces"></div>
+            <button type="button" class="add" data-add="setPieces">+ Add set piece</button>
+            <div class="list" data-list="setBonuses"></div>
+            <button type="button" class="add" data-add="setBonuses">+ Add set bonus</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Finishing touches</legend>
+            <label>Flavor text<textarea data-bind="flavor" rows="2" placeholder="Bears the mark of the Lich King"></textarea></label>
+            <label>Made by<input type="text" data-bind="madeBy" /></label>
+            <div class="row">
+              <label class="narrow">Gold<input type="number" data-bind="sellGold" /></label>
+              <label class="narrow">Silver<input type="number" data-bind="sellSilver" /></label>
+              <label class="narrow">Copper<input type="number" data-bind="sellCopper" /></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Spell ----------------------------------------------------------------- -->
+        <div data-panel="spell" hidden>
+          <fieldset>
+            <legend>Custom spell</legend>
+
+            <div class="row icon-row">
+              <button type="button" id="icon-btn-spell" class="icon-btn" title="Choose an icon">
+                <img id="icon-preview-spell" alt="" />
+                <span class="icon-hint">Icon</span>
+              </button>
+
+              <div class="grow">
+                <label>Name<input type="text" data-bind="spellName" placeholder="Frostbolt" /></label>
+                <label class="narrow">Rank<input type="text" data-bind="rank" placeholder="4" /></label>
+              </div>
+            </div>
+
+            <div class="row">
+              <label>Cost<input type="text" data-bind="cost" placeholder="450 Mana" /></label>
+              <label>Range<input type="text" data-bind="range" placeholder="40 yd range" /></label>
+            </div>
+
+            <div class="row">
+              <label>Cast time<input type="text" data-bind="castTime" placeholder="2.5 sec cast" /></label>
+              <label>Cooldown<input type="text" data-bind="cooldown" placeholder="45 sec cooldown" /></label>
+            </div>
+
+            <label>Reagents<input type="text" data-bind="reagents" /></label>
+            <label>Requires (red)<input type="text" data-bind="spellRequires" placeholder="Requires Two-Handed Axes" /></label>
+            <label>Description<textarea data-bind="description" rows="4" placeholder="Blasts your enemy with Shadow damage…"></textarea></label>
+            <label>Flavor text<textarea data-bind="spellFlavor" rows="2"></textarea></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Accompanying buff</legend>
+            <label class="check">
+              <input type="checkbox" data-bind="buffShow" />
+              Show the buff tooltip
+            </label>
+            <p class="hint">
+              The window the game shows when the aura itself is hovered on a unit frame, which is
+              not the spell's own tooltip: it describes what the aura does while it is up, and how
+              long is left. It draws underneath the spell tooltip, as a second window.
+            </p>
+
+            <div data-when="buffShow">
+              <label>Name<input type="text" data-bind="buffName" placeholder="Soul Reaper" /></label>
+              <label>Description<textarea data-bind="buffDescription" rows="3" placeholder="Deals 27349 Shadow damage and the caster gains 100% increased haste after 5 sec."></textarea></label>
+              <label>Time remaining<input type="text" data-bind="buffRemaining" placeholder="5 seconds remaining" /></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- NPC target frame ------------------------------------------------------ -->
+        <div data-panel="unit" hidden>
+          <!-- The NPC finder lives above the preview now, beside the frame it fills in. -->
+
+          <fieldset>
+            <legend>Target frame</legend>
+
+            <!-- No icon picker here: the portrait ring only ever holds a captured 3D render. -->
+            <label>Name<input type="text" data-bind="unitName" placeholder="Patchwerk" /></label>
+            <div class="row">
+              <label class="narrow">Level<input type="number" data-bind="unitLevel" min="1" max="99" /></label>
+              <label class="check"><input type="checkbox" data-bind="unitSkull" /> Skull (??)</label>
+            </div>
+
+            <div class="row">
+              <label>Classification<select data-bind="unitClassification"></select></label>
+              <label>Reaction<select data-bind="unitReaction"></select></label>
+            </div>
+            <p class="hint">Boss classification shows a skull in place of the level, as in game.</p>
+
+            <div class="row">
+              <label class="narrow">Display ID<input type="number" data-bind="unitDisplayId" min="0" /></label>
+              <button type="button" id="btn-model" class="add">Render 3D model →</button>
+            </div>
+            <p class="hint">
+              The client has no creature portrait images — in game they are live 3D renders. Load the
+              model, frame the shot, then capture it as the portrait.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Health</legend>
+            <div class="row">
+              <label>Current<input type="number" data-bind="unitHealth" min="0" step="1000" /></label>
+              <label>Maximum<input type="number" data-bind="unitHealthMax" min="1" step="1000" /></label>
+            </div>
+            <!-- Sets the arrow-key increment on both fields; raid pools are in the millions. -->
+            <label>Step <output id="health-step-out">1,000</output></label>
+            <div class="chip-row" id="health-step">
+              <button type="button" data-step="1" class="active">1&times;</button>
+              <button type="button" data-step="2">2&times;</button>
+              <button type="button" data-step="5">5&times;</button>
+              <button type="button" data-step="10">10&times;</button>
+            </div>
+            <label>Health <output id="health-pct"></output>
+              <input type="range" id="health-slider" min="0" max="100" step="1" />
+            </label>
+            <label class="check"><input type="checkbox" data-bind="unitShowHealthText" /> Show health numbers on the bar</label>
+
+            <!-- Roadmap 6: invent a harder version of a real boss and see the pool it needs. -->
+            <label>Custom scaling <output id="scale-out">none</output></label>
+            <div class="chip-row" id="health-scale">
+              <button type="button" data-scale="5">+5%</button>
+              <button type="button" data-scale="10">+10%</button>
+              <button type="button" data-scale="15">+15%</button>
+              <button type="button" data-scale="20">+20%</button>
+              <button type="button" data-scale="25">+25%</button>
+              <button type="button" data-scale="30">+30%</button>
+              <button type="button" id="btn-scale-reset">Reset</button>
+            </div>
+            <p class="hint">
+              Each press compounds on what is already applied, so +5% twice is +10.25%. This
+              scales health alone — mana has its own buttons under Power. The resulting pool is
+              what a DPS check has to chew through.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Power</legend>
+            <label>Type<select data-bind="unitPower"></select></label>
+            <div class="row">
+              <label>Current<input type="number" data-bind="unitPowerCur" min="0" /></label>
+              <label>Maximum<input type="number" data-bind="unitPowerMax" min="1" /></label>
+            </div>
+
+            <!-- Mana only: the other pools are a fixed hundred points and have nothing to scale. -->
+            <div id="power-scale-field">
+              <label>Custom scaling <output id="power-scale-out">none</output></label>
+              <div class="chip-row" id="power-scale">
+                <button type="button" data-scale="5">+5%</button>
+                <button type="button" data-scale="10">+10%</button>
+                <button type="button" data-scale="15">+15%</button>
+                <button type="button" data-scale="20">+20%</button>
+                <button type="button" data-scale="25">+25%</button>
+                <button type="button" data-scale="30">+30%</button>
+                <button type="button" id="btn-power-scale-reset">Reset</button>
+              </div>
+              <p class="hint">Scales the mana pool on its own; the health buttons leave it alone.</p>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------------------------------- preview -->
+      <section class="preview" aria-label="Preview and export">
+        <!-- Spell mode only: pulls a real spell out of the client's Spell.dbc. -->
+        <fieldset class="highlight npc-finder" data-kind-only="item">
+          <legend>Find an item</legend>
+          <div class="row">
+            <input type="search" id="item-search" class="grow" placeholder="Search items — e.g. Shadowmourne, or 49623" autocomplete="off" disabled />
+            <button type="button" id="btn-browse-loot" class="add">Browse loot by boss &rarr;</button>
+          </div>
+          <p class="hint" id="item-hint">Connect your world database in Settings to search items by name or entry id.</p>
+          <div id="item-results" class="npc-results"></div>
+        </fieldset>
+        <!--
+          The item wizard is parked (ROADMAP item 2, FUTURE). The maths behind it is built and
+          verified and the panel works; what is unsettled is how it should feel to use beside a
+          loaded item. Remove the hidden attribute to bring it back.
+        -->
+        <fieldset class="highlight npc-finder" data-kind-only="item" id="item-wizard-panel" hidden>
+          <legend>Item wizard — tier &amp; budget</legend>
+          <div class="row">
+            <label class="grow">Tier<select id="wizard-tier"></select></label>
+            <label class="grow">Role<select id="wizard-role"></select></label>
+          </div>
+          <div class="row wizard-secondaries" id="wizard-secondaries">
+              <label class="check"><input type="checkbox" data-secondary="crit" /> Crit</label>
+              <label class="check"><input type="checkbox" data-secondary="hit" /> Hit</label>
+              <label class="check"><input type="checkbox" data-secondary="haste" /> Haste</label>
+              <label class="check"><input type="checkbox" data-secondary="expertise" /> Expertise</label>
+              <label class="check"><input type="checkbox" data-secondary="arp" /> Armor pen</label>
+              <label class="check"><input type="checkbox" data-secondary="mp5" /> MP5</label>
+              <label class="check"><input type="checkbox" data-secondary="spi" /> Spirit</label>
+              <label class="check"><input type="checkbox" data-secondary="defense" /> Defense</label>
+              <label class="check"><input type="checkbox" data-secondary="dodge" /> Dodge</label>
+              <label class="check"><input type="checkbox" data-secondary="parry" /> Parry</label>
+              <label class="check"><input type="checkbox" data-secondary="resilience" /> Resilience</label>
+          </div>
+          <p class="hint">
+            Tick the secondaries you want and the whole secondary share is split between them.
+            Leave them all clear to use the spread real gear of that role averages.
+          </p>
+
+          <div class="row">
+            <button type="button" id="btn-wizard-generate" class="add">Generate stats</button>
+            <button type="button" id="btn-wizard-price" class="add">Price this item</button>
+          </div>
+          <p class="hint" id="wizard-note">
+            Generate spends the item level's whole budget in the proportions real gear of that role
+            uses. Price reads what is in the editor and says what item level it really is — the slot
+            and sockets come from the fields below, because sockets are paid for out of the same
+            budget.
+          </p>
+        </fieldset>
+        <fieldset class="highlight npc-finder" data-kind-only="spell">
+          <legend>Find a spell</legend>
+          <div class="row">
+            <input type="search" id="spell-search" class="grow" placeholder="Search spells — e.g. Frostbolt, or 116" autocomplete="off" />
+          </div>
+          <p class="hint" id="spell-hint">Reads the client's Spell.dbc — no database needed. Picking one fills in the name, rank, cost, range, cast time, cooldown, icon and description.</p>
+          <div id="spell-results" class="npc-results"></div>
+        </fieldset>
+
+        <!-- NPC mode only: this is how the target frame gets filled in, so it sits beside it. -->
+        <fieldset class="highlight npc-finder" data-kind-only="unit">
+          <legend>Find an NPC</legend>
+          <div class="row">
+            <input type="search" id="npc-search" class="grow" placeholder="Search creatures — e.g. Patchwerk, or 16028" autocomplete="off" disabled />
+            <button type="button" id="btn-browse-instances" class="add">Browse dungeons &amp; raids →</button>
+          </div>
+          <p class="hint" id="npc-hint">Connect your world database in Settings to search creatures by name or entry id.</p>
+          <div id="npc-results" class="npc-results"></div>
+        </fieldset>
+
+        <!-- Achievement mode only: Achievement.dbc is client data, so this needs no database. -->
+        <fieldset class="highlight npc-finder" data-kind-only="achievement">
+          <legend>Find an achievement</legend>
+          <div class="row">
+            <input type="search" id="ach-search" class="grow" placeholder="Search achievements — e.g. The Undying, or 2187" autocomplete="off" />
+            <label class="finder-select">Category<select id="ach-category"></select></label>
+          </div>
+          <p class="hint" id="ach-hint">Reads the client's Achievement.dbc — no database needed. Picking one fills in the title, description, reward, points, icon and criteria. Statistics are left out, as they are in the game's own achievement list.</p>
+          <div id="ach-results" class="npc-results"></div>
+        </fieldset>
+
+        <div class="stage" id="stage">
+          <div id="canvas-host"></div>
+        </div>
+
+        <div class="export">
+          <div class="row">
+            <label>Export scale
+              <select id="export-scale">
+                <option value="1">1x</option>
+                <option value="2" selected>2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+              </select>
+            </label>
+            <label>Preview zoom
+              <select id="preview-zoom">
+                <option value="1">1x (true size)</option>
+                <option value="1.5" selected>1.5x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+              </select>
+            </label>
+            <label>Max width <output id="max-width-out"></output>
+              <input type="range" id="max-width" min="200" max="480" step="10" />
+            </label>
+          </div>
+
+          <div class="row">
+            <!-- A unit frame has no icon to place; its portrait comes from the model viewer. -->
+            <label data-kind-only="item spell">Icon placement
+              <select id="opt-icon-placement">
+                <option value="outside">Outside the frame</option>
+                <option value="inside">Inside, top-left</option>
+                <option value="none">No icon</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row">
+            <label class="check"><input type="checkbox" id="opt-transparent" /> Transparent background</label>
+            <!-- Item-only: a spell or a unit frame has no quality to take a border colour from. -->
+            <label class="check" data-kind-only="item"><input type="checkbox" id="opt-quality-border" checked /> Quality-colored border</label>
+          </div>
+
+          <div class="row">
+            <label class="check"><input type="checkbox" id="opt-checker" checked /> Checkerboard behind preview</label>
+          </div>
+
+          <div class="buttons">
+            <button type="button" id="btn-png" class="primary">Download PNG</button>
+            <button type="button" id="btn-copy">Copy image</button>
+            <!-- Clears this window only; there is no global reset. -->
+            <button type="button" id="btn-reset-window" class="reset-window">Reset this window</button>
+          </div>
+
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Icon picker ------------------------------------------------------------- -->
+    <dialog id="icon-dialog">
+      <form method="dialog" class="dialog-head">
+        <input type="search" id="icon-search" placeholder="Search 6,307 icons — try 'axe', 'shadow', 'frost'" autocomplete="off" />
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+      <div class="chip-row" id="icon-categories"></div>
+
+      <!-- Shown on the custom chips: where uploads go, and folder management. -->
+      <div class="icon-upload" id="icon-upload" hidden>
+        <div class="row" id="new-folder-row" hidden>
+          <label class="grow">Folder name<input type="text" id="new-folder-name" placeholder="bosses" /></label>
+          <button type="button" id="btn-new-folder" class="add">Create folder</button>
+        </div>
+
+        <div class="row" id="upload-row">
+          <label class="upload-btn">
+            <input type="file" id="custom-file" accept="image/png,image/x-tga,.tga" multiple />
+            <span>Upload PNG or TGA…</span>
+          </label>
+          <span class="hint" id="upload-target"></span>
+          <button type="button" id="btn-delete-folder" class="danger" hidden></button>
+        </div>
+
+        <p class="hint">
+          In-game icons are <strong>64&times;64</strong>. Anything else still works — the game
+          scales icons — but 64&times;64 is what the client ships and what stays sharp. A TGA is
+          converted to PNG as it is saved; no browser can read one, so its size is not checked here
+          the way a PNG's is.
+        </p>
+        <p class="status" id="custom-status"></p>
+      </div>
+
+      <p class="hint" id="icon-count"></p>
+      <div class="icon-grid" id="icon-grid"></div>
+    </dialog>
+
+    <!-- Settings ---------------------------------------------------------------- -->
+    <dialog id="settings-dialog">
+      <form method="dialog" class="dialog-head">
+        <strong>Settings</strong>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <fieldset>
+          <legend>Appearance</legend>
+          <label>Theme</label>
+          <div class="chip-row" id="theme-picker">
+            <button type="button" data-theme-choice="light">Light</button>
+            <button type="button" data-theme-choice="dark">Dark</button>
+            <button type="button" data-theme-choice="midnight">Midnight</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>3.3.5a client folder</legend>
+          <p class="hint">
+            Icons and fonts are read straight from your client, so none of Blizzard's artwork ships
+            with this program. Point at the folder containing <code>Data\</code>.
+          </p>
+          <div class="row">
+            <label class="grow">Folder<input type="text" id="client-path" placeholder="C:\Wrath of the Lich King" /></label>
+            <button type="button" id="btn-browse" class="add">Browse…</button>
+          </div>
+          <div class="row">
+            <button type="button" id="btn-apply-client" class="primary">Use this folder</button>
+          </div>
+          <p class="status" id="client-status"></p>
+        </fieldset>
+
+        <fieldset>
+          <legend>World database (optional)</legend>
+          <p class="hint">
+            Enables NPC search. Creature names live in the server database, not the client, so this
+            is the only way to look them up. Everything else works without it.
+          </p>
+          <label class="check"><input type="checkbox" id="db-enabled" /> Enable NPC search</label>
+          <div class="row">
+            <label>Host<input type="text" id="db-host" /></label>
+            <label class="narrow">Port<input type="number" id="db-port" /></label>
+          </div>
+          <div class="row">
+            <label>User<input type="text" id="db-user" /></label>
+            <label>Password<input type="password" id="db-password" placeholder="unchanged" /></label>
+          </div>
+          <label>Database<input type="text" id="db-database" /></label>
+          <div class="row">
+            <button type="button" id="btn-apply-db" class="primary">Connect</button>
+          </div>
+          <p class="status" id="db-status"></p>
+        </fieldset>
+      </div>
+    </dialog>
+
+    <!-- 3D model viewer ---------------------------------------------------------- -->
+    <dialog id="model-dialog">
+      <form method="dialog" class="dialog-head">
+        <strong>Model viewer</strong>
+        <span class="hint" id="model-status"></span>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <p class="hint">
+          Drag to rotate, scroll to zoom. When the pose looks right, capture it — the visible frame
+          becomes the portrait.
+        </p>
+        <div id="model-stage">
+          <!-- Shows the portrait crop, so the model can be posed to fit it before capturing. -->
+          <div id="model-guide" aria-hidden="true"></div>
+        </div>
+        <div class="row">
+          <button type="button" id="btn-capture" class="primary">Capture as portrait</button>
+          <button type="button" id="btn-pause">Pause animation</button>
+          <label class="check"><input type="checkbox" id="opt-guide" checked /> Show portrait guide</label>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="instance-dialog">
+      <form method="dialog" class="dialog-head">
+        <strong>Dungeons &amp; raids</strong>
+        <span class="hint" id="instance-status"></span>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <!-- Pick an expansion. The instance list and the difficulty buttons below both come from
+             the client's own Map.dbc and MapDifficulty.dbc, so they match the real game. -->
+        <div class="xpac-picker" id="xpac-picker">
+          <button type="button" data-xpac="0" title="Classic">
+            <img src="ui/xpac-classic.png" alt="Classic" />
+          </button>
+          <button type="button" data-xpac="1" title="The Burning Crusade">
+            <img src="ui/xpac-tbc.png" alt="The Burning Crusade" />
+          </button>
+          <button type="button" data-xpac="2" title="Wrath of the Lich King">
+            <img src="ui/xpac-wotlk.png" alt="Wrath of the Lich King" />
+          </button>
+        </div>
+
+        <div class="instance-browser">
+          <div class="instance-list" id="instance-list"></div>
+          <div class="boss-list" id="boss-list">
+            <p class="hint">Pick an expansion, then a dungeon or raid.</p>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- The 3D model viewer is built against jQuery; bundled rather than fetched so the rest of
+         the app has no network dependency. -->
+    <script src="vendor/jquery.min.js"></script>
+    <script src="tooltip.js"></script>
+    <script src="render.js"></script>
+    <script type="module" src="editor/main.js"></script>
+  </body>
+</html>
