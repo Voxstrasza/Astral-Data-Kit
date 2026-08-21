@@ -6,23 +6,6 @@ build/icon.ico
 # The Windows launcher the packager regenerates
 Astral.lnk
 
-# ---------------------------------------------------------------- game assets
-#
-# Everything below is pulled out of a Warcraft client and belongs to Blizzard. Astral is built to
-# read the client you already own, so none of it is kept in the repository — the scripts that
-# extract it are here instead:
-#
-#   npm run extract-art     -> public/ui      (frame, socket, coin and achievement textures)
-#   npm run extract-fonts   -> public/fonts   (FRIZQT__, MORPHEUS and the rest)
-#
-# Both need a configured 3.3.5a client, which the program asks for on first run anyway.
-public/ui/
-public/fonts/
-art/wow_transparent.png
-art/tbc_transparent.png
-art/wotlk_transparent.png
-home_art/
-
 # Icons you have added yourself; the app keeps its own copies outside the repo
 custom_icon/
 
