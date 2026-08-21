@@ -24,7 +24,7 @@ npm run serve      # or a browser at http://localhost:4173
 npm run package    # build dist\Astral-win32-x64\Astral.exe
 ```
 
-## First run
+## Initialization
 
 Open **Settings** and point at your 3.3.5a folder — the one containing `Data\`. That turns on the
 real icons and fonts, the client's spell and achievement tables, and the dungeon browser.
@@ -42,7 +42,7 @@ It adds creature search, item search, real loot tables and real health pools.
 - **NPC** — the target frame with real health pools, a dungeon and raid browser built from the
   client's own tables, custom difficulty scaling, and portraits captured from the 3D model.
 - **Achievement** — the achievement card in the client's own parchment.
-- **Texts** — what a creature says, in the colours the chat frame prints them in.
+- **Texts** — what a creature says, in the colors the chat frame prints them in.
 
 Every window exports a PNG at 1x–4x, copies to the clipboard, and carries a permalink that reopens
 the exact state still editable.
