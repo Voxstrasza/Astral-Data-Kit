@@ -53,7 +53,7 @@ function applyAchievement(achievement)
     setIcon(state.achIcon);
     update();
 
-    const where = achievement.categoryName ? ` — ${achievement.categoryName}` : '';
+    const where = achievement.categoryName ? ` - ${achievement.categoryName}` : '';
     status(`Loaded ${achievement.title} (achievement ${achievement.id})${where}`);
 }
 

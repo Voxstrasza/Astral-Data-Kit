@@ -24,7 +24,7 @@ function populateSelects()
     {
         const opt = document.createElement('option');
         opt.value = v;
-        opt.textContent = v || '—';
+        opt.textContent = v || '-';
         sel.appendChild(opt);
     });
 
@@ -150,7 +150,7 @@ let builtForSlot = null;
  *
  * A slot that shows no subclass in game hides the field entirely rather than offering an empty
  * dropdown. A type that the new slot cannot take is dropped — switching a sword to Head should
- * not leave "Sword" sitting in an armour field.
+ * not leave "Sword" sitting in an armor field.
  */
 function syncItemTypes(force = false)
 {
@@ -189,7 +189,7 @@ function syncItemTypes(force = false)
     {
         const option = document.createElement('option');
         option.value = value;
-        option.textContent = value || '—';
+        option.textContent = value || '-';
         select.appendChild(option);
     }
 

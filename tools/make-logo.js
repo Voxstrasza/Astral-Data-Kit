@@ -105,7 +105,7 @@ const SCRIPT = `(async () => {
     /*
      * One outline pass, carrying its own shadow.
      *
-     * Two passes plus a separate blurred halo stacked into a grey cloud over the letter tops,
+     * Two passes plus a separate blurred halo stacked into a gray cloud over the letter tops,
      * which read as dull pewter rather than gold. The gradient underneath was fine; it was being
      * covered up.
      */
@@ -189,7 +189,7 @@ const SCRIPT = `(async () => {
 
     const mid = S / 2;
 
-    // Deep field, lit from the centre.
+    // Deep field, lit from the center.
     const field = mx.createRadialGradient(mid, mid * 0.85, 20, mid, mid, mid);
     field.addColorStop(0, '#1d2b4a');
     field.addColorStop(0.55, '#0d1524');
@@ -223,7 +223,7 @@ const SCRIPT = `(async () => {
      *
      * Curving straight from one tip to the next inner corner sweeps every edge the same way round
      * and the star comes out as a pinwheel. Drawing inner corner -> tip -> inner corner, with both
-     * curves pulled toward the centre, keeps each point symmetric about its own axis.
+     * curves pulled toward the center, keeps each point symmetric about its own axis.
      */
     const star = (cxs, cys, outer, inner, rotation) => {
         mx.save();

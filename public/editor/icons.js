@@ -4,6 +4,7 @@
 
 import { $, $$ } from './dom.js';
 import { state, runtime } from './state.js';
+import { takeIcon, wantsIcon } from './raids.js';
 import { api, postJson } from './api.js';
 import { update } from './preview.js';
 import { FILTERS, inCategory } from './icon-categories.js';
@@ -50,6 +51,12 @@ function currentIconName()
 
 function setIcon(name, redraw = true)
 {
+    /* The raid wizard borrows this dialog for a logo, which belongs to a file rather than a field. */
+    if (wantsIcon() && takeIcon(name))
+    {
+        return;
+    }
+
     state[iconField()] = name || '';
 
     const paint = (img, value) =>
@@ -287,7 +294,7 @@ function renderIconGrid(filter)
 
     if (activeChip === NEW_FOLDER_CHIP)
     {
-        $('#icon-count').textContent = 'Name a folder and create it — it joins the row above.';
+        $('#icon-count').textContent = 'Name a folder and create it - it joins the row above.';
         return;
     }
 
@@ -295,7 +302,7 @@ function renderIconGrid(filter)
     {
         $('#icon-count').textContent = query
             ? 'No icons in this folder match that.'
-            : 'This folder is empty — upload a PNG below.';
+            : 'This folder is empty - upload a PNG below.';
         return;
     }
 
@@ -414,7 +421,7 @@ async function uploadFiles(files)
     renderIconGrid($('#icon-search').value);
 
     const warning = odd.length
-        ? ` In-game icons are ${native}x${native} — ${odd.join(', ')}.`
+        ? ` In-game icons are ${native}x${native} - ${odd.join(', ')}.`
         : '';
 
     customStatus(`${saved} icon${saved === 1 ? '' : 's'} added.${warning}`);

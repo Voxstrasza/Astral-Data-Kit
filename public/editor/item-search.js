@@ -19,7 +19,7 @@ import { setIcon, iconUrl } from './icons.js';
 import { M } from './wow.js';
 import { syncTier } from './item-wizard.js';
 
-/* Quality -> the colour the game paints an item name in. Same table the tooltip renderer uses. */
+/* Quality -> the color the game paints an item name in. Same table the tooltip renderer uses. */
 const QUALITY_COLOR = (quality) => M.qualityColor(quality);
 
 /**
@@ -58,7 +58,7 @@ function applyItem(item)
     /* The wizard follows the item in, so pricing and generating act on the tier it came from. */
     syncTier();
 
-    status(`Loaded ${item.name} — item ${item.entry}, ilvl ${item.itemLevel}`);
+    status(`Loaded ${item.name} - item ${item.entry}, ilvl ${item.itemLevel}`);
 }
 
 async function loadItem(entry)
@@ -83,9 +83,9 @@ async function loadItem(entry)
 }
 
 /**
- * One result row: icon, name in its quality colour, then what it is.
+ * One result row: icon, name in its quality color, then what it is.
  *
- * The icon is worth the request here in a way it is not for a creature — an item is recognised by
+ * The icon is worth the request here in a way it is not for a creature — an item is recognized by
  * its icon long before its name is read, and the icon is already cached by the picker.
  */
 function itemRow(item, extra)
@@ -243,7 +243,7 @@ async function showLoot(boss, instance, tier, difficultyLabel, onBack)
     }
 
     const heading = document.createElement('h4');
-    heading.textContent = `${boss.name} — ${instance ? instance.name : ''}`
+    heading.textContent = `${boss.name} - ${instance ? instance.name : ''}`
         + (difficultyLabel ? `, ${difficultyLabel}` : '');
     host.appendChild(heading);
 
@@ -308,7 +308,7 @@ async function showMisc(kind, expansion, label)
     host.textContent = '';
 
     const heading = document.createElement('h4');
-    heading.textContent = `${label} — ${expansion.name}`;
+    heading.textContent = `${label} - ${expansion.name}`;
     host.appendChild(heading);
 
     const note = document.createElement('p');

@@ -67,13 +67,13 @@ const LAYOUT = {
 const UNIT_FONT_SIZE = 10;
 
 /*
- * The target frame's own colours, taken from the client rather than inferred from the art.
+ * The target frame's own colors, taken from the client rather than inferred from the art.
  *
  * The health bar is green for every unit — `UnitFrameHealthBar_Update` calls
- * `SetStatusBarColor(0.0, 1.0, 0.0)` and TargetFrame.lua never recolours its bars. Reaction is
+ * `SetStatusBarColor(0.0, 1.0, 0.0)` and TargetFrame.lua never recolors its bars. Reaction is
  * carried by the tinted name background instead, which is the whole reason that texture is there.
  *
- * The name is gold because nothing recolours it: it keeps GameFontNormalSmall's own
+ * The name is gold because nothing recolors it: it keeps GameFontNormalSmall's own
  * `<Color r="1.0" g="0.82" b="0"/>`. The level text is set to the same gold explicitly, in
  * TargetFrame_CheckLevel.
  */
@@ -84,7 +84,7 @@ const FONTS = {
     title: (px) => `${px}px AstralGame, Georgia, "Times New Roman", serif`,
     body: (px) => `${px}px AstralGame, Georgia, "Times New Roman", serif`,
     /*
-     * Flavour text is upright, not italic. WoW sets it apart by colour — the gold of
+     * Flavor text is upright, not italic. WoW sets it apart by color — the gold of
      * GameFontNormal — and never by slant: the client ships a single FRIZQT__.TTF with no italic
      * face, so asking for one only got a synthesised oblique that the game never shows.
      */
@@ -315,21 +315,21 @@ function art(name)
     return image && image.complete && image.naturalWidth ? image : null;
 }
 
-const opaqueCentreCache = new Map();
+const opaqueCenterCache = new Map();
 
 /**
  * Where a texture's visible pixels actually sit inside its own bounds, as a fraction of size.
  *
- * The skull is padded asymmetrically inside its 32x32 texture, so drawing the texture centred
- * leaves the skull visibly off-centre in the level ring — measured at roughly two pixels up and
+ * The skull is padded asymmetrically inside its 32x32 texture, so drawing the texture centered
+ * leaves the skull visibly off-center in the level ring — measured at roughly two pixels up and
  * to the right. Measuring the opaque bounds once and correcting by the difference fixes it for
  * any texture without hand-tuned offsets.
  */
-function opaqueCentre(image, key)
+function opaqueCenter(image, key)
 {
-    if (opaqueCentreCache.has(key))
+    if (opaqueCenterCache.has(key))
     {
-        return opaqueCentreCache.get(key);
+        return opaqueCenterCache.get(key);
     }
 
     let result = { dx: 0, dy: 0 };
@@ -362,7 +362,7 @@ function opaqueCentre(image, key)
 
         if (maxX >= 0)
         {
-            // Offset of the visible centre from the texture centre, normalised to 0..1.
+            // Offset of the visible center from the texture center, normalized to 0..1.
             result = {
                 dx: ((minX + maxX) / 2 - (probe.width - 1) / 2) / probe.width,
                 dy: ((minY + maxY) / 2 - (probe.height - 1) / 2) / probe.height
@@ -371,10 +371,10 @@ function opaqueCentre(image, key)
     }
     catch
     {
-        // If the pixels cannot be read, drawing centred is still a reasonable approximation.
+        // If the pixels cannot be read, drawing centered is still a reasonable approximation.
     }
 
-    opaqueCentreCache.set(key, result);
+    opaqueCenterCache.set(key, result);
     return result;
 }
 
@@ -391,7 +391,7 @@ function drawSocket(ctx, cmd, scale)
         return;
     }
 
-    // Fallback if the extracted art is missing: a coloured slot outline.
+    // Fallback if the extracted art is missing: a colored slot outline.
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.75)';
     ctx.strokeStyle = def ? def.color : '#808080';
@@ -519,7 +519,7 @@ function renderTooltip(lines, opts, scale)
 
 /* ------------------------------------------------------------------------- unit frame */
 
-/** Fills one bar slot: dark trough, coloured portion, then a soft highlight along the top. */
+/** Fills one bar slot: dark trough, colored portion, then a soft highlight along the top. */
 /** Turns off the canvas shadow again, so it cannot leak into whatever is drawn next. */
 function clearShadow(ctx)
 {
@@ -549,9 +549,9 @@ function drawOutlined(ctx, text, x, y, scale)
 const tintCache = new Map();
 
 /**
- * A client texture recoloured, the way the game's SetVertexColor does it.
+ * A client texture recolored, the way the game's SetVertexColor does it.
  *
- * The frame art is greyscale and gets its colour at draw time — the name background is one
+ * The frame art is grayscale and gets its color at draw time — the name background is one
  * texture that the client tints red, yellow or green. Multiplying keeps the texture's own shading
  * instead of flattening it to a solid block, and the result is cached because a render redraws
  * this on every keystroke.
@@ -769,12 +769,12 @@ function renderUnitFrame(state, opts, scale)
      * 5. The name itself, in white.
      *
      * TargetFrame.xml gives $parentName as GameFontNormalSmall — Friz Quadrata at 10 with a
-     * 1,-1 black shadow, not Arial and not 11. The reaction colour is carried by the background
+     * 1,-1 black shadow, not Arial and not 11. The reaction color is carried by the background
      * behind it now, as in game: the client leaves this font at its default and never tints it.
      */
     ctx.font = FONTS.body(UNIT_FONT_SIZE * scale);
     ctx.fillStyle = UNIT_NAME_COLOR;
-    // $parentName sets no justifyH, so it takes the XML default and centres over its background.
+    // $parentName sets no justifyH, so it takes the XML default and centers over its background.
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
@@ -788,7 +788,7 @@ function renderUnitFrame(state, opts, scale)
     /*
      * 6. Values on the bars — TextStatusBarText, so Friz Quadrata 10 with a black outline.
      *
-     * Centred on the bar rather than sitting above it. The client's status bar is 12 tall against
+     * Centered on the bar rather than sitting above it. The client's status bar is 12 tall against
      * the 7 of visible cut-out here, and its text is drawn on a layer above the frame art, so in
      * game the digits overlap the border — which is why they are outlined at all.
      */
@@ -822,9 +822,9 @@ function renderUnitFrame(state, opts, scale)
         if (skull)
         {
             const size = 19 * scale;
-            const shift = opaqueCentre(skull, 'unit-skull');
+            const shift = opaqueCenter(skull, 'unit-skull');
 
-            // Subtract the texture's own off-centre bias so the skull, not its bounding box,
+            // Subtract the texture's own off-center bias so the skull, not its bounding box,
             // lands on the middle of the ring.
             ctx.drawImage(
                 skull,
@@ -844,9 +844,9 @@ function renderUnitFrame(state, opts, scale)
         ctx.shadowOffsetY = scale;
 
         /*
-         * 'middle' centres the glyphs on the point given. Deriving the offset from
+         * 'middle' centers the glyphs on the point given. Deriving the offset from
          * actualBoundingBoxAscent was tried and abandoned: the metric is not reliably populated
-         * here, and treating a zero as real puts the baseline itself on the ring centre, leaving
+         * here, and treating a zero as real puts the baseline itself on the ring center, leaving
          * the number floating well above it.
          */
         ctx.textAlign = 'center';
@@ -1000,7 +1000,7 @@ function renderAchievement(state, opts, scale)
      * 1. The parchment.
      *
      * An unearned achievement uses the desaturated copy of the texture rather than a filter over
-     * the coloured one — the client ships both, so there is nothing to approximate.
+     * the colored one — the client ships both, so there is nothing to approximate.
      */
     const parchment = art(earned ? 'ach-parchment' : 'ach-parchment-desaturated')
         || art('ach-parchment');
@@ -1137,14 +1137,14 @@ function renderAchievement(state, opts, scale)
         const label = String(points);
 
         ctx.font = FONTS.title(F.points * scale);
-        // An unearned achievement greys its points out, as the shield beside them is greyed.
+        // An unearned achievement grays its points out, as the shield beside them is grayed.
         ctx.fillStyle = earned ? COLORS.points : 'rgba(150,150,150,1)';
         ctx.textAlign = 'center';
 
         /*
-         * Centred on the digits, not on the em box.
+         * Centered on the digits, not on the em box.
          *
-         * textBaseline 'middle' centres the font's whole em square — ascender, descender and all —
+         * textBaseline 'middle' centers the font's whole em square — ascender, descender and all —
          * and a number has no descender to fill the bottom of it, so the digits were being pushed
          * visibly low in the shield. Measuring the glyphs and centring those puts the number where
          * the eye expects it.
@@ -1159,7 +1159,7 @@ function renderAchievement(state, opts, scale)
         ctx.textBaseline = 'top';
     }
 
-    /* 6. The title, centred on its strip. Clipped rather than wrapped: the strip is one line. */
+    /* 6. The title, centered on its strip. Clipped rather than wrapped: the strip is one line. */
     ctx.font = FONTS.title(F.title * scale);
     ctx.fillStyle = COLORS.title;
     ctx.textAlign = 'center';
@@ -1174,7 +1174,7 @@ function renderAchievement(state, opts, scale)
         ctx.restore();
     }
 
-    /* 7. The description, centred and wrapped; its lines were measured above. */
+    /* 7. The description, centered and wrapped; its lines were measured above. */
     ctx.font = FONTS.body(F.description * scale);
     ctx.fillStyle = COLORS.description;
     ctx.textAlign = 'center';
@@ -1277,8 +1277,8 @@ const CHAT = {
 /**
  * Draws a run of chat lines as the frame would print them.
  *
- * Each line carries its own colour, which is the whole point of the window: a say, a yell and an
- * emote are three different colours in game, and a script written down in one colour loses the
+ * Each line carries its own color, which is the whole point of the window: a say, a yell and an
+ * emote are three different colors in game, and a script written down in one color loses the
  * thing that makes it readable.
  */
 function renderChat(lines, opts, scale)
@@ -1300,6 +1300,15 @@ function renderChat(lines, opts, scale)
 
     for (const line of lines)
     {
+        /*
+         * The trigger is the program's own annotation rather than something the game prints, so it
+         * sits in front of the quote in muted gray and leaves the line's own color alone.
+         */
+        if (line.trigger)
+        {
+            wrapped.push({ text: line.trigger, color: '#8992ab', small: true });
+        }
+
         const words = String(line.text || '').split(/\s+/).filter(Boolean);
         let current = '';
 
@@ -1326,7 +1335,8 @@ function renderChat(lines, opts, scale)
         Math.max(1, ...wrapped.map((line) => scratch.measureText(line.text).width))
     ) + padding * 2);
 
-    const height = Math.ceil(wrapped.length * (size + gap) - gap + padding * 2);
+    const height = Math.ceil(wrapped.reduce((total, line) =>
+        total + (line.small ? size * 0.95 : size) + gap, 0) - gap + padding * 2);
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -1351,6 +1361,8 @@ function renderChat(lines, opts, scale)
 
     for (const line of wrapped)
     {
+        ctx.font = line.small ? FONTS.body(size * 0.82) : font;
+
         /* The game draws chat with a hard shadow one pixel down and right; without it, pale
            yellow on a light screenshot is unreadable. */
         ctx.fillStyle = CHAT.shadow;
@@ -1359,7 +1371,7 @@ function renderChat(lines, opts, scale)
         ctx.fillStyle = line.color || '#ffffff';
         ctx.fillText(line.text, padding, y);
 
-        y += size + gap;
+        y += (line.small ? size * 0.95 : size) + gap;
     }
 
     return canvas;

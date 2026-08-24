@@ -16,6 +16,7 @@ const path = require('path');
 const url = require('url');
 
 const { ClientAssets } = require('../lib/client-assets');
+const { PortraitCameras } = require('../lib/portrait-camera');
 const { Settings } = require('../lib/settings');
 const { WorldDb } = require('../lib/world-db');
 const { Instances } = require('../lib/instances');
@@ -24,6 +25,8 @@ const { Spells } = require('../lib/spells');
 const { Achievements } = require('../lib/achievements');
 const { ItemDisplay } = require('../lib/items');
 const { ItemBudget } = require('../lib/item-budget');
+const { Raids } = require('../lib/raids');
+const { Saved } = require('../lib/saved');
 const routes = require('../lib/routes');
 
 const PUBLIC = path.join(__dirname, '..', 'public');
@@ -37,6 +40,9 @@ let spells = null;
 let achievements = null;
 let itemDisplay = null;
 let itemBudget = null;
+let raids = null;
+let saved = null;
+let portraitCameras = null;
 
 protocol.registerSchemesAsPrivileged([
     {
@@ -158,6 +164,7 @@ function reopenClient()
     if (achievements) { achievements.reset(); }
     if (itemDisplay) { itemDisplay.reset(); }
     if (itemBudget) { itemBudget.reset(); }
+    if (portraitCameras) { portraitCameras.reset(); }
 
     return assets.open(settings.data.clientPath);
 }
@@ -188,6 +195,9 @@ app.whenReady().then(() =>
     achievements = new Achievements(assets);
     itemDisplay = new ItemDisplay(assets);
     itemBudget = new ItemBudget(assets);
+    raids = new Raids(path.join(userData, 'raids'));
+    saved = new Saved(path.join(userData, 'saved'));
+    portraitCameras = new PortraitCameras(assets);
 
     if (settings.data.clientPath)
     {
@@ -207,7 +217,7 @@ app.whenReady().then(() =>
         const result = await routes.handle(
             {
             assets, settings, worldDb, instances, customIcons, spells, achievements,
-            itemDisplay, itemBudget, reopenClient
+            itemDisplay, itemBudget, raids, saved, portraitCameras, reopenClient
         },
             parsed.pathname,
             parsed.searchParams,

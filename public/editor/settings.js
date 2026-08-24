@@ -23,7 +23,7 @@ function paintBadges(db)
     client.textContent = ready ? 'client: connected' : 'client: not connected';
     client.className = ready ? 'badge ok' : 'badge off';
     client.title = ready
-        ? `${runtime.clientStatus.clientPath} — ${runtime.clientStatus.iconCount.toLocaleString()} icons`
+        ? `${runtime.clientStatus.clientPath} - ${runtime.clientStatus.iconCount.toLocaleString()} icons`
         : 'Open Settings and point at your 3.3.5a folder';
 
     const badge = $('#db-badge');
@@ -32,7 +32,7 @@ function paintBadges(db)
     badge.textContent = connected ? 'database: connected' : 'database: not connected';
     badge.className = connected ? 'badge ok' : 'badge off';
     badge.title = connected
-        ? 'World database connected — creature, item and loot search are available'
+        ? 'World database connected - creature, item and loot search are available'
         : (db && db.error) || 'Connect your world database in Settings';
 }
 
@@ -86,7 +86,7 @@ async function applyClientPath(pathValue)
         const client = result.client || {};
 
         $('#client-status').textContent = client.ok
-            ? `Ready — ${client.icons.toLocaleString()} icons available.`
+            ? `Ready - ${client.icons.toLocaleString()} icons available.`
             : `Could not use that folder: ${client.reason || 'unknown error'}`;
 
         await refreshStatus();
@@ -130,7 +130,7 @@ async function applyDbSettings()
         const outcome = result.db || {};
 
         $('#db-status').textContent = outcome.ok
-            ? `Connected — ${outcome.creatures.toLocaleString()} creatures.`
+            ? `Connected - ${outcome.creatures.toLocaleString()} creatures.`
             : `Not connected: ${outcome.reason || 'unknown error'}`;
 
         await refreshStatus();

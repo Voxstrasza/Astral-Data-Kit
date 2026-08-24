@@ -41,7 +41,7 @@ price outright. Read straight off the single-stat suffixes:
 1.5 to 1.
 
 **The multiplier between the two was fitted**, by grid search over 1,779 clean epics — no set
-bonus, no on-use effect, no resilience — minimising median absolute error:
+bonus, no on-use effect, no resilience — minimizing median absolute error:
 
 ```
 budget = RandPropPoints(ilvl, quality, slot) x 1.890   (epic; 1.730 rare)
@@ -50,12 +50,12 @@ budget = RandPropPoints(ilvl, quality, slot) x 1.890   (epic; 1.730 rare)
 
 Half of all real items land within **1.7%** of that. It is a sharp optimum: 1.88 or 1.90 each cost
 a third of a percent of accuracy. A socket costs a flat 15 points whatever the item level, and a
-socket bonus costs nothing — matching colours is the reward, not something the item pays for.
+socket bonus costs nothing — matching colors is the reward, not something the item pays for.
 
 ### What that settles from the old working-out
 
-- **Armour needs no curve of its own.** It never came out of the stat budget: armour is fixed by
-  slot, item level and armour class, which is why a cloth and a plate chest of the same item level
+- **Armor needs no curve of its own.** It never came out of the stat budget: armor is fixed by
+  slot, item level and armor class, which is why a cloth and a plate chest of the same item level
   carry the same stats. The old sampled jumps were off-set pieces, as suspected.
 - **Slot modifiers are the five columns**, not something to derive. Confirmed by measuring: with
   the costs above applied, head/chest/legs land on 1.86, shoulders/waist/feet/hands on 1.87 and
@@ -84,9 +84,9 @@ being integer rounding of the damage range. Not an average hiding a spread — a
 | 264 | 226.6 | 294.7 | 131.1 | — | 253.2 | 416.4 |
 | 277 | 250.6 | 325.7 | 154.7 | 230.0 | 288.8 | 460.3 |
 
-**But a weapon is not budgeted apart from armour** — it spends part of the same allowance on its
+**But a weapon is not budgeted apart from armor** — it spends part of the same allowance on its
 damage, and this is what the first version of the generator got wrong. A melee weapon carrying the
-full dps for its level lands on the same 1.89 as armour (one-hand 1.89, ranged 1.88, wand 1.89). A
+full dps for its level lands on the same 1.89 as armor (one-hand 1.89, ranged 1.88, wand 1.89). A
 caster weapon carries about 60% of that damage and is paid the difference in stats:
 
 ```
@@ -94,7 +94,7 @@ budget = RandPropPoints x 1.89 + (melee dps for the slot - actual dps) x 6.19
 ```
 
 The exchange rate is what makes it a rule rather than a fit: taking each caster weapon's stats
-above the armour budget and dividing by the dps it gives up gives **6.18** for one-handers and
+above the armor budget and dividing by the dps it gives up gives **6.18** for one-handers and
 **6.19** for two-handers — the same number out of two separate samples. It reproduces the whole
 set, a caster one-hander coming out at 6.4 times its slot's points against 6.5 measured.
 
@@ -390,7 +390,7 @@ The health formula checks out end to end: `creature_classlevelstats` at level 83
 - **Ulduar is two buttons, not four.** Its hard modes are in-encounter, not separate entries:
   Flame Leviathan 33113 → 34003, XT-002 33293 → 33885, Freya 32906 → 33360, Algalon 32871 → 33070,
   each with `_2` and `_3` empty. "ToC onwards" is the right cut-off.
-- **Onyxia is the exception to "Classic has no buttons", and resolves in our favour.** The 3.3.5a
+- **Onyxia is the exception to "Classic has no buttons", and resolves in our favor.** The 3.3.5a
   Onyxia (10184) was retuned in 3.2.2, carries `difficulty_entry_1` → 36538 (HP mod 350 → 1600) and
   is flagged `exp = 2`, so grouping by expansion files her under WotLK where her 10/25 buttons
   belong — not under Classic where they would look wrong.
@@ -588,11 +588,11 @@ at a time.
 **Built as the Texts window.** A list of lines, each with its speaker, its kind and its words, drawn
 as the chat frame would print them — so two NPCs trading lines read as the exchange they are.
 
-The colours are the client's own, not a guess at them. `Interface\FrameXML\GlobalStrings.lua` has
+The colors are the client's own, not a guess at them. `Interface\FrameXML\GlobalStrings.lua` has
 the sentences (`CHAT_MONSTER_SAY_GET = "%s says:\32"`, and the `\32` is the space after the colon),
 and the client's `chat-cache.txt` has the RGB it prints them in:
 
-| kind | colour | |
+| kind | color | |
 |---|---|---|
 | say | 255 255 159 | a pale yellow — **not** white, which is the commonest way a mocked-up log looks wrong |
 | yell | 255 64 64 | |
@@ -623,3 +623,73 @@ is that it would answer a question nobody using this window is asking.
   remembering how the game phrases them.
 
 Fits beside item 4: an encounter's script and its mechanics are the same design, written down twice.
+
+---
+
+## 9. Live portraits, drawn from the client's own models - **v2.0.0**
+
+*In progress. The data half is built and verified; the rendering half is the work left, and it is
+the piece that makes the result exact rather than close.*
+
+The client ships no portrait images for units. `SetPortraitTexture` renders the model live each
+frame, framed by a camera stored inside the model file itself - so the framing everyone recognises
+is not a UI rule, it is per-model artwork, and it is sitting in the client the user already pointed
+the app at.
+
+### Built and verified
+
+- **`lib/portrait-camera.js`** resolves a display id to that camera, entirely offline:
+  `CreatureDisplayInfo` -> ModelID -> `CreatureModelData` -> the `.m2` in the MPQs -> camera type 0.
+  Served at `/api/portrait-camera?displayId=`.
+- **`CreatureDisplayInfo.PortraitTextureName`** (field 9) - 138 displays name an icon and the client
+  draws that instead of rendering anything, which is how a creature on an invisible model still
+  shows something. All 138 resolve to icons the client ships. Astral now checks this first, so those
+  portraits cost about 5ms and no model load at all.
+- **Framing maths**, each item checked against the client's data or the format spec rather than by
+  eye: the `fov` field is a *diagonal* FOV (`vfov = dfov / sqrt(1 + aspect^2)`), model size comes
+  from `CreatureModelData`'s GeoBox (fields 17-22) and never from walking vertices, and the scale so
+  derived matches `CreatureModelScale x ModelScale` exactly on every model tested.
+
+### The problem, and why the next step is a renderer
+
+Portraits are currently drawn by aiming that camera at a **remote** model viewer, whose assets are a
+modern conversion rather than the 3.3.5 model the camera belongs to. Every awkward correction in the
+pipeline exists only because the mesh and the camera come from different places - a scale ratio, a
+quarter-turn of orientation, and the standing possibility that a remade mesh simply does not match
+its old camera. The framing comes out tight, by an amount that differs per model, which is exactly
+what a mesh mismatch would look like.
+
+**Drawing the client's own M2 removes all of it.** The camera is then correct by construction: same
+file, same units, same axes, no ratio and no turn. It also drops the internet dependency, the proxy
+and the upstream 404s.
+
+### What that needs, and what already exists
+
+Everything to be read is reachable and was checked on a real client:
+
+| piece | where | state |
+|---|---|---|
+| vertices | `.m2`, `nVertices` at 0x3c, 48 bytes each | reads |
+| triangles, submeshes | matching `00.skin` | reads - 9,029 triangles for the Lich King |
+| texture names | `.m2` texture block at 0x50 | reads |
+| skin variations | `CreatureDisplayInfo.TextureVariation[0..2]` | reads |
+| BLP decoding | **`lib/wow/blp.js`** | already in the repo |
+| PNG output | **`lib/wow/png.js`** | already in the repo |
+| the camera | `lib/portrait-camera.js` | built |
+
+So the work is a still-frame rasteriser - perspective transform, z-buffer, texture sampling - plus
+geoset selection from `CreatureGeosetData` and following the texture lookup tables. No animation, no
+bones, no particles: a portrait is one frame of a model standing still.
+
+### Known risks
+
+- **Bind pose.** M2 vertices are stored in the bind pose, so a portrait would show a neutral stance
+  rather than the idle animation the game renders. Framing exact, pose possibly stiff.
+- **Render flags.** Alpha test, two-sided faces and blending need enough handling that hair, capes
+  and wings do not come out wrong.
+
+### Suggested first step
+
+Geometry and camera only - flat shaded, no textures - to confirm the framing lands correctly before
+committing to the full renderer. That answers the one question everything else depends on for a
+fraction of the work.

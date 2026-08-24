@@ -37,7 +37,7 @@ function applySpell(spell)
     setIcon(state.spellIcon);
     update();
 
-    status(`Loaded ${spell.name}${spell.rank ? ` (${spell.rank})` : ''} — spell ${spell.id}`);
+    status(`Loaded ${spell.name}${spell.rank ? ` (${spell.rank})` : ''} - spell ${spell.id}`);
 }
 
 function renderSpellResults(results)

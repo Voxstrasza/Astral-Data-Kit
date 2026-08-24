@@ -8,7 +8,7 @@
  * derived from the names, most specific rule first.
  *
  * The order matters. `inv_` covers nearly half the set and means only "an inventory item", so the
- * armour and weapon rules have to be tested before it or everything lands in Misc. Anything that
+ * armor and weapon rules have to be tested before it or everything lands in Misc. Anything that
  * matches nothing falls through to Misc rather than being hidden.
  */
 

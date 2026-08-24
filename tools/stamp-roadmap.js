@@ -55,11 +55,11 @@ const NEW_CARDS = [
             'emotes it performs, in the order they happen — a fight’s script written as a whole rather',
             'than a line at a time.'
         ],
-        /* A chat frame, in the colours the game prints those lines in. */
+        /* A chat frame, in the colors the game prints those lines in. */
         chat: [
-            { text: 'The Lich King yells: Frostmourne hungers…', colour: '#ff4d4d' },
-            { text: 'Highlord Tirion Fordring says: Hold, champions.', colour: '#f2f4f8' },
-            { text: 'The Lich King raises his blade.', colour: '#ff9c40' }
+            { text: 'The Lich King yells: Frostmourne hungers…', color: '#ff4d4d' },
+            { text: 'Highlord Tirion Fordring says: Hold, champions.', color: '#f2f4f8' },
+            { text: 'The Lich King raises his blade.', color: '#ff9c40' }
         ],
         footnote: {
             label: 'ALREADY HAVE',
@@ -83,8 +83,8 @@ const NEW_CARDS = [
 const HEADER = {
     paint: { x: 430, y: 40, w: 2750, h: 292 },
     sampleX: 2200,
-    lead: { text: 'Astral 3.3.5a Data Kit ', colour: '#f2f4f8' },
-    tail: { text: 'Roadmap', colour: '#ffd100' },
+    lead: { text: 'Astral 3.3.5a Data Kit ', color: '#f2f4f8' },
+    tail: { text: 'Roadmap', color: '#ffd100' },
     x: 459,
     baseline: 192,
     size: 86
@@ -97,8 +97,8 @@ const HEADER = {
  *   window is not, so both wait rather than ship half-right.
  */
 const ON_HOLD = [
-    { label: 'ON HOLD', colour: '#ffb020', x0: 99, y0: 412, x1: 2080, y1: 1209 },
-    { label: 'ON HOLD', colour: '#ffb020', x0: 2128, y0: 412, x1: 3144, y1: 1209 }
+    { label: 'ON HOLD', color: '#ffb020', x0: 99, y0: 412, x1: 2080, y1: 1209 },
+    { label: 'ON HOLD', color: '#ffb020', x0: 2128, y0: 412, x1: 3144, y1: 1209 }
 ];
 
 const GREEN = '#3ddc55';
@@ -144,8 +144,8 @@ app.whenReady().then(async () =>
         const GREEN = ${JSON.stringify(GREEN)};
         const GOLD = ${JSON.stringify(GOLD)};
         const PANEL = ${JSON.stringify(PANEL)};
-        const TITLE_COLOUR = ${JSON.stringify(TITLE)};
-        const BODY_COLOUR = ${JSON.stringify(BODY)};
+        const TITLE_COLOR = ${JSON.stringify(TITLE)};
+        const BODY_COLOR = ${JSON.stringify(BODY)};
         const FOOTER_TOP = ${FOOTER_TOP};
 
         const GAP = 38;               // the gutter between card rows in the original
@@ -185,7 +185,7 @@ app.whenReady().then(async () =>
          * card bleeds into the gutter when it is a few pixels out. A stamp floating in the middle
          * cannot be misaligned that way.
          */
-        const stampCard = (card, label, colour, plate) => {
+        const stampCard = (card, label, color, plate) => {
             const cx = (card.x0 + card.x1) / 2;
             const cy = (card.y0 + card.y1) / 2;
             const cardW = card.x1 - card.x0;
@@ -209,7 +209,7 @@ app.whenReady().then(async () =>
             const boxH = size + padY * 2;
 
             ctx.globalAlpha = 0.92;
-            ctx.strokeStyle = colour;
+            ctx.strokeStyle = color;
             ctx.lineWidth = Math.max(6, size * 0.075);
             ctx.beginPath();
             ctx.roundRect(-boxW / 2, -boxH / 2, boxW, boxH, size * 0.16);
@@ -225,7 +225,7 @@ app.whenReady().then(async () =>
             ctx.textBaseline = 'middle';
             ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
             ctx.shadowBlur = size * 0.14;
-            ctx.fillStyle = colour;
+            ctx.fillStyle = color;
             ctx.fillText(label, 0, size * 0.04);
 
             ctx.restore();
@@ -279,9 +279,9 @@ app.whenReady().then(async () =>
             ctx.fillText(card.number, badge.x + badge.size / 2, badge.y + badge.size / 2 + 2);
             ctx.restore();
 
-            // The title, on the badge's centre line.
+            // The title, on the badge's center line.
             ctx.save();
-            ctx.fillStyle = TITLE_COLOUR;
+            ctx.fillStyle = TITLE_COLOR;
             ctx.font = '600 46px "Segoe UI", Arial, sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
@@ -290,7 +290,7 @@ app.whenReady().then(async () =>
 
             // The description, left half.
             ctx.save();
-            ctx.fillStyle = BODY_COLOUR;
+            ctx.fillStyle = BODY_COLOR;
             ctx.font = '400 30px "Segoe UI", Arial, sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
@@ -324,7 +324,7 @@ app.whenReady().then(async () =>
 
                 let chatY = box.y + 52;
                 for (const line of card.chat) {
-                    ctx.fillStyle = line.colour;
+                    ctx.fillStyle = line.color;
                     ctx.fillText(line.text, box.x + 28, chatY);
                     chatY += 46;
                 }
@@ -353,7 +353,7 @@ app.whenReady().then(async () =>
                 ctx.textBaseline = 'alphabetic';
                 ctx.fillText(card.footnote.label, MARGIN_X + PAD, noteY + 38);
                 ctx.letterSpacing = '0px';
-                ctx.fillStyle = BODY_COLOUR;
+                ctx.fillStyle = BODY_COLOR;
                 ctx.font = '400 27px "Segoe UI", Arial, sans-serif';
                 ctx.fillText(card.footnote.text, MARGIN_X + PAD, noteY + 76);
                 ctx.restore();
@@ -369,7 +369,7 @@ app.whenReady().then(async () =>
 
         /*
          * The idea count in the header. Covered with a patch of the background beside it rather
-         * than a guessed colour, so the header's own gradient carries through.
+         * than a guessed color, so the header's own gradient carries through.
          */
         if (HEADER) {
             ctx.save();
@@ -378,9 +378,9 @@ app.whenReady().then(async () =>
              * Repaint the strip a row at a time, as a gradient between the background just outside
              * each end of it.
              *
-             * A single sampled colour was tried first and left a visible rectangle: the header's
+             * A single sampled color was tried first and left a visible rectangle: the header's
              * background falls off from left to right as well as top to bottom, so a flat fill is
-             * the right colour only in the middle. Reading both ends and interpolating between
+             * the right color only in the middle. Reading both ends and interpolating between
              * them matches the picture in both directions and leaves no seam.
              */
             for (let row = 0; row < HEADER.paint.h; row++) {
@@ -401,20 +401,20 @@ app.whenReady().then(async () =>
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
             ctx.font = '300 ' + HEADER.size + 'px "Segoe UI", Arial, sans-serif';
-            ctx.fillStyle = HEADER.lead.colour;
+            ctx.fillStyle = HEADER.lead.color;
             ctx.fillText(HEADER.lead.text, HEADER.x, HEADER.baseline);
 
             const leadWidth = ctx.measureText(HEADER.lead.text).width;
 
             ctx.font = '700 ' + HEADER.size + 'px "Segoe UI", Arial, sans-serif';
-            ctx.fillStyle = HEADER.tail.colour;
+            ctx.fillStyle = HEADER.tail.color;
             ctx.fillText(HEADER.tail.text, HEADER.x + leadWidth, HEADER.baseline);
 
             ctx.restore();
         }
 
         for (const card of ON_HOLD) {
-            stampCard(card, card.label, card.colour, '#1a1204');
+            stampCard(card, card.label, card.color, '#1a1204');
         }
 
         /*

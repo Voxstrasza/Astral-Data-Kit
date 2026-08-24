@@ -18,6 +18,9 @@ const { Spells } = require('./lib/spells');
 const { Achievements } = require('./lib/achievements');
 const { ItemDisplay } = require('./lib/items');
 const { ItemBudget } = require('./lib/item-budget');
+const { Raids } = require('./lib/raids');
+const { Saved } = require('./lib/saved');
+const { PortraitCameras } = require('./lib/portrait-camera');
 const routes = require('./lib/routes');
 
 const PORT = Number(process.env.PORT) || 4173;
@@ -43,6 +46,9 @@ const spells = new Spells(assets);
 const achievements = new Achievements(assets);
 const itemDisplay = new ItemDisplay(assets);
 const itemBudget = new ItemBudget(assets);
+const raids = new Raids(path.join(DATA, 'raids'));
+const saved = new Saved(path.join(DATA, 'saved'));
+const portraitCameras = new PortraitCameras(assets);
 
 const reopenClient = () =>
 {
@@ -52,6 +58,7 @@ const reopenClient = () =>
     achievements.reset();
     itemDisplay.reset();
     itemBudget.reset();
+    portraitCameras.reset();
     return assets.open(settings.data.clientPath);
 };
 
@@ -87,7 +94,7 @@ const server = http.createServer(async (req, res) =>
         result = await routes.handle(
             {
                 assets, settings, worldDb, instances, customIcons, spells, achievements,
-                itemDisplay, itemBudget, reopenClient
+                itemDisplay, itemBudget, raids, saved, portraitCameras, reopenClient
             },
             parsed.pathname,
             parsed.searchParams,
@@ -137,7 +144,7 @@ const server = http.createServer(async (req, res) =>
 server.listen(PORT, () =>
 {
     const url = `http://localhost:${PORT}/`;
-    console.log(`Astral — a 3.3.5a Data Kit running at ${url}`);
+    console.log(`Astral - a 3.3.5a Data Kit running at ${url}`);
     console.log(assets.ready
         ? `client: ${settings.data.clientPath} (${assets.icons.size} icons)`
         : 'client: not configured');

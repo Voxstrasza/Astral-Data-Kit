@@ -49,7 +49,7 @@ function applyNpc(npc)
     syncForm();
     update();
 
-    const pool = npc.health > 0 ? ` — ${npc.health.toLocaleString()} HP` : '';
+    const pool = npc.health > 0 ? ` - ${npc.health.toLocaleString()} HP` : '';
     status(`Loaded ${npc.name} (entry ${npc.entry})${pool}`);
 }
 

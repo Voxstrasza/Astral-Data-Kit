@@ -7,6 +7,30 @@ import { state } from './state.js';
 import { update } from './preview.js';
 import { M } from './wow.js';
 
+/**
+ * Fills the trigger field's suggestion list from the model.
+ *
+ * The list lived in the HTML as well as in tooltip.js, which is two lists to keep in step and one
+ * of them silently unused. The model owns what the client can say, so it owns this too; the
+ * datalist in index.html is left empty for it.
+ */
+function fillTriggers()
+{
+    const list = $('#chat-triggers');
+
+    if (!list || list.childElementCount)
+    {
+        return;
+    }
+
+    for (const trigger of M.CHAT_TRIGGERS)
+    {
+        const option = document.createElement('option');
+        option.value = trigger;
+        list.appendChild(option);
+    }
+}
+
 function del(list, index)
 {
     return button('×', 'del', () =>
@@ -22,12 +46,32 @@ const LIST_RENDERERS = {
      * One spoken line: who, how, and what. The type sits between the name and the words because
      * that is the order the sentence reads in — "Lord Marrowgar" "yells:" "Bonestorm!".
      */
-    textLines: (item, i) => row(
-        input('text', item.speaker, (v) => { item.speaker = v; update(); }, 'Speaker', '150px'),
-        select(M.CHAT_TYPE_OPTIONS, item.type, (v) => { item.type = v; update(); }),
-        input('text', item.text, (v) => { item.text = v; update(); }, 'What they say', ''),
-        del('textLines', i)
-    ),
+    textLines: (item, i) =>
+    {
+        /*
+         * The trigger is a typed field with suggestions behind it rather than a dropdown: the
+         * common moments are worth offering, but the interesting ones are specific to a fight.
+         */
+        const when = input('text', item.trigger, (v) => { item.trigger = v; update(); },
+            'When - on aggro, on death…', '150px');
+
+        fillTriggers();
+        when.setAttribute('list', 'chat-triggers');
+        when.classList.add('chat-when');
+
+        const said = input('text', item.text, (v) => { item.text = v; update(); }, 'What they say', '');
+
+        /* The words are the point of the row, so they take whatever the other fields leave. */
+        said.classList.add('chat-said');
+
+        return row(
+            input('text', item.speaker, (v) => { item.speaker = v; update(); }, 'Speaker', '130px'),
+            select(M.CHAT_TYPE_OPTIONS, item.type, (v) => { item.type = v; update(); }),
+            when,
+            said,
+            del('textLines', i)
+        );
+    },
 
     stats: (item, i) => row(
         select(M.STAT_TYPES, item.type, (v) => { item.type = v; update(); }),
@@ -162,7 +206,12 @@ const LIST_DEFAULTS = {
     {
         const previous = (state.textLines || [])[state.textLines.length - 1];
 
-        return { speaker: previous ? previous.speaker : '', type: previous ? previous.type : 'say', text: '' };
+        return {
+            speaker: previous ? previous.speaker : '',
+            type: previous ? previous.type : 'say',
+            trigger: '',
+            text: ''
+        };
     }
 };
 
@@ -182,4 +231,4 @@ function renderLists()
     }
 }
 
-export { renderLists, LIST_DEFAULTS };
+export { renderLists, LIST_DEFAULTS, fillTriggers };

@@ -9,7 +9,7 @@
  *   { l, r, lc, rc, kind }
  *
  * `l`/`r` are the left and right column text (WotLK pairs them: "Two-Hand" ... "Axe"),
- * `lc`/`rc` their colours, and `kind` drives font/spacing: title | body | flavor | gap | socket.
+ * `lc`/`rc` their colors, and `kind` drives font/spacing: title | body | flavor | gap | socket.
  */
 
 const QUALITY = [
@@ -27,11 +27,11 @@ const QUALITY = [
      * The Blizzard blue everyone pictures for heirlooms arrived in Legion, to stop them being
      * confused with the artifacts introduced in that same expansion. In Wrath an heirloom draws in
      * the same light gold as an Artifact, so picking Artifact already produces the right tooltip
-     * and a separate entry would only be a second name for one colour.
+     * and a separate entry would only be a second name for one color.
      *
      * The client says as much twice over: GlobalStrings.lua defines ITEM_QUALITY7_DESC =
      * "Heirloom", so the tier exists, while UIParent.lua builds ITEM_QUALITY_COLORS with
-     * `for i = -1, 6` — the table stops short of 7, because there was no separate colour for it.
+     * `for i = -1, 6` — the table stops short of 7, because there was no separate color for it.
      */
 ];
 
@@ -42,7 +42,7 @@ const C = {
     white: '#ffffff',
     green: '#1eff00',
     gold: '#ffd100',
-    grey: '#9d9d9d',
+    gray: '#9d9d9d',
     red: '#ff2020',
     socketEmpty: '#808080'
 };
@@ -104,12 +104,12 @@ const ITEM_TYPES = [
  * Which Type values each slot can actually take, and what the field is called when it does.
  *
  * In game the second line of an item tooltip is the slot on the left and its subclass on the
- * right, and the subclass is never free-form: a chest is one of the four armour classes, a main
+ * right, and the subclass is never free-form: a chest is one of the four armor classes, a main
  * hand is one of the melee weapon types, a relic is one of the four class relics. Offering all
  * twenty-two types for every slot lets you build a Plate Dagger.
  *
  * Slots that show no subclass at all in 3.3.5a map to an empty list and hide the field — a cloak
- * shows "Back" and its armour value with no armour class beside it, and the same goes for necks,
+ * shows "Back" and its armor value with no armor class beside it, and the same goes for necks,
  * rings, trinkets, shirts, tabards and bags.
  */
 const ARMOR_TYPES = ['Cloth', 'Leather', 'Mail', 'Plate'];
@@ -194,6 +194,39 @@ function formatMoney(gold, silver, copper)
 }
 
 /**
+ * The enrage timer as it is written on a sheet: "Enrage: 10 minutes, 30 seconds".
+ *
+ * A flat ten minutes is spoken as ten minutes, so a zero is left out rather than printed - and the
+ * two fields are added up before being split again, which is what makes "90 seconds" read as one
+ * minute thirty instead of being reported back as typed.
+ *
+ * The icon is the game's own enrage art, named here so the sheet and anything else drawing this
+ * line agree on it.
+ */
+const ENRAGE_ICON = 'spell_shadow_unholyfrenzy';
+
+function enrageLabel(enrage)
+{
+    const whole = (value) => Math.max(0, Math.floor(Number(value) || 0));
+    const total = whole((enrage || {}).minutes) * 60 + whole((enrage || {}).seconds);
+    const minutes = Math.floor(total / 60);
+    const seconds = total % 60;
+    const parts = [];
+
+    if (minutes)
+    {
+        parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`);
+    }
+
+    if (seconds)
+    {
+        parts.push(`${seconds} second${seconds === 1 ? '' : 's'}`);
+    }
+
+    return `Enrage: ${parts.join(', ') || 'no time set'}`;
+}
+
+/**
  * The rank as it appears beside a spell's name.
  *
  * The field takes a bare number and this adds the word, so "4" reads "Rank 4". It also passes
@@ -268,7 +301,7 @@ function buildItemLines(s)
         body(`Unique (${Number(s.uniqueN) || 1})`);
     }
 
-    // Slot on the left, armour/weapon type on the right — WotLK's two-column row.
+    // Slot on the left, armor/weapon type on the right — WotLK's two-column row.
     if (s.slot || s.itemType)
     {
         body(s.slot || '', C.white, s.itemType || '', C.white);
@@ -327,7 +360,7 @@ function buildItemLines(s)
 
     if (s.socketBonus)
     {
-        // Grey because an empty socket set means the bonus is not active, which is how a
+        // Gray because an empty socket set means the bonus is not active, which is how a
         // freshly-linked item looks in game.
         body(`Socket Bonus: ${s.socketBonus}`, C.socketEmpty);
     }
@@ -416,9 +449,9 @@ function buildSpellLines(s)
     const push = (line) => lines.push(line);
     const body = (l, lc = C.white, r = '', rc = C.white) => push({ l, r, lc, rc, kind: 'body' });
 
-    // Name white, rank grey and right-aligned on the same line — matching the in-game tooltip
+    // Name white, rank gray and right-aligned on the same line — matching the in-game tooltip
     // (verified against wotlkdb: name rgb(255,255,255), rank rgb(157,157,157)).
-    push({ l: s.spellName || 'Spell Name', lc: C.white, r: rankLabel(s.rank), rc: C.grey, kind: 'title' });
+    push({ l: s.spellName || 'Spell Name', lc: C.white, r: rankLabel(s.rank), rc: C.gray, kind: 'title' });
 
     /*
      * Cost sits left, range right; cast time left, cooldown right — the in-game arrangement, but
@@ -533,10 +566,10 @@ const UNIT_FRAME = {
     /*
      * The big ring holds the portrait; the small ring below-right holds the level (or a skull).
      *
-     * The portrait is the client's again: a 64x64 texture at (126,12), so centre (158,44) and an
-     * inscribed radius of 32. Casting rays out from that centre through the frame art puts its
+     * The portrait is the client's again: a 64x64 texture at (126,12), so center (158,44) and an
+     * inscribed radius of 32. Casting rays out from that center through the frame art puts its
      * first opaque pixel at a median radius of 28 and never past 30, which says two things — the
-     * centre is right, and a 32 portrait is masked by the ring in every direction.
+     * center is right, and a 32 portrait is masked by the ring in every direction.
      *
      * Drawing it at 27, as this did, is a pixel short of the 28 hole, and the gap shows as a thin
      * ring of background between the portrait and the art. Oversized-and-masked is what the game
@@ -560,7 +593,7 @@ const UNIT_CLASSIFICATIONS = [
     { value: 'boss', label: 'Boss', art: 'unit-frame-elite' }
 ];
 
-/* The health bar and name take the unit's selection colour, as in the default UI. */
+/* The health bar and name take the unit's selection color, as in the default UI. */
 const UNIT_REACTIONS = [
     { value: 'hostile', label: 'Hostile', color: '#ff0000' },
     { value: 'neutral', label: 'Neutral', color: '#ffff00' },
@@ -646,12 +679,12 @@ const ACHIEVEMENT = {
      */
     title: { x: 5, y: 5, w: 424, h: 24, crop: { x: 0, y: 0, w: 0.9765625, h: 0.3125 }, alpha: 0.8 },
 
-    /* $parentLabel: 320x20 centred on the title strip. */
+    /* $parentLabel: 320x20 centered on the title strip. */
     label: { cx: 217, y: 5, w: 320, h: 20 },
 
     /*
      * $parentIcon: a 60x60 frame at (8, -9). Inside it the icon is 50x50 offset (0, 3) from the
-     * centre — and 3 *up*, since FrameXML's y grows the other way — with the ring drawn over it
+     * center — and 3 *up*, since FrameXML's y grows the other way — with the ring drawn over it
      * at 72x72 offset (-1, 2). The ring texture is a sheet; only its top-left 0.5625 is the ring.
      */
     icon: { cx: 38, cy: 39, size: 50, dy: -3 },
@@ -664,9 +697,9 @@ const ACHIEVEMENT = {
      * earned, the right unearned.
      *
      * The points are a 32x16 FontString anchored TOPRIGHT (-18, -26) within the frame, so the box
-     * runs x 378-410 and its centre is 394, not the 396 this said before. Two pixels does show:
+     * runs x 378-410 and its center is 394, not the 396 this said before. Two pixels does show:
      * the painted shield's own middle sits at 393.5 (measured off the texture's opaque bounds),
-     * and a number two pixels right of that reads as off-centre.
+     * and a number two pixels right of that reads as off-center.
      */
     shield: { x: 362, y: 6, w: 66, h: 64 },
     points: { cx: 394, cy: 34 },
@@ -676,12 +709,12 @@ const ACHIEVEMENT = {
      * ACHIEVEMENTUI_FONTHEIGHT is the description font's own size, which is what the client counts
      * lines by and therefore what the height maths above has to agree with.
      *
-     * The width is the one number here that is deliberately not the client's. FrameXML centres the
+     * The width is the one number here that is deliberately not the client's. FrameXML centers the
      * string on the card and sets its width to ACHIEVEMENTUI_MAXCONTENTWIDTH (330), which spans
      * x 52-382 — straight over the icon ring, which ends at 73, and under the shield, which starts
      * at 362. So a full-width line has letters sitting on both. Given the whole point of this card
      * is to be exported and looked at, the description is given the same run the objectives get
-     * (icon's right edge + 8, to the shield's left edge - 10) and centred on that instead.
+     * (icon's right edge + 8, to the shield's left edge - 10) and centered on that instead.
      */
     description: { cx: 215, y: 30, w: 278, lineHeight: 10 },
 
@@ -766,11 +799,11 @@ function buildLines(state)
 /* --------------------------------------------------------------------------- chat lines */
 
 /*
- * What the chat frame prints when a creature speaks, and in what colour.
+ * What the chat frame prints when a creature speaks, and in what color.
  *
  * Both halves come from the client rather than from memory. The sentences are in
  * `Interface\FrameXML\GlobalStrings.lua` — CHAT_MONSTER_SAY_GET is "%s says:\32", and the \32 is
- * a space, which is why the game's output has one after the colon and none before it. The colours
+ * a space, which is why the game's output has one after the colon and none before it. The colors
  * are the client's own defaults, written out in its `chat-cache.txt`:
  *
  *     MONSTER_SAY      255 255 159     a pale yellow, not white
@@ -801,6 +834,28 @@ const CHAT_TYPES = {
     }
 };
 
+/*
+ * The moments a line is usually tied to.
+ *
+ * Suggestions rather than a fixed set — the field takes anything, because half the interesting
+ * ones are specific to a fight ("When the third add spawns", "At 30% health").
+ *
+ * The list runs in the order the fight does, which is why Intro and Outro sit at the ends: they are
+ * the role-play either side of the pull rather than a moment inside it.
+ */
+const CHAT_TRIGGERS = [
+    'Intro',
+    'On aggro',
+    'On pull',
+    'On phase change',
+    'On casting a spell',
+    'On killing a player',
+    'On death',
+    'On wipe',
+    'On enrage',
+    'Outro'
+];
+
 /** The dropdown's own list, in the order the types are worth reaching for. */
 const CHAT_TYPE_OPTIONS = Object.entries(CHAT_TYPES).map(([value, type]) => ({ value, label: type.label }));
 
@@ -820,7 +875,11 @@ function buildChatLines(s)
             const who = (line.speaker || '').trim() || 'Unnamed';
             const what = (line.text || '').trim();
 
-            return { text: type.format(who, what), color: type.color };
+            return {
+                text: type.format(who, what),
+                color: type.color,
+                trigger: (line.trigger || '').trim()
+            };
         });
 }
 
@@ -830,6 +889,7 @@ window.TooltipModel = {
     UNIT_FRAME, UNIT_CLASSIFICATIONS, UNIT_REACTIONS, POWER_TYPES,
     ACHIEVEMENT, ACHIEVEMENT_FONTS, ACHIEVEMENT_COLORS, ACHIEVEMENT_POINTS,
     POWER_DEFAULTS, SCALES_WITH_DIFFICULTY,
-    buildLines, buildBuffLines, buildChatLines, CHAT_TYPES, CHAT_TYPE_OPTIONS,
+    buildLines, buildBuffLines, buildChatLines, CHAT_TYPES, CHAT_TYPE_OPTIONS, CHAT_TRIGGERS,
+    enrageLabel, ENRAGE_ICON,
     qualityColor, rankLabel, formatMoney, lookup
 };

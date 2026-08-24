@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Astral — a 3.3.5a Data Kit</title>
+    <title>Astral - a 3.3.5a Data Kit</title>
     <link rel="icon" href="logo.png" />
     <link rel="stylesheet" href="app.css" />
     <script>
@@ -22,7 +22,7 @@
   </head>
   <body>
     <header class="topbar">
-      <img class="brand" src="logo.png" alt="Astral — a 3.3.5a Data Kit" />
+      <img class="brand" src="logo.png" alt="Astral - a 3.3.5a Data Kit" />
 
       <div class="kind-switch" role="tablist" aria-label="Window">
         <button type="button" role="tab" data-kind="home" class="active">Home</button>
@@ -47,12 +47,12 @@
         <!-- Home ------------------------------------------------------------------ -->
         <div data-panel="home">
           <fieldset class="highlight">
-            <legend>Astral — a 3.3.5a Data Kit</legend>
+            <legend>Astral - a 3.3.5a Data Kit</legend>
             <p class="hint">
               Astral builds the things a Wrath of the Lich King server needs pictures of:
               <strong>item tooltips</strong>, <strong>spell tooltips</strong>,
               <strong>NPC target frames</strong>, <strong>achievement cards</strong> and
-              <strong>chat scripts</strong> &mdash; each drawn the way the game draws it, then
+              <strong>chat scripts</strong> - each drawn the way the game draws it, then
               exported as a PNG.
             </p>
             <p class="hint">
@@ -69,7 +69,7 @@
           <fieldset>
             <legend>Initialization</legend>
             <p class="hint">
-              Open <strong>Settings</strong> and point at your 3.3.5a folder &mdash; the one
+              Open <strong>Settings</strong> and point at your 3.3.5a folder - the one
               containing <code>Data\</code>. Indexing takes a moment the first time and is cached
               afterwards. That one step turns on the real icons, the real fonts, the client's spell
               and achievement tables, and the dungeon browser.
@@ -84,35 +84,35 @@
           <fieldset>
             <legend>The editors</legend>
             <p class="hint">
-              <strong>Item</strong> &mdash; quality, binding, slot and weapon type, damage with a
+              <strong>Item</strong> - quality, binding, slot and weapon type, damage with a
               calculated DPS, stats, sockets, set bonuses and green
               <code>Equip:</code>/<code>Use:</code> lines with the exact in-game wording as presets.
-              The Type field follows the slot, so a Head can only be an armour class and a Main Hand
+              The Type field follows the slot, so a Head can only be an armor class and a Main Hand
               only a weapon. <strong>Find an item</strong> searches your database by name or entry,
               or browses loot boss by boss, and loads a real drop into the editor to work from.
             </p>
             <p class="hint">
-              <strong>Spell</strong> &mdash; search the client's <code>Spell.dbc</code> by name or
+              <strong>Spell</strong> - search the client's <code>Spell.dbc</code> by name or
               id and pull a real spell in complete with its rank, cost, range, cast time, cooldown,
               icon and description, then edit any of it. A spell can carry its
               <strong>accompanying buff</strong>, which draws as a second tooltip and exports as its
               own image, the way the game shows the aura separately from the spell that applies it.
             </p>
             <p class="hint">
-              <strong>NPC</strong> &mdash; the target frame: portrait, health and power bars, name,
+              <strong>NPC</strong> - the target frame: portrait, health and power bars, name,
               level and classification in the client's own border art. Search creatures by name or
               entry, or browse dungeons and raids by expansion, where each boss offers a button per
               difficulty the instance really has. Custom scaling invents a harder version of any of
               them, and portraits can be captured from the live 3D model.
             </p>
             <p class="hint">
-              <strong>Achievement</strong> &mdash; the achievement card in the client's own
+              <strong>Achievement</strong> - the achievement card in the client's own
               parchment, earned or unearned, with points, reward line and criteria. Search the
               client's achievements and load one in to edit.
             </p>
             <p class="hint">
-              <strong>Texts</strong> &mdash; what a creature says, drawn as the chat frame prints
-              it. Name the speaker, pick say, yell, whisper or emote, and the colour follows the
+              <strong>Texts</strong> - what a creature says, drawn as the chat frame prints
+              it. Name the speaker, pick say, yell, whisper or emote, and the color follows the
               client's own. Add a line per thing spoken and two NPCs hold a conversation.
             </p>
           </fieldset>
@@ -121,7 +121,7 @@
             <legend>Icons</legend>
             <p class="hint">
               The picker reads all 6,300 client icons, sorted into categories and searchable. The
-              <strong>Custom</strong> tab takes your own PNGs, organised into folders &mdash;
+              <strong>Custom</strong> tab takes your own PNGs, organized into folders -
               in-game icons are 64&times;64, and anything else is scaled.
             </p>
           </fieldset>
@@ -135,7 +135,7 @@
             </p>
             <p class="hint">
               The address bar always holds a permalink to exactly what you are looking at, and it
-              reopens still editable rather than as a flat image &mdash; copy it from the address
+              reopens still editable rather than as a flat image - copy it from the address
               bar to share a build.
             </p>
             <p class="hint">
@@ -189,7 +189,7 @@
               <label class="grow">Category<select data-bind="achCategory" data-number></select></label>
               <p class="hint grow">
                 Where it is filed, read from the client's own category tree. Nothing on the card
-                shows it — it is what an achievement list sorts by, and loading a real one brings
+                shows it - it is what an achievement list sorts by, and loading a real one brings
                 its category in with it.
               </p>
             </div>
@@ -200,7 +200,7 @@
                 Earned
               </label>
               <p class="hint grow">
-                Unearned draws the desaturated parchment and shield — both are real textures in
+                Unearned draws the desaturated parchment and shield - both are real textures in
                 the client, so nothing is being faded here.
               </p>
             </div>
@@ -221,24 +221,22 @@
         <!-- Raid Wizard ------------------------------------------------------------ -->
         <div data-panel="raid" hidden>
           <fieldset class="highlight">
-            <legend>Raid wizard — TBD</legend>
+            <legend>Raid wizard</legend>
             <p class="hint">
-              Not built yet. The plan is a place to put what the other windows make: create a raid,
-              give it a name and a logo out of the icon picker, then fill it by copying finished
-              work in. A target frame becomes a boss, a spell becomes an ability, an item becomes a
-              drop &mdash; a raid is a document you paste into rather than a form you fill in.
+              Name a raid, give it a logo, then fill it: <strong>Browse dungeons &amp; raids</strong>
+              picks a boss at the difficulty you want and drops it straight in, or take whatever the
+              <strong>NPC</strong> window is showing for a boss you built by hand. Either way the
+              target frame comes with it, health pool and all.
             </p>
             <p class="hint">
-              Opening a boss opens its fight: phase by phase, each phase holding the spells cast in
-              it, the adds summoned in it and the lines spoken in it, with a proposed loot list and
-              any achievements saved alongside the boss they belong to.
+              Raids are saved to your own data folder as you work, beside the custom icons, so they
+              are still here next session and survive a reinstall.
             </p>
-            <p class="hint">
-              Raids save to your own data folder beside the custom icons, so they are still there
-              next session and survive a reinstall. Then simulate it: the raid DPS needed to beat
-              an enrage timer, played back with the target frame draining as the simulated raid
-              damages it.
-            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Raids</legend>
+            <div id="raid-panel"></div>
           </fieldset>
         </div>
 
@@ -248,7 +246,7 @@
             <legend>Texts</legend>
             <p class="hint">
               What a creature says, drawn the way the chat frame prints it. Name the speaker, pick
-              whether it is said, yelled, whispered or emoted, and the colour follows &mdash; a say
+              whether it is said, yelled, whispered or emoted, and the color follows - a say
               is the pale yellow the game uses for creatures, a yell red, an emote orange.
             </p>
             <p class="hint">
@@ -472,11 +470,12 @@
 
             <div class="row">
               <label class="narrow">Display ID<input type="number" data-bind="unitDisplayId" min="0" /></label>
-              <button type="button" id="btn-model" class="add">Render 3D model →</button>
+              <button type="button" id="btn-auto-portrait" class="add">Generate portrait</button>
             </div>
             <p class="hint">
-              The client has no creature portrait images — in game they are live 3D renders. Load the
-              model, frame the shot, then capture it as the portrait.
+              The client has no creature portrait images - in game they are live 3D renders, framed
+              by a camera stored inside the model itself. <strong>Generate portrait</strong> reads
+              that camera and renders the same shot, with nothing to aim.
             </p>
           </fieldset>
 
@@ -512,7 +511,7 @@
             </div>
             <p class="hint">
               Each press compounds on what is already applied, so +5% twice is +10.25%. This
-              scales health alone — mana has its own buttons under Power. The resulting pool is
+              scales health alone - mana has its own buttons under Power. The resulting pool is
               what a DPS check has to chew through.
             </p>
           </fieldset>
@@ -549,11 +548,20 @@
         <fieldset class="highlight npc-finder" data-kind-only="item">
           <legend>Find an item</legend>
           <div class="row">
-            <input type="search" id="item-search" class="grow" placeholder="Search items — e.g. Shadowmourne, or 49623" autocomplete="off" disabled />
+            <input type="search" id="item-search" class="grow" placeholder="Search items - e.g. Shadowmourne, or 49623" autocomplete="off" disabled />
             <button type="button" id="btn-browse-loot" class="add">Browse loot by boss &rarr;</button>
           </div>
           <p class="hint" id="item-hint">Connect your world database in Settings to search items by name or entry id.</p>
           <div id="item-results" class="npc-results"></div>
+        </fieldset>
+
+        <fieldset class="npc-finder" data-kind-only="item">
+          <legend>Saved items</legend>
+          <p class="hint">
+            Keep what this window is showing, and draw everything kept here as one sheet - a
+            tier set or a boss's drop table as a single picture rather than eight.
+          </p>
+          <div id="saved-item"></div>
         </fieldset>
         <!--
           The item wizard is parked (ROADMAP item 2, FUTURE). The maths behind it is built and
@@ -561,7 +569,7 @@
           loaded item. Remove the hidden attribute to bring it back.
         -->
         <fieldset class="highlight npc-finder" data-kind-only="item" id="item-wizard-panel" hidden>
-          <legend>Item wizard — tier &amp; budget</legend>
+          <legend>Item wizard - tier &amp; budget</legend>
           <div class="row">
             <label class="grow">Tier<select id="wizard-tier"></select></label>
             <label class="grow">Role<select id="wizard-role"></select></label>
@@ -590,7 +598,7 @@
           </div>
           <p class="hint" id="wizard-note">
             Generate spends the item level's whole budget in the proportions real gear of that role
-            uses. Price reads what is in the editor and says what item level it really is — the slot
+            uses. Price reads what is in the editor and says what item level it really is - the slot
             and sockets come from the fields below, because sockets are paid for out of the same
             budget.
           </p>
@@ -598,32 +606,57 @@
         <fieldset class="highlight npc-finder" data-kind-only="spell">
           <legend>Find a spell</legend>
           <div class="row">
-            <input type="search" id="spell-search" class="grow" placeholder="Search spells — e.g. Frostbolt, or 116" autocomplete="off" />
+            <input type="search" id="spell-search" class="grow" placeholder="Search spells - e.g. Frostbolt, or 116" autocomplete="off" />
           </div>
-          <p class="hint" id="spell-hint">Reads the client's Spell.dbc — no database needed. Picking one fills in the name, rank, cost, range, cast time, cooldown, icon and description.</p>
+          <p class="hint" id="spell-hint">Reads the client's Spell.dbc - no database needed. Picking one fills in the name, rank, cost, range, cast time, cooldown, icon and description.</p>
           <div id="spell-results" class="npc-results"></div>
+        </fieldset>
+
+        <fieldset class="npc-finder" data-kind-only="spell">
+          <legend>Saved spells</legend>
+          <p class="hint">
+            Keep what this window is showing, and draw the saved ones as one sheet - or tick a
+            few and build a sheet mixing them with items and target frames.
+          </p>
+          <div id="saved-spell"></div>
         </fieldset>
 
         <!-- NPC mode only: this is how the target frame gets filled in, so it sits beside it. -->
         <fieldset class="highlight npc-finder" data-kind-only="unit">
           <legend>Find an NPC</legend>
           <div class="row">
-            <input type="search" id="npc-search" class="grow" placeholder="Search creatures — e.g. Patchwerk, or 16028" autocomplete="off" disabled />
+            <input type="search" id="npc-search" class="grow" placeholder="Search creatures - e.g. Patchwerk, or 16028" autocomplete="off" disabled />
             <button type="button" id="btn-browse-instances" class="add">Browse dungeons &amp; raids →</button>
           </div>
           <p class="hint" id="npc-hint">Connect your world database in Settings to search creatures by name or entry id.</p>
           <div id="npc-results" class="npc-results"></div>
         </fieldset>
 
+        <fieldset class="npc-finder" data-kind-only="unit">
+          <legend>Saved target frames</legend>
+          <p class="hint">
+            Keep this frame, portrait and all, and draw the saved ones as one sheet.
+          </p>
+          <div id="saved-unit"></div>
+        </fieldset>
+
         <!-- Achievement mode only: Achievement.dbc is client data, so this needs no database. -->
         <fieldset class="highlight npc-finder" data-kind-only="achievement">
           <legend>Find an achievement</legend>
           <div class="row">
-            <input type="search" id="ach-search" class="grow" placeholder="Search achievements — e.g. The Undying, or 2187" autocomplete="off" />
+            <input type="search" id="ach-search" class="grow" placeholder="Search achievements - e.g. The Undying, or 2187" autocomplete="off" />
             <label class="finder-select">Category<select id="ach-category"></select></label>
           </div>
-          <p class="hint" id="ach-hint">Reads the client's Achievement.dbc — no database needed. Picking one fills in the title, description, reward, points, icon and criteria. Statistics are left out, as they are in the game's own achievement list.</p>
+          <p class="hint" id="ach-hint">Reads the client's Achievement.dbc - no database needed. Picking one fills in the title, description, reward, points, icon and criteria. Statistics are left out, as they are in the game's own achievement list.</p>
           <div id="ach-results" class="npc-results"></div>
+        </fieldset>
+
+        <fieldset class="npc-finder" data-kind-only="achievement">
+          <legend>Saved achievements</legend>
+          <p class="hint">
+            Keep what this window is showing, and draw everything kept here as one sheet.
+          </p>
+          <div id="saved-achievement"></div>
         </fieldset>
 
         <div class="stage" id="stage">
@@ -666,7 +699,7 @@
 
           <div class="row">
             <label class="check"><input type="checkbox" id="opt-transparent" /> Transparent background</label>
-            <!-- Item-only: a spell or a unit frame has no quality to take a border colour from. -->
+            <!-- Item-only: a spell or a unit frame has no quality to take a border color from. -->
             <label class="check" data-kind-only="item"><input type="checkbox" id="opt-quality-border" checked /> Quality-colored border</label>
           </div>
 
@@ -689,7 +722,7 @@
     <!-- Icon picker ------------------------------------------------------------- -->
     <dialog id="icon-dialog">
       <form method="dialog" class="dialog-head">
-        <input type="search" id="icon-search" placeholder="Search 6,307 icons — try 'axe', 'shadow', 'frost'" autocomplete="off" />
+        <input type="search" id="icon-search" placeholder="Search 6,307 icons - try 'axe', 'shadow', 'frost'" autocomplete="off" />
         <button value="cancel" class="ghost">Close</button>
       </form>
       <div class="chip-row" id="icon-categories"></div>
@@ -711,8 +744,8 @@
         </div>
 
         <p class="hint">
-          In-game icons are <strong>64&times;64</strong>. Anything else still works — the game
-          scales icons — but 64&times;64 is what the client ships and what stays sharp. A TGA is
+          In-game icons are <strong>64&times;64</strong>. Anything else still works - the game
+          scales icons - but 64&times;64 is what the client ships and what stays sharp. A TGA is
           converted to PNG as it is saved; no browser can read one, so its size is not checked here
           the way a PNG's is.
         </p>
@@ -724,6 +757,10 @@
     </dialog>
 
     <!-- Settings ---------------------------------------------------------------- -->
+    <!-- The moments a spoken line is usually tied to; the field takes anything else too. -->
+    <!-- Filled from the model's CHAT_TRIGGERS by lists.js, so the two cannot disagree. -->
+    <datalist id="chat-triggers"></datalist>
+
     <dialog id="settings-dialog">
       <form method="dialog" class="dialog-head">
         <strong>Settings</strong>
@@ -781,30 +818,12 @@
       </div>
     </dialog>
 
-    <!-- 3D model viewer ---------------------------------------------------------- -->
-    <dialog id="model-dialog">
-      <form method="dialog" class="dialog-head">
-        <strong>Model viewer</strong>
-        <span class="hint" id="model-status"></span>
-        <button value="cancel" class="ghost">Close</button>
-      </form>
-
-      <div class="dialog-body">
-        <p class="hint">
-          Drag to rotate, scroll to zoom. When the pose looks right, capture it — the visible frame
-          becomes the portrait.
-        </p>
-        <div id="model-stage">
-          <!-- Shows the portrait crop, so the model can be posed to fit it before capturing. -->
-          <div id="model-guide" aria-hidden="true"></div>
-        </div>
-        <div class="row">
-          <button type="button" id="btn-capture" class="primary">Capture as portrait</button>
-          <button type="button" id="btn-pause">Pause animation</button>
-          <label class="check"><input type="checkbox" id="opt-guide" checked /> Show portrait guide</label>
-        </div>
-      </div>
-    </dialog>
+    <!--
+      There was a model viewer dialog here, with manual framing, a pause control and a capture
+      button. It is gone: the portrait framing is the camera the artist put in the model, not a
+      judgement call, so aiming one by hand could only produce a worse portrait than pressing
+      Generate portrait once. See public/editor/model-viewer.js.
+    -->
 
     <dialog id="instance-dialog">
       <form method="dialog" class="dialog-head">

@@ -111,7 +111,7 @@ function defaultState()
         achDescription: '',
         achReward: '',
         achPoints: 10,
-        /* Earned draws the coloured parchment and shield; unearned draws the desaturated pair. */
+        /* Earned draws the colored parchment and shield; unearned draws the desaturated pair. */
         achEarned: true,
         achCriteria: [],
         /*
@@ -187,6 +187,68 @@ const FIELDS_BY_KIND = {
     ],
     text: ['textLines']
 };
+
+/**
+ * The captured portrait as a PNG, or empty when there is none.
+ *
+ * Stored at 200 pixels square rather than at capture size: the frame draws it into a ring about a
+ * quarter of that across, and a raid with a dozen creatures in it should not carry a dozen
+ * full-size screenshots around.
+ */
+function portraitDataUrl()
+{
+    const image = runtime.portraitImage;
+
+    if (!image)
+    {
+        return '';
+    }
+
+    try
+    {
+        const size = 200;
+        const canvas = document.createElement('canvas');
+
+        canvas.width = size;
+        canvas.height = size;
+        canvas.getContext('2d').drawImage(image, 0, 0, size, size);
+
+        return canvas.toDataURL('image/png');
+    }
+    catch
+    {
+        /* A tainted canvas would throw; a frame without its portrait is better than no frame. */
+        return '';
+    }
+}
+
+/**
+ * One window's fields, lifted off the editor as it stands.
+ *
+ * This lives here rather than in the panels that call it because it is FIELDS_BY_KIND read back
+ * out — three panels each grew their own copy, and they had already drifted over which kinds carry
+ * an icon.
+ */
+function fieldsOf(kind)
+{
+    const fields = {};
+
+    for (const field of FIELDS_BY_KIND[kind] || [])
+    {
+        fields[field] = state[field];
+    }
+
+    /* A frame's icon is the picker's, not one of the unit fields, so it is taken separately. */
+    if (kind === 'unit')
+    {
+        fields.icon = state.icon;
+
+        /* And the portrait is a capture rather than a field. */
+        fields.portrait = portraitDataUrl();
+    }
+
+    return fields;
+}
 
 /**
  * Puts one mode's fields back to their defaults, leaving the other two alone.
@@ -286,5 +348,5 @@ function effectText(effect)
 
 export {
     defaultState, state, setState, runtime, view, resetKind, FIELDS_BY_KIND, CANVAS_KINDS,
-    encodeState, decodeState, effectText
+    fieldsOf, portraitDataUrl, encodeState, decodeState, effectText
 };

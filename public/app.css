@@ -602,7 +602,6 @@ button.primary {
 }
 
 #settings-dialog,
-#model-dialog,
 #instance-dialog {
   width: min(720px, 94vw);
   max-height: 88vh;
@@ -614,7 +613,6 @@ button.primary {
 }
 
 #settings-dialog::backdrop,
-#model-dialog::backdrop,
 #instance-dialog::backdrop {
   background: rgb(0 0 0 / 60%);
 }
@@ -686,7 +684,7 @@ code {
 
 /*
  * An achievement result carries its icon, which the NPC and spell rows do not: the icon is half
- * of how one is recognised, and it is already indexed for the picker, so showing it costs a URL.
+ * of how one is recognized, and it is already indexed for the picker, so showing it costs a URL.
  */
 .ach-row {
   align-items: center;
@@ -720,67 +718,6 @@ code {
   margin: 0;
   color: var(--muted);
   font-size: 11.5px;
-}
-
-/*
- * Square on purpose. The viewer sizes its canvas to the container width and renders 1:1, so a
- * wide-but-short stage produced a canvas taller than the box and clipped most of the model out
- * of sight — which looked like it had failed to render at all.
- */
-#model-stage {
-  position: relative;
-  width: 420px;
-  height: 420px;
-  max-width: 100%;
-  margin: 0 auto 12px;
-  background: #000;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-#model-stage > div {
-  width: 100%;
-  height: 100%;
-}
-
-/*
- * The portrait guide. The captured image is drawn into a circular clip, so anything outside this
- * ring is discarded — posing against it avoids capturing a model that ends up half cropped.
- * Everything outside the circle is dimmed with a huge inset shadow, which needs no extra element.
- */
-#model-guide {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-}
-
-/*
- * The circle matches the crop exactly. The capture is squeezed into the portrait ring's bounding
- * square and clipped to the inscribed circle, so what survives is a full-width centred circle —
- * only the four corners are lost. An arbitrary smaller ring would have understated the framing.
- */
-#model-guide::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 100%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border: 2px dashed rgb(255 209 0 / 70%);
-  border-radius: 50%;
-  box-shadow: 0 0 0 9999px rgb(0 0 0 / 55%);
-}
-
-#model-stage.no-guide #model-guide {
-  display: none;
-}
-
-#model-stage canvas {
-  display: block;
-  max-width: 100%;
 }
 
 /* ---------------------------------------------------- dungeon & raid browser */
@@ -1088,7 +1025,7 @@ code {
   max-height: 190px;
 }
 
-/* The category select in the achievement finder, keeping its caption above it in a centred row. */
+/* The category select in the achievement finder, keeping its caption above it in a centered row. */
 .finder-select {
   flex: 0 0 auto;
   max-width: 45%;
@@ -1188,7 +1125,7 @@ button.danger[data-armed="yes"] {
  * Kept faint on purpose: it should register as atmosphere and never compete with the text sitting
  * on it, so it goes in a pseudo-element behind the content at a per-theme opacity rather than as
  * a background on the panel itself. Light mode takes less of it — a dark image over a white page
- * turns grey long before it turns subtle.
+ * turns gray long before it turns subtle.
  */
 :root,
 :root[data-theme="dark"] {
@@ -1293,7 +1230,7 @@ main.home > * {
  * A badge that is off rather than wrong.
  *
  * "Not connected" is a state, not a warning — the program works without either connection — so it
- * sits in the muted colour rather than the accent one the warn badge uses.
+ * sits in the muted color rather than the accent one the warn badge uses.
  */
 .badge.off {
   color: var(--muted);
@@ -1302,9 +1239,9 @@ main.home > * {
 }
 
 /*
- * Both badges read as a pair, so they are the same width with their text centred inside.
+ * Both badges read as a pair, so they are the same width with their text centered inside.
  *
- * Centred both ways, and the vertical half is the one that needs saying: the top bar is a flex
+ * Centered both ways, and the vertical half is the one that needs saying: the top bar is a flex
  * row, so a badge is stretched to the height of the Settings button beside it — 35px — while its
  * text is a 17px line sitting at the top of that. Text-align alone left it riding high in the
  * pill. Making the badge its own centring box puts the line in the middle of whatever height the
@@ -1323,7 +1260,7 @@ main.home > * {
 /*
  * An item result leads with its icon.
  *
- * A creature is found by reading its name; an item is recognised by its icon before the name is
+ * A creature is found by reading its name; an item is recognized by its icon before the name is
  * read at all, which is why these rows carry one and the NPC rows do not.
  */
 .item-row {
@@ -1422,4 +1359,364 @@ main.home > * {
 .wizard-secondaries .check {
   margin-right: 0;
   font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ raid wizard */
+
+.raid-bar {
+  margin-bottom: 8px;
+}
+
+.raid-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* A raid reads as a card: its logo, its name, and how much is in it. */
+.raid-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.raid-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.raid-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.raid-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.raid-card-name {
+  font-size: 14px;
+}
+
+.raid-card-meta {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+/* The open raid's own identity sits above its roster. */
+.raid-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.raid-logo {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+}
+
+.raid-logo img {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+}
+
+.raid-name {
+  flex: 1;
+  font-size: 15px;
+  margin: 0;
+}
+
+.raid-paste {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.raid-bosses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.raid-boss {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.raid-boss-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The number is the order the raid is run in, which is the roster's whole point. */
+.raid-boss-order {
+  color: var(--muted);
+  font-size: 11.5px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.raid-boss-name {
+  flex: 1;
+  margin: 0;
+}
+
+.raid-boss-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.raid-mini {
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.raid-mini:hover {
+  color: var(--text);
+  border-color: var(--accent-dim);
+}
+
+.raid-boss-meta {
+  margin: 6px 0 0 26px;
+}
+
+/* --------------------------------------------------------- raid: boss detail */
+
+/* A raid card and its delete sit on one line, the delete outside the card's own click. */
+.raid-card-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.raid-card-row .raid-card {
+  flex: 1;
+}
+
+.raid-delete {
+  align-self: center;
+  color: #ff6b6b;
+}
+
+.raid-delete[data-armed="yes"] {
+  background: #ff6b6b;
+  color: #fff;
+  border-color: #ff6b6b;
+}
+
+.raid-section {
+  color: var(--accent);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 14px 0 4px;
+}
+
+/* The difficulty a boss is being edited at. */
+.raid-difficulty-tabs .difficulty.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.raid-phase-trigger {
+  flex: 1;
+  margin: 0;
+}
+
+/* Something taken from another window: its icon, its name, and a way to take it off again. */
+.raid-attach {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.raid-attach-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.raid-attach-label {
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.raid-export {
+  margin-top: 16px;
+}
+
+/* Adding a difficulty reads as an offer rather than a state. */
+.raid-add-difficulty {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.raid-role,
+.raid-phase-pick {
+  width: auto;
+  margin: 0;
+  font-size: 12px;
+  padding: 3px 6px;
+}
+
+/* A raid's or a boss's description: the same register as the flavor text it becomes. */
+/* Matches how it will be drawn: the game's flavor face, in gold, upright. */
+.raid-note {
+  width: 100%;
+  margin: 0 0 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--accent);
+}
+
+/*
+ * On a button that takes something from another window, the action is the label and the source is
+ * a quiet note after it — "Set this frame  from the NPC window · Sindragosa" — so the button says
+ * what it does to the card it sits on rather than leading with a name from somewhere else.
+ */
+.raid-take-source {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* The enrage timer: the switch, the two halves of the clock, and the line it will draw. */
+.raid-enrage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.raid-enrage-row .check {
+  margin: 0;
+}
+
+.raid-enrage-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.raid-enrage-field input {
+  width: 72px;
+  margin: 0;
+}
+
+.raid-enrage-preview {
+  margin: 0;
+}
+
+/* A set of lines: the moment it is filed under, then what is in it. */
+.raid-text-label {
+  flex: 0 0 230px;
+  margin: 0;
+}
+
+/* Taking the Texts window and naming the moment are one sentence, so they sit on one line. */
+.raid-take-row {
+  align-items: center;
+  gap: 8px;
+}
+
+/* Copying a spell into another phase is an action, not the state the row is in. */
+.raid-phase-copy {
+  color: var(--muted);
+}
+
+/* A spoken line's row: fixed-ish speaker, type and trigger, and the words take the rest. */
+.chat-when {
+  flex: 0 0 150px;
+}
+
+.chat-said {
+  flex: 1 1 220px;
+  min-width: 140px;
+}
+
+/* ------------------------------------------------------------------ saved work */
+
+.saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+/* A saved entry's name is the way back into it, so it reads as a link rather than a button. */
+.saved-name {
+  flex: 1;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  padding: 2px 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-name:hover {
+  color: var(--accent);
+}
+
+/* The one currently loaded, so pressing Save again is obviously an update. */
+.saved-name.active {
+  color: var(--accent);
+}
+
+/* The tick that puts a saved thing on a mixed sheet. */
+.saved-tick {
+  width: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+/* The mixed sheet's own row: a title to draw it under, and the build. */
+.saved-sheet {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  align-items: center;
+}
+
+.saved-title {
+  flex: 1 1 200px;
+  margin: 0;
+}
+
+/* The mixed-selection row sits under the title it will be drawn with. */
+.saved-mixed {
+  margin-top: 6px;
+  align-items: center;
 }

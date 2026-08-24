@@ -5,7 +5,7 @@
  *
  * Downscaling uses an area average (every source pixel inside the target pixel contributes), so
  * a detailed logo stays legible at 16x16 instead of aliasing into noise. Upscaling falls back to
- * nearest-neighbour, which is what 64x64 client icons want — smoothing pixel art turns it to mush.
+ * nearest-neighbor, which is what 64x64 client icons want — smoothing pixel art turns it to mush.
  * Vista-era ICOs may embed PNG data directly, which is what we do here.
  *
  * Usage:
@@ -106,7 +106,7 @@ function encodePng(width, height, rgba)
     ihdr.writeUInt32BE(width, 0);
     ihdr.writeUInt32BE(height, 4);
     ihdr[8] = 8;   // bit depth
-    ihdr[9] = 6;   // colour type: RGBA
+    ihdr[9] = 6;   // color type: RGBA
     ihdr[10] = 0;
     ihdr[11] = 0;
     ihdr[12] = 0;
@@ -139,7 +139,7 @@ function decodePng(buffer)
 
             if (data[8] !== 8 || data[9] !== 6)
             {
-                throw new Error(`unsupported PNG format (depth ${data[8]}, colour ${data[9]})`);
+                throw new Error(`unsupported PNG format (depth ${data[8]}, color ${data[9]})`);
             }
         }
         else if (type === 'IDAT')
@@ -212,7 +212,7 @@ function crop(image, box)
 }
 
 /**
- * Area-average downscale, nearest-neighbour upscale.
+ * Area-average downscale, nearest-neighbor upscale.
  *
  * Averaging matters at icon sizes: point-sampling a 390px logo down to 16px throws away 99% of
  * the pixels and lands on whatever happens to sit under the sample point, which looks like noise.
@@ -253,7 +253,7 @@ function resize(image, width, height)
                     const i = (sy * image.width + sx) * 4;
                     const alpha = image.rgba[i + 3];
 
-                    // Weight colour by alpha so transparent pixels do not drag the edges dark.
+                    // Weight color by alpha so transparent pixels do not drag the edges dark.
                     r += image.rgba[i] * alpha;
                     g += image.rgba[i + 1] * alpha;
                     b += image.rgba[i + 2] * alpha;
@@ -291,7 +291,7 @@ function buildIco(pngs)
         entry[1] = size >= 256 ? 0 : size;
         entry[2] = 0;                       // palette size
         entry[3] = 0;                       // reserved
-        entry.writeUInt16LE(1, 4);          // colour planes
+        entry.writeUInt16LE(1, 4);          // color planes
         entry.writeUInt16LE(32, 6);         // bits per pixel
         entry.writeUInt32LE(data.length, 8);
         entry.writeUInt32LE(offset, 12);

@@ -74,10 +74,10 @@ function chosenSecondaries()
 }
 
 /**
- * The weapon half of the request, or nothing for armour.
+ * The weapon half of the request, or nothing for armor.
  *
  * A weapon spends part of its allowance on damage, so generating one without saying so hands it
- * an armour-sized stat block on top of a weapon's damage — which is what the first version did.
+ * an armor-sized stat block on top of a weapon's damage — which is what the first version did.
  * Whether it is a caster weapon comes from the role, since that is the same choice: a staff for a
  * mage carries a third of the damage and three times the stats of one for a warrior.
  */
@@ -122,7 +122,7 @@ async function generate()
          * Only the stat block is replaced.
          *
          * Everything that makes the item that item — its name, icon, slot, sockets, binding,
-         * flavour — is left exactly as it is, so generating over a loaded drop retunes it rather
+         * flavor — is left exactly as it is, so generating over a loaded drop retunes it rather
          * than emptying it.
          */
         state.stats = made.editor.stats;
@@ -165,7 +165,7 @@ async function generate()
             `${made.points} random-property points x ${made.multiplier}${damageLine}${socketLine} `
             + `= ${made.budget} points, spent as a ${made.roleName.toLowerCase()} ${made.slot.toLowerCase()}.`);
 
-        status(`Generated ilvl ${made.ilvl} ${made.slot} — ${made.budget} points of ${made.roleName}`);
+        status(`Generated ilvl ${made.ilvl} ${made.slot} - ${made.budget} points of ${made.roleName}`);
     }
     catch (err)
     {
@@ -201,7 +201,7 @@ async function price()
 
     if (!(state.stats || []).length && !(state.effects || []).length)
     {
-        setNote('Nothing to price yet — generate a block, or load an item from the finder.', 'bad');
+        setNote('Nothing to price yet - generate a block, or load an item from the finder.', 'bad');
         return;
     }
 
@@ -239,12 +239,12 @@ async function price()
             : '';
 
         setNote(
-            `${answer.cost} points of stats — that is item level ${answer.ilvl}, ${drift}.`
+            `${answer.cost} points of stats - that is item level ${answer.ilvl}, ${drift}.`
             + (tier ? ` ${tier}.` : '') + mismatch,
             typed && typed !== answer.ilvl ? 'warn' : ''
         );
 
-        status(`Priced at ${answer.cost} points — ilvl ${answer.ilvl}`);
+        status(`Priced at ${answer.cost} points - ilvl ${answer.ilvl}`);
     }
     catch (err)
     {
@@ -295,13 +295,13 @@ async function bindItemWizard()
     }
     catch
     {
-        setNote('Point at your 3.3.5a folder in Settings — the tier table is read from the client.', 'bad');
+        setNote('Point at your 3.3.5a folder in Settings - the tier table is read from the client.', 'bad');
         return;
     }
 
     if (info.error)
     {
-        setNote('Point at your 3.3.5a folder in Settings — the tier table is read from the client.', 'bad');
+        setNote('Point at your 3.3.5a folder in Settings - the tier table is read from the client.', 'bad');
         return;
     }
 
@@ -309,7 +309,7 @@ async function bindItemWizard()
     {
         const option = document.createElement('option');
         option.value = entry.ilvl;
-        option.textContent = `${entry.ilvl}${entry.tier ? ` · ${entry.tier}` : ''} — ${entry.source}`;
+        option.textContent = `${entry.ilvl}${entry.tier ? ` · ${entry.tier}` : ''} - ${entry.source}`;
         tier.appendChild(option);
     }
 

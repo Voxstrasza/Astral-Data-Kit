@@ -5,6 +5,24 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
+/** A plain element with an optional class and text — the building block the rest are made of. */
+function el(tag, className, text)
+{
+    const node = document.createElement(tag);
+
+    if (className)
+    {
+        node.className = className;
+    }
+
+    if (text !== undefined)
+    {
+        node.textContent = text;
+    }
+
+    return node;
+}
+
 function button(label, cls, onClick, title)
 {
     const el = document.createElement('button');
@@ -30,7 +48,7 @@ function select(options, value, onChange)
     {
         const opt = document.createElement('option');
         opt.value = typeof option === 'object' ? option.value : option;
-        opt.textContent = typeof option === 'object' ? option.label : (option || '—');
+        opt.textContent = typeof option === 'object' ? option.label : (option || '-');
         el.appendChild(opt);
     }
 
@@ -67,4 +85,4 @@ function row(...children)
     return el;
 }
 
-export { $, $$, button, select, input, row };
+export { $, $$, el, button, select, input, row };

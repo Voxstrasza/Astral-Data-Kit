@@ -37,7 +37,7 @@ function currentLines()
  * one a mode uses — they chose separately before, with the same ternary written out twice.
  */
 /**
- * What this state draws, as one or more labelled images.
+ * What this state draws, as one or more labeled images.
  *
  * A spell with an aura is two windows, not one: the game tooltips them separately — hover the
  * spell and you get one, hover the buff it leaves on you and you get another — and they are two

@@ -19,12 +19,14 @@ import { setIcon, currentIconName, renderIconGrid, loadIcons, loadAssets, loadGa
 import { update, status, exportCanvas, exportParts, fileName } from './preview.js';
 import { refreshStatus, applyClientPath, applyDbSettings } from './settings.js';
 import { renderNpcResults } from './npc.js';
-import { openModelViewer, capturePortrait, togglePause } from './model-viewer.js';
+import { autoPortrait } from './model-viewer.js';
 import { bindBrowser } from './instances.js';
 import { bindTheme } from './theme.js';
 import { bindSpellSearch } from './spell-search.js';
 import { bindItemSearch } from './item-search.js';
 import { bindItemWizard } from './item-wizard.js';
+import { showRaids } from './raids.js';
+import { bindSaved } from './saved.js';
 import { bindAchievementSearch, loadAchievementCategories } from './achievement.js';
 import { seedExample } from './example.js';
 import { M } from './wow.js';
@@ -45,7 +47,7 @@ async function init()
         }
         catch
         {
-            status('That link could not be read — starting from a fresh tooltip.');
+            status('That link could not be read - starting from a fresh tooltip.');
         }
     }
     else
@@ -72,6 +74,11 @@ async function init()
     {
         state.kind = btn.dataset.kind;
         syncForm();
+
+        if (state.kind === 'raid')
+        {
+            showRaids();
+        }
         // Each mode has its own icon, so reload the image for the one now showing.
         setIcon(currentIconName());
         update();
@@ -117,6 +124,7 @@ async function init()
     bindRoadmap();
     bindItemSearch();
     bindItemWizard();
+    bindSaved();
 
     /*
      * These all write into the current mode's own view settings, so ticking transparent while
@@ -199,7 +207,7 @@ async function init()
             }
             catch
             {
-                status('Your browser blocked the clipboard — use Download PNG instead.');
+                status('Your browser blocked the clipboard - use Download PNG instead.');
             }
         });
     });
@@ -255,7 +263,7 @@ async function init()
 
             $('#client-path').value = result.path;
             $('#client-status').textContent = result.ok
-                ? `Ready — ${(result.icons || 0).toLocaleString()} icons available.`
+                ? `Ready - ${(result.icons || 0).toLocaleString()} icons available.`
                 : `Could not use that folder: ${result.reason}`;
 
             await refreshStatus();
@@ -339,14 +347,7 @@ async function init()
 
     bindBrowser();
 
-    $('#btn-model').addEventListener('click', openModelViewer);
-    $('#btn-capture').addEventListener('click', capturePortrait);
-    $('#btn-pause').addEventListener('click', togglePause);
-
-    $('#opt-guide').addEventListener('change', (e) =>
-    {
-        $('#model-stage').classList.toggle('no-guide', !e.target.checked);
-    });
+    $('#btn-auto-portrait').addEventListener('click', () => autoPortrait(state.unitDisplayId));
 }
 
 /*
@@ -403,7 +404,7 @@ function paintScaling()
     const pct = Number(state.unitScalePct) || 0;
 
     out.textContent = pct
-        ? `+${pct.toFixed(2).replace(/\.?0+$/, '')}% — ${(Number(state.unitHealthMax) || 0).toLocaleString()} HP`
+        ? `+${pct.toFixed(2).replace(/\.?0+$/, '')}% - ${(Number(state.unitHealthMax) || 0).toLocaleString()} HP`
         : 'none';
 
     const reset = $('#btn-scale-reset');
@@ -475,7 +476,7 @@ function paintPowerScaling()
     const pct = Number(state.unitPowerScalePct) || 0;
 
     out.textContent = pct
-        ? `+${pct.toFixed(2).replace(/\.?0+$/, '')}% — ${(Number(state.unitPowerMax) || 0).toLocaleString()} mana`
+        ? `+${pct.toFixed(2).replace(/\.?0+$/, '')}% - ${(Number(state.unitPowerMax) || 0).toLocaleString()} mana`
         : 'none';
 
     const reset = $('#btn-power-scale-reset');

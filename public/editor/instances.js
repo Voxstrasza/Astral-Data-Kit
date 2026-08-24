@@ -14,6 +14,7 @@ import { api } from './api.js';
 import { status } from './preview.js';
 import { applyNpc } from './npc.js';
 import { showLoot, showMisc } from './item-search.js';
+import { addBossFrame } from './raids.js';
 
 let tree = null;
 let currentExpansion = null;
@@ -23,8 +24,9 @@ let currentInstance = null;
  * Which window opened the browser.
  *
  * 'npc' fills the target frame from the boss picked; 'loot' lists what that boss drops and fills
- * the item editor from whatever is chosen out of it. One dialog rather than two, because the way
- * in — expansion, instance, boss — is the same question either way.
+ * the item editor from whatever is chosen out of it; 'raid' adds the boss to the raid being built.
+ * One dialog rather than three, because the way in — expansion, instance, boss — is the same
+ * question every time.
  */
 let browserMode = 'npc';
 
@@ -163,6 +165,13 @@ function difficultyButtons(tiers, instance, label, describe, onPick)
                 return;
             }
 
+            if (browserMode === 'raid')
+            {
+                addBossFrame(tier);
+                $('#instance-dialog').close();
+                return;
+            }
+
             applyNpc(tier);
             $('#instance-dialog').close();
             status(describe(name));
@@ -268,7 +277,7 @@ function renderBoss(boss, instance)
     {
         head.appendChild(difficultyButtons(
             boss.difficulties, instance, boss.name,
-            (label) => `${boss.name} — ${instance.name}, ${label}`));
+            (label) => `${boss.name} - ${instance.name}, ${label}`));
 
         row.appendChild(head);
         return row;
@@ -301,7 +310,7 @@ function renderBoss(boss, instance)
             {
                 line.appendChild(difficultyButtons(
                     member.difficulties, instance, member.name,
-                    (label) => `${member.name} — ${instance.name} ${boss.name}, ${label}`));
+                    (label) => `${member.name} - ${instance.name} ${boss.name}, ${label}`));
             }
 
             list.appendChild(line);
@@ -384,7 +393,9 @@ function selectExpansion(id)
     /* The dialog serves both windows, and each is here for a different reason. */
     hint.textContent = browserMode === 'loot'
         ? 'Select a dungeon or raid boss to show its loot.'
-        : 'Select a dungeon or raid to show its bosses and bring up a template and model.';
+        : browserMode === 'raid'
+            ? 'Pick a boss, at the difficulty you want it in the raid.'
+            : 'Select a dungeon or raid to show its bosses and bring up a template and model.';
     $('#boss-list').appendChild(hint);
 
     if (currentExpansion)
@@ -395,11 +406,13 @@ function selectExpansion(id)
 
 async function openBrowser(mode = 'npc')
 {
-    browserMode = mode === 'loot' ? 'loot' : 'npc';
+    browserMode = ['loot', 'raid'].includes(mode) ? mode : 'npc';
 
     $('#instance-dialog').showModal();
     $('#instance-dialog .dialog-head strong').textContent =
-        browserMode === 'loot' ? 'Loot by boss' : 'Dungeons & raids';
+        browserMode === 'loot' ? 'Loot by boss'
+            : browserMode === 'raid' ? 'Add a boss to the raid'
+                : 'Dungeons & raids';
 
     /* The boss column belongs to whichever mode is open, so it starts over on each open. */
     if (currentInstance)

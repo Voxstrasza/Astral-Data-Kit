@@ -6,7 +6,7 @@ import { state } from './state.js';
  * Glorenzelg, High-Blade of the Silver Hand (item 50730).
  *
  * Every value is the real one from item_template rather than an approximation: Flags 8 is the
- * heroic bit, delay 3600 is speed 3.60, sellprice 332775 copper is 33g 27s 75c, the three colour-2
+ * heroic bit, delay 3600 is speed 3.60, sellprice 332775 copper is 33g 27s 75c, the three color-2
  * sockets are red, and the stat ids are Strength (4), Stamina (7), crit rating (32) and expertise
  * rating (37). The icon is what ItemDisplayInfo.dbc gives for display 64397.
  */
