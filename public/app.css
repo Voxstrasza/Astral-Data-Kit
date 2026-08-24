@@ -1651,14 +1651,48 @@ main.home > * {
   color: var(--muted);
 }
 
-/* A spoken line's row: fixed-ish speaker, type and trigger, and the words take the rest. */
+/*
+ * A spoken line's row, over two lines.
+ *
+ * Speaker, type, trigger and delete share the first; the words take the second, which is the only
+ * way all five fit a 460px column. On one line the row simply grew wider than the panel, and the
+ * editor column hides what runs past it - so the × was clipped off the right edge and a line could
+ * not be deleted at all.
+ */
+.chat-row {
+  flex-wrap: wrap;
+}
+
+/* The type dropdown would claim the whole width from the shared input rule and break the line. */
+.chat-row select {
+  flex: 0 1 110px;
+}
+
+/*
+ * The trigger takes whatever the first line has left, and is the field that gives ground.
+ *
+ * min-width: 0 is what lets it shrink at all: a text input's automatic minimum is about twenty
+ * characters wide, which is wider than the space there is, and an item that will not shrink wraps
+ * instead. The small basis matters for the same reason - the four fields have to *start* inside the
+ * line for the × to stay on it, whatever they grow to afterwards.
+ */
 .chat-when {
-  flex: 0 0 150px;
+  flex: 1 1 60px;
+  min-width: 0;
+}
+
+/*
+ * Laid out after the delete rather than before it, so the words wrap onto the second line and the ×
+ * stays at the end of the first. Only the drawing order moves: the tab order is still the order the
+ * fields are filled in.
+ */
+.chat-row .del {
+  order: 1;
 }
 
 .chat-said {
-  flex: 1 1 220px;
-  min-width: 140px;
+  order: 2;
+  flex: 1 1 100%;
 }
 
 /* ------------------------------------------------------------------ saved work */

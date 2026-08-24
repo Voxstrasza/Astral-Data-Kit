@@ -1310,15 +1310,29 @@ function renderChat(lines, opts, scale)
         wrapped.push({ text: opts.heading, color: '#8992ab', small: true });
     }
 
+    /*
+     * A moment is written once, however many times it was typed.
+     *
+     * Every line carries its own trigger, so a block of five lines spoken at the same moment used
+     * to say so five times - and if the block is already headed with that moment, six. The rule is
+     * the one a printed script uses: name the moment when it changes, and say nothing while it
+     * holds. Starting from the heading is what makes a set taken in as "Intro", whose lines are
+     * each marked "Intro", print it once rather than twice.
+     */
+    let spoken = String(opts.heading || '').trim().toLowerCase();
+
     for (const line of lines)
     {
         /*
          * The trigger is the program's own annotation rather than something the game prints, so it
          * sits in front of the quote in muted gray and leaves the line's own color alone.
          */
-        if (line.trigger)
+        const trigger = String(line.trigger || '').trim();
+
+        if (trigger && trigger.toLowerCase() !== spoken)
         {
-            wrapped.push({ text: line.trigger, color: '#8992ab', small: true });
+            wrapped.push({ text: trigger, color: '#8992ab', small: true });
+            spoken = trigger.toLowerCase();
         }
 
         const words = String(line.text || '').split(/\s+/).filter(Boolean);

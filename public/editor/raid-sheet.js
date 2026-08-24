@@ -501,7 +501,7 @@ async function sectionsFor(difficulty, scale, phaseId)
 
     if (quotes.length)
     {
-        sections.push({ title: 'Encounter quotes', pieces: quotes });
+        sections.push({ title: 'Encounter quotes', pieces: quotes, stack: true });
     }
 
     return sections;
@@ -550,8 +550,13 @@ function composeSections(sections, { boss, difficulty, raid, subtitle }, scale)
 
         for (const piece of section.pieces)
         {
-            /* Wrap when the next piece would run past the body width. */
-            if (x > pad && x + piece.width > pad + content)
+            /*
+             * Wrap when the next piece would run past the body width - or on every piece, for a
+             * section that reads downwards. Quotes are the case: they are read in the order the
+             * fight speaks them, and a row of blocks running across the page asks the eye to
+             * follow a conversation sideways.
+             */
+            if (x > pad && (section.stack || x + piece.width > pad + content))
             {
                 y += rowHeight + gap;
                 x = pad;

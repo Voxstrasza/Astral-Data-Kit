@@ -53,24 +53,37 @@ const LIST_RENDERERS = {
          * common moments are worth offering, but the interesting ones are specific to a fight.
          */
         const when = input('text', item.trigger, (v) => { item.trigger = v; update(); },
-            'When - on aggro, on death…', '150px');
+            'When - on aggro, on death…');
 
         fillTriggers();
         when.setAttribute('list', 'chat-triggers');
+
+        /* Sized by the stylesheet, not here: a width set inline cannot be shrunk by a narrow row. */
         when.classList.add('chat-when');
 
         const said = input('text', item.text, (v) => { item.text = v; update(); }, 'What they say', '');
 
-        /* The words are the point of the row, so they take whatever the other fields leave. */
+        /* The words are the point of the row, so they take a line to themselves. */
         said.classList.add('chat-said');
 
-        return row(
+        /*
+         * Four fields and a delete do not fit the editor column on one line. They used to be asked
+         * to anyway: the row grew past the panel, and since the column hides its overflow the ×
+         * went with it - a line typed at any length could not be deleted. So the row wraps, the
+         * words drop underneath, and the × keeps its place at the end of the first line (put there
+         * by CSS order, so tabbing still runs speaker, type, when, words, delete).
+         */
+        const line = row(
             input('text', item.speaker, (v) => { item.speaker = v; update(); }, 'Speaker', '130px'),
             select(M.CHAT_TYPE_OPTIONS, item.type, (v) => { item.type = v; update(); }),
             when,
             said,
             del('textLines', i)
         );
+
+        line.classList.add('chat-row');
+
+        return line;
     },
 
     stats: (item, i) => row(
