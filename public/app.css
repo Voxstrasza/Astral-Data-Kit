@@ -146,6 +146,21 @@ body {
   margin-left: auto;
   display: flex;
   gap: 8px;
+  align-items: center;
+}
+
+/* The build sits over the Settings button, right-aligned with it, in the corner of the window. */
+.topbar-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.version {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.4px;
 }
 
 .kind-switch {

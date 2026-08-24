@@ -37,7 +37,12 @@
       <div class="topbar-actions">
         <span id="client-badge" class="badge" title="Where assets are coming from"></span>
         <span id="db-badge" class="badge" title="The world database connection"></span>
-        <button type="button" id="btn-settings" class="ghost">Settings</button>
+
+        <!-- Which build this is, over the button that opens the rest of the detail. -->
+        <div class="topbar-end">
+          <span id="app-version" class="version"></span>
+          <button type="button" id="btn-settings" class="ghost">Settings</button>
+        </div>
       </div>
     </header>
 
@@ -114,6 +119,14 @@
               <strong>Texts</strong> - what a creature says, drawn as the chat frame prints
               it. Name the speaker, pick say, yell, whisper or emote, and the color follows the
               client's own. Add a line per thing spoken and two NPCs hold a conversation.
+            </p>
+            <p class="hint">
+              <strong>Raid Wizard</strong> - where the other windows go. A raid is a document in
+              your own data folder: bosses in the order they are run, each built at the difficulties
+              it has, with the creatures in the fight, the abilities they cast filed under a phase,
+              an enrage timer, and the loot, achievements and encounter texts that come with it.
+              Nothing is made here - it is taken from the window that already built it. A fight
+              draws as one sheet, or as a sheet per phase.
             </p>
           </fieldset>
 

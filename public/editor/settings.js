@@ -43,6 +43,15 @@ async function refreshStatus()
         const info = await api('api/status');
         runtime.clientStatus = info.client;
 
+        /* The build, in the corner. It cannot change while the window is open, so this is the once. */
+        const version = $('#app-version');
+
+        if (version && info.version)
+        {
+            version.textContent = `v${info.version}`;
+            version.title = `Astral ${info.version}`;
+        }
+
         $('#client-path').value = info.settings.clientPath || '';
         $('#db-enabled').checked = !!info.settings.db.enabled;
         $('#db-host').value = info.settings.db.host;
