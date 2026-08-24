@@ -51,12 +51,6 @@ function currentIconName()
 
 function setIcon(name, redraw = true)
 {
-    /* The raid wizard borrows this dialog for a logo, which belongs to a file rather than a field. */
-    if (wantsIcon() && takeIcon(name))
-    {
-        return;
-    }
-
     state[iconField()] = name || '';
 
     const paint = (img, value) =>
@@ -275,9 +269,22 @@ function iconButton(name)
 
     btn.appendChild(img);
 
+    /*
+     * A click in the grid is the only place an icon is *chosen*.
+     *
+     * The raid wizard borrows this dialog for a logo, which belongs to a file rather than a field,
+     * so the hand-off lives here rather than in setIcon. setIcon is also what every window calls
+     * to repaint the icon it already has - on a mode switch, a search result, a saved sheet - and
+     * a hand-off sitting in there swallowed those repaints and quietly wrote them into the raid's
+     * logo instead, which is how a picked icon stopped taking effect.
+     */
     btn.addEventListener('click', () =>
     {
-        setIcon(name);
+        if (!(wantsIcon() && takeIcon(name)))
+        {
+            setIcon(name);
+        }
+
         $('#icon-dialog').close();
     });
 

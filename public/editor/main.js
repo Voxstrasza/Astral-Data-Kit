@@ -25,7 +25,7 @@ import { bindTheme } from './theme.js';
 import { bindSpellSearch } from './spell-search.js';
 import { bindItemSearch } from './item-search.js';
 import { bindItemWizard } from './item-wizard.js';
-import { showRaids } from './raids.js';
+import { showRaids, releaseIcon } from './raids.js';
 import { bindSaved } from './saved.js';
 import { bindAchievementSearch, loadAchievementCategories } from './achievement.js';
 import { seedExample } from './example.js';
@@ -120,6 +120,13 @@ async function init()
     }
 
     $('#icon-search').addEventListener('input', (e) => renderIconGrid(e.target.value));
+
+    /*
+     * The picker is one dialog serving several askers, so closing it ends whoever asked. Without
+     * this, a raid logo pick abandoned with Close or Escape stayed armed and ate the next icon
+     * chosen in any window.
+     */
+    $('#icon-dialog').addEventListener('close', releaseIcon);
 
     bindRoadmap();
     bindItemSearch();

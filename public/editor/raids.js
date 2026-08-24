@@ -64,6 +64,17 @@ function wantsIcon()
     return !!iconTarget;
 }
 
+/**
+ * Called when the icon dialog closes, picked or not.
+ *
+ * A logo pick that was abandoned used to leave the target armed, so the next icon chosen anywhere
+ * in the app went to the raid instead of the window that asked for it.
+ */
+function releaseIcon()
+{
+    iconTarget = null;
+}
+
 /* ------------------------------------------------------------------ the list */
 
 async function refresh()
@@ -359,7 +370,7 @@ function renderRoster()
      */
     const sheetBar = document.createElement('div');
     sheetBar.className = 'row raid-bar';
-    sheetBar.appendChild(button('Copy the raid as a PNG', 'add',
+    sheetBar.appendChild(button('Download PNG', 'add',
         () => exportRaidSheet(openRaid),
         'The logo, the description and the roster on one sheet'));
     wrap.appendChild(sheetBar);
@@ -642,4 +653,4 @@ function showRaids()
     }
 }
 
-export { showRaids, takeIcon, wantsIcon, addBossFrame };
+export { showRaids, takeIcon, wantsIcon, releaseIcon, addBossFrame };

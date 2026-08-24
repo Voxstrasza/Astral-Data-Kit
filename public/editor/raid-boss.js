@@ -194,7 +194,7 @@ function renderBoss(boss, handlers)
     const exportBar = el('div', 'row raid-export');
 
     exportBar.append(
-        button('Copy everything as one PNG', 'primary', () => onExport(boss, showing.id, 'all')),
+        button('Download PNG', 'primary', () => onExport(boss, showing.id, 'all')),
         button('One PNG per phase', 'add', () => onExport(boss, showing.id, 'phases'))
     );
 
