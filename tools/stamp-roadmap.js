@@ -34,9 +34,12 @@ const APP_OUT = path.join(ROOT, 'public', 'roadmap.png');
 /*
  * Card boxes in the image's own 3200-pixel width, measured off the render.
  *
+ * 4 — Raid wizard: raids as documents, bosses with difficulties, phases and abilities, and the
+ *     sheet they draw as. Shipped in 1.5.
  * 7 — Achievement creator: the Achievement window, its finder and the card renderer.
  */
 const DONE = [
+    { label: '4', x0: 1087, y0: 1222, x1: 2034, y1: 1960 },
     { label: '7', x0: 1090, y0: 2001, x1: 3026, y1: 3079 }
 ];
 

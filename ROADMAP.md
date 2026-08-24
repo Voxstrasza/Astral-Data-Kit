@@ -215,7 +215,13 @@ straight into the world database. The only thing to supply should be the entry i
 Best done after the item wizard: both need the same complete picture of an item, and the exporter
 is the natural way to get a generated one out of the tool.
 
-## 4. Raid wizard — assemble a raid out of what the other windows make
+## 4. Raid wizard — COMPLETE
+
+*Shipped in 1.5 as the Raid Wizard. `lib/raids.js` keeps a raid as one JSON file per raid in
+`~/.astral-data-kit/raids/`; `public/editor/raids.js` is the list and the roster,
+`public/editor/raid-boss.js` is one fight opened, and `public/editor/raid-sheet.js` draws it. The
+working-out below is kept because what it settled still holds — and what it turned out differently
+on is written up at the end of the card.*
 
 Every other window in the program builds one finished thing and then has nowhere to put it. The
 raid wizard is where they go: **create a raid, then fill it by copying finished work in from the
@@ -324,6 +330,45 @@ exactly the bosses anyone cares about.
 Note that `creature_template` in this schema has no `spell1..8` columns; a creature's abilities
 live in `smart_scripts`, which is also where phases and summons are, so one reader covers the
 abilities, the phases and the adds.
+
+### What it turned out to be
+
+Where the built thing differs from the plan above, it is the plan that was wrong:
+
+- **Taking, not pasting.** There is no clipboard. A button on the raid says what it will take and
+  from where — "Add Glorenzelg, High-Blade of the Silver Hand from the Item window" — and takes it.
+  That is the same mechanism with a step removed: `FIELDS_BY_KIND` still says what travels, so a
+  boss still cannot drag the item in the next tab along with it. A copy that has to be parked
+  somewhere first is only worth its complication when the two ends are far apart, and here they are
+  two clicks from each other.
+- **A snapshot, as decided.** What lands is a copy. Editing the item afterwards leaves the drop
+  already in the raid alone, and a raid keeps reading when the thing it came from is gone.
+- **The portrait travels as a PNG**, which is the answer this card picked: `portraitDataUrl()` in
+  `state.js` puts the captured canvas on the frame, so a boss carries its face without needing the
+  model viewer or a connection to open.
+- **The folder is the index.** No `raids.json`: a directory listing is the list, and a folder cannot
+  disagree with itself the way an index and its contents can.
+- **A fight is built per difficulty**, at 10 and 25 Normal and Heroic, added rather than assumed —
+  most fights are not written at all four sizes and a row of empty tabs invites filling them in for
+  the sake of it. Phases are a list on the difficulty, each a name and a trigger, reordered with
+  arrows; a creature's spells are filed under one, and an ability that runs in two phases is copied
+  into the second from the row it already sits on.
+- **It ends in a picture, not a form.** A fight draws as one sheet — creatures as target frames,
+  abilities as a tactics table under their phase headings, then loot, achievements and the quotes,
+  each set under the moment it belongs to — or as one PNG per phase when the fight is too big to
+  read in one picture.
+- **An enrage timer is recorded rather than simulated**: ticked on the fight, drawn at the top of
+  the ability table above the first phase.
+
+**Not built, and not holding the card open**
+
+- **The simulation.** Playing a fight back with the health bar draining against a raid's DPS is a
+  different program to a design document, and nothing else in the wizard was waiting on it.
+- **Export and import a raid as one `.json`.** The files are already plain JSON in a folder anyone
+  can open, so this is a nicety rather than the only way to move one.
+- **"Propose from a real boss."** The dungeon browser already brings a boss in with its real pool,
+  and `creature_loot_template` with its references is read for loot; proposing a whole fight from
+  `smart_scripts` is its own card if it is ever wanted.
 
 ## 5. Raid-size variants of WotLK NPCs — **built**
 
