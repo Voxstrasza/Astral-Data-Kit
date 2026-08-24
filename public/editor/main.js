@@ -214,7 +214,7 @@ async function init()
             }
             catch
             {
-                status('Your browser blocked the clipboard - use Download PNG instead.');
+                status('The clipboard would not take it - use Download PNG instead.');
             }
         });
     });

@@ -1,6 +1,6 @@
 'use strict';
 
-/* The data API, served by lib/routes.js behind both the Electron app:// scheme and server.js. */
+/* The data API, served by lib/routes.js behind the app:// scheme the window is loaded from. */
 
 async function api(path, options)
 {

@@ -292,9 +292,9 @@ Two things to decide when it is built:
 
 ### Saving, and carrying raids over between sessions
 
-Raids are files in the app's own data folder, beside the custom icons: `~/.astral-data-kit/raids/`,
-one JSON per raid. That is the `DATA` root `server.js` builds from `os.homedir()` and the Electron
-shell uses the same one, so a raid saved in the browser opens in the desktop app.
+Raids are files in the app's own data folder, beside the custom icons and the client cache:
+`%APPDATA%\astral-data-kit\raids\`, one JSON per raid. That folder is Electron's `userData`, which
+is where the settings, the icons and the cache already live.
 
 Outside the program folder on purpose, and for the same reason `lib/custom-icons.js` gives for the
 icons: repackaging the app rewrites `dist\`, and rebuilding the client index throws away `cache\`.

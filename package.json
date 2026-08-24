@@ -6,7 +6,6 @@
   "main": "electron/main.js",
   "scripts": {
     "app": "electron .",
-    "serve": "node server.js --open",
     "icon": "node tools/make-icon.js",
     "extract-art": "node tools/extract-ui-art.js",
     "dist": "electron-builder --win",

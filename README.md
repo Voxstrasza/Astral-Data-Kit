@@ -19,8 +19,7 @@ From source, with Node 18 or newer:
 
 ```
 npm install
-npm run app        # desktop window
-npm run serve      # or a browser at http://localhost:4173
+npm run app        # the app, from source
 npm run package    # build dist\Astral-win32-x64\Astral.exe
 ```
 
