@@ -149,18 +149,29 @@ body {
   align-items: center;
 }
 
-/* The build sits over the Settings button, right-aligned with it, in the corner of the window. */
+/*
+ * The build sits over the Settings button, right-aligned with it, in the corner of the window.
+ *
+ * Lifted out of the flow rather than stacked above the button: a column of the two made the row
+ * taller and pushed Settings down off the line it shares with the badges. This way the wrapper is
+ * exactly the button's size, so the button does not move, and the version hangs in the space the
+ * bar already had above it.
+ */
 .topbar-end {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
+  align-items: center;
 }
 
 .version {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 3px;
   color: var(--muted);
   font-size: 11px;
   letter-spacing: 0.4px;
+  white-space: nowrap;
 }
 
 .kind-switch {
