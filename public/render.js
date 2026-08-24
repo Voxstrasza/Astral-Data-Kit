@@ -1298,6 +1298,18 @@ function renderChat(lines, opts, scale)
 
     const wrapped = [];
 
+    /*
+     * What the block is: the moment these lines belong to, when something above has named one.
+     *
+     * It is the program's annotation rather than words the game prints, so it takes the same muted
+     * gray a line's trigger does. Gold is the sheet's own voice for its sections, and a moment is
+     * not a section - it is a note on the block underneath it.
+     */
+    if (opts.heading)
+    {
+        wrapped.push({ text: opts.heading, color: '#8992ab', small: true });
+    }
+
     for (const line of lines)
     {
         /*

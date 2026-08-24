@@ -330,9 +330,14 @@ function drawAbilities(rows, width, scale, multipleCasters)
     {
         if (row.heading)
         {
+            /*
+             * As typed, not shouted. The sheet's own headings are uppercase because they are the
+             * program's words - ABILITIES, LOOT - but a phase is named and described by whoever
+             * wrote the fight down, and "70% HEALTH" is not how they wrote it.
+             */
             ctx.fillStyle = SHEET.accent;
             ctx.font = SHEET.font(SHEET.section * scale, 600);
-            ctx.fillText(row.heading.toUpperCase(), 0, y + SHEET.section * scale * 0.6);
+            ctx.fillText(row.heading, 0, y + SHEET.section * scale * 0.6);
 
             y += row.headingHeight;
         }
@@ -476,29 +481,27 @@ async function sectionsFor(difficulty, scale, phaseId)
     }
 
     /*
-     * Each set of lines under the moment it was filed as, so an intro, the words over a corpse and
-     * an outro read as the separate exchanges they are rather than one run of quotes.
+     * The quotes are one section, and each block says which moment it is.
      *
-     * Sets sharing a moment share its heading: two creatures answering each other at the pull is
-     * one moment written down twice, and repeating the heading over each would say otherwise. A set
-     * saved before moments existed carries no name and keeps the old one.
+     * The moment was briefly a gold section heading of its own, which made a fight with four sets
+     * of lines read as four sections of the sheet rather than one - the gold is how the sheet names
+     * Loot and Abilities, and a moment does not carry that weight. It sits on the block instead, in
+     * the gray a line's trigger uses. A set saved before moments existed simply has nothing to say
+     * there, and the section heading covers it.
      */
-    let quotes = null;
+    const quotes = [];
 
     for (const lines of difficulty.lines || [])
     {
-        const title = (lines.label || '').trim() || 'Encounter quotes';
-        const piece = R.renderChat(
-            M.buildChatLines(pieceState('text', lines)), { ...options, maxWidth: 460 }, scale);
+        quotes.push(R.renderChat(
+            M.buildChatLines(pieceState('text', lines)),
+            { ...options, maxWidth: 460, heading: (lines.label || '').trim() },
+            scale));
+    }
 
-        if (quotes && quotes.title === title)
-        {
-            quotes.pieces.push(piece);
-            continue;
-        }
-
-        quotes = { title, pieces: [piece] };
-        sections.push(quotes);
+    if (quotes.length)
+    {
+        sections.push({ title: 'Encounter quotes', pieces: quotes });
     }
 
     return sections;
