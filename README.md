@@ -77,10 +77,7 @@ Every tool exports a PNG at 1x-4x and copies to the clipboard.
 ## Future features
 
 - **Item wizard** - build upon the gear formula and create gear beyond Icecrown Citadel, or create
-  new gearsets that fit nicely in existing tiers. The budget it prices against is the client's own
-  (`RandPropPoints.dbc` and `ItemRandomSuffix.dbc`) rather than an average fitted to real gear, so
-  a "Plus" tier - a T7.5, or a WotLK-style T11 - costs what the curve says it should. The maths is
-  derived and verified in `lib/item-budget.js`; what is open is how the panel should feel to use.
+  new gearsets that fit nicely in existing tiers.
 - **SQL exporter** - export the items you create straight into AzerothCore or TrinityCore:
   ready-to-run `INSERT` statements for whatever the editor is showing, with only an entry id to
   supply.
