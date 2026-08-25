@@ -10,30 +10,6 @@ items, creatures and loot tables, so a custom piece can start from the one it wi
 
 Visualize your creativity and see how it would appear in-game.
 
-## Examples
-
-Example of target frames:
-
-![Target frame](art/malformed-ghoul.png)
-
-Example of spell tooltips:
-
-![Spell tooltip](art/army-of-the-damned.png)
-
-![Spell tooltip](art/necrotic-convergence.png)
-
-Example of text editor:
-
-![Encounter texts](art/overlordbloodbanetexts.png)
-
-Example of achievement editor:
-
-![Achievement card](art/there-must-always-be-a-nevermind.png)
-
-Example of raid wizard output:
-
-![Raid wizard sheet](art/overlord-bloodbane-25h.png)
-
 ## Getting it
 
 Download the [latest release](https://github.com/Voxstrasza/Astral-Data-Kit/releases), unzip it
@@ -72,6 +48,30 @@ It adds creature search, item search, real loot tables and real health pools.
 
 Every tool exports a PNG at 1x-4x and copies to the clipboard.
 
+## Examples
+
+Example of target frames:
+
+![Target frame](art/malformed-ghoul.png)
+
+Example of spell tooltips:
+
+![Spell tooltip](art/army-of-the-damned.png)
+
+![Spell tooltip](art/necrotic-convergence.png)
+
+Example of text editor:
+
+![Encounter texts](art/overlordbloodbanetexts.png)
+
+Example of achievement editor:
+
+![Achievement card](art/there-must-always-be-a-nevermind.png)
+
+Example of raid wizard output:
+
+![Raid wizard sheet](art/overlord-bloodbane-25h.png)
+
 ## Future features
 
 - **Item wizard** - build upon the gear formula and create gear beyond Icecrown Citadel, or create
@@ -83,11 +83,6 @@ Every tool exports a PNG at 1x-4x and copies to the clipboard.
 - **Live portraits** - portraits rendered from the client's own `.m2` models with the camera stored
   inside the model file, so the framing is the game's rather than an approximation. The data half
   is built and verified; a local renderer is the work left.
-
-## Roadmap
-
-[ROADMAP.md](ROADMAP.md) is the working notebook - what is built, what is parked and why, and the
-figures behind each idea, including the WotLK item budget derived from the client's own tables.
 
 ## Notes
 
