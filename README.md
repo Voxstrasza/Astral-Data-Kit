@@ -81,11 +81,7 @@ Every tool exports a PNG at 1x-4x and copies to the clipboard.
 - **SQL exporter** - export the items you create straight into AzerothCore or TrinityCore:
   ready-to-run `INSERT` statements for whatever the editor is showing, with only an entry id to
   supply.
-- **Armory** - build a character and see what your own gear would do to it. Base stats come from
-  the core's own `player_classlevelstats`, the way NPC health already comes from
-  `creature_classlevelstats`, so equipping an item you designed reads out as the real stat block
-  that character would have - the honest test of whether a custom piece is an upgrade or a
-  problem.
+- **Armory** - build a character and see what your own gear would do to it.
 - **Live portraits** - portraits rendered from the client's own `.m2` models with the camera stored
   inside the model file, so the framing is the game's rather than an approximation. The data half
   is built and verified; a local renderer is the work left.
