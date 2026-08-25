@@ -64,7 +64,7 @@ It adds creature search, item search, real loot tables and real health pools.
 - **NPC** - in-game target frame with health pools. Create a creature or pull a dungeon/raid
   creature from the database. Customize the scaling and pull portraits from the 3D model, matching
   the in-game engine.
-- **Achievement** - the achievement card in the client's own parchment.
+- **Achievement** - create an achievement or load an existing one as it would appear in-game.
 - **Texts** - what a creature says, in the colors the chat frame prints them in.
 - **Raid Wizard** - where everything else goes. A raid is a document in your own data folder:
   bosses in the order they are run, each at the difficulties it has, with the creatures in the
