@@ -61,8 +61,9 @@ It adds creature search, item search, real loot tables and real health pools.
   the in-game engine.
 - **Spell** - create a spell tooltip, or pull existing data from `Spell.dbc` and load it, matching
   the in-game engine.
-- **NPC** - the target frame with real health pools, a dungeon and raid browser built from the
-  client's own tables, custom difficulty scaling, and portraits captured from the 3D model.
+- **NPC** - in-game target frame with health pools. Create a creature or pull a dungeon/raid
+  creature from the database. Customize the scaling and pull portraits from the 3D model, matching
+  the in-game engine.
 - **Achievement** - the achievement card in the client's own parchment.
 - **Texts** - what a creature says, in the colors the chat frame prints them in.
 - **Raid Wizard** - where everything else goes. A raid is a document in your own data folder:
