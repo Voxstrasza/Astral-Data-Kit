@@ -1,9 +1,9 @@
-# Astral — a 3.3.5a Data Kit
+# Astral - a 3.3.5a Data Kit
 
 Astral is a conceptualization tool for Wrath of the Lich King content.
 
 It is where you design a thing before it exists in the game: an item, a spell, a boss, an
-achievement, a line of dialogue — or a whole raid built out of all of them. Everything you make
+achievement, a line of dialogue - or a whole raid built out of all of them. Everything you make
 draws the way the client draws it, using the icons, fonts and border art from your own 3.3.5a
 install, and exports as a PNG. Point it at a world database as well and it reads your server's real
 items, creatures and loot tables, so a custom piece can start from the one it will sit beside.
@@ -49,7 +49,7 @@ npm run package    # build dist\Astral-win32-x64\Astral.exe
 
 ## Initialization
 
-Open **Settings** and point at your 3.3.5a folder — the one containing `Data\`. That turns on the
+Open **Settings** and point at your 3.3.5a folder - the one containing `Data\`. That turns on the
 real icons and fonts, the client's spell and achievement tables, and the dungeon browser.
 
 Connecting a **world database** (AzerothCore or TrinityCore schema) in the same dialog is optional.
@@ -57,47 +57,47 @@ It adds creature search, item search, real loot tables and real health pools.
 
 ## Tools
 
-- **Item** — quality, binding, slot, damage with calculated DPS, stats, sockets, set bonuses and
+- **Item** - quality, binding, slot, damage with calculated DPS, stats, sockets, set bonuses and
   green `Equip:`/`Use:` lines. Search your database, or browse loot boss by boss and difficulty by
   difficulty.
-- **Spell** — pull a real spell out of the client's `Spell.dbc` and edit it, with its aura drawn as
+- **Spell** - pull a real spell out of the client's `Spell.dbc` and edit it, with its aura drawn as
   a second tooltip.
-- **NPC** — the target frame with real health pools, a dungeon and raid browser built from the
+- **NPC** - the target frame with real health pools, a dungeon and raid browser built from the
   client's own tables, custom difficulty scaling, and portraits captured from the 3D model.
-- **Achievement** — the achievement card in the client's own parchment.
-- **Texts** — what a creature says, in the colors the chat frame prints them in.
-- **Raid Wizard** — where everything else goes. A raid is a document in your own data folder:
+- **Achievement** - the achievement card in the client's own parchment.
+- **Texts** - what a creature says, in the colors the chat frame prints them in.
+- **Raid Wizard** - where everything else goes. A raid is a document in your own data folder:
   bosses in the order they are run, each at the difficulties it has, with the creatures in the
   fight, the abilities they cast filed under a phase, an enrage timer, and the loot, achievements
-  and encounter texts that come with it. Nothing is invented here — each piece is copied in from
+  and encounter texts that come with it. Nothing is invented here - each piece is copied in from
   the tool that already built it. A fight draws as one sheet, or as a sheet per phase.
 
-Every tool exports a PNG at 1x–4x and copies to the clipboard.
+Every tool exports a PNG at 1x-4x and copies to the clipboard.
 
 ## Future features
 
-- **Tier stat generator** — generate an item with T7–T10 stats and item level from the client's own
+- **Tier stat generator** - generate an item with T7-T10 stats and item level from the client's own
   budget curve (`RandPropPoints.dbc` and `ItemRandomSuffix.dbc`), plus a "Plus" mode that
-  extrapolates hypothetical tiers — a T7.5, or a WotLK-style T11. The maths is derived and verified
+  extrapolates hypothetical tiers - a T7.5, or a WotLK-style T11. The maths is derived and verified
   in `lib/item-budget.js`; what is open is how the panel should feel to use.
-- **Item wizard** — the flow around that maths. Forwards, generate a stat block that costs its
+- **Item wizard** - the flow around that maths. Forwards, generate a stat block that costs its
   budget exactly; backwards, price whatever the editor is showing and say what item level it
   *really* is, rather than what was typed into the field.
-- **SQL exporter** — export the items you create straight into AzerothCore or TrinityCore:
+- **SQL exporter** - export the items you create straight into AzerothCore or TrinityCore:
   ready-to-run `INSERT` statements for whatever the editor is showing, with only an entry id to
   supply.
-- **Armory** — build a character and see what your own gear would do to it. Base stats come from
+- **Armory** - build a character and see what your own gear would do to it. Base stats come from
   the core's own `player_classlevelstats`, the way NPC health already comes from
   `creature_classlevelstats`, so equipping an item you designed reads out as the real stat block
-  that character would have — the honest test of whether a custom piece is an upgrade or a
+  that character would have - the honest test of whether a custom piece is an upgrade or a
   problem.
-- **Live portraits** — portraits rendered from the client's own `.m2` models with the camera stored
+- **Live portraits** - portraits rendered from the client's own `.m2` models with the camera stored
   inside the model file, so the framing is the game's rather than an approximation. The data half
   is built and verified; a local renderer is the work left.
 
 ## Roadmap
 
-[ROADMAP.md](ROADMAP.md) is the working notebook — what is built, what is parked and why, and the
+[ROADMAP.md](ROADMAP.md) is the working notebook - what is built, what is parked and why, and the
 figures behind each idea, including the WotLK item budget derived from the client's own tables.
 
 ## Notes
