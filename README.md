@@ -13,32 +13,27 @@ would look like on their screen.
 
 ## Examples
 
-One fight that does not exist, built a tool at a time — Overlord Bloodbane, from a
-*Return to Scarlet Enclave*.
+Example of target frames:
 
-**NPC** — the target frame, for one of the adds he summons:
+![Target frame](art/malformed-ghoul.png)
 
-![Malformed Ghoul target frame](art/malformed-ghoul.png)
+Example of spell tooltips:
 
-**Spell** — the spell that summons them, and the ability the fight is built around:
+![Spell tooltip](art/army-of-the-damned.png)
 
-![Army of the Damned](art/army-of-the-damned.png)
+![Spell tooltip](art/necrotic-convergence.png)
 
-![Necrotic Convergence](art/necrotic-convergence.png)
+Example of text editor:
 
-**Texts** — what he shouts while it happens:
+![Encounter texts](art/overlordbloodbanetexts.png)
 
-![Overlord Bloodbane's encounter texts](art/overlordbloodbanetexts.png)
+Example of achievement editor:
 
-**Achievement** — for beating the mechanic the fight hides:
+![Achievement card](art/there-must-always-be-a-nevermind.png)
 
-![There Must Always Be A... Nevermind](art/there-must-always-be-a-nevermind.png)
+Example of raid wizard output:
 
-**Raid Wizard** — a concept boss fight with every tool used together: the frames, the spells, the
-texts, the loot and the achievement all pasted into one encounter, drawn as a single sheet at
-25 Heroic.
-
-![Overlord Bloodbane, 25 Heroic](art/overlord-bloodbane-25h.png)
+![Raid wizard sheet](art/overlord-bloodbane-25h.png)
 
 ## Getting it
 
