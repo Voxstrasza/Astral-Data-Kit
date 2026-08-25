@@ -8,8 +8,7 @@ draws the way the client draws it, using the icons, fonts and border art from yo
 install, and exports as a PNG. Point it at a world database as well and it reads your server's real
 items, creatures and loot tables, so a custom piece can start from the one it will sit beside.
 
-The point is the picture you can put in front of someone: this is what I mean, this is what it
-would look like on their screen.
+Visualize your creativity and see how it would appear in-game.
 
 ## Examples
 
