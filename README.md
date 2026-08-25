@@ -65,7 +65,8 @@ It adds creature search, item search, real loot tables and real health pools.
   creature from the database. Customize the scaling and pull portraits from the 3D model, matching
   the in-game engine.
 - **Achievement** - create an achievement or load an existing one as it would appear in-game.
-- **Texts** - what a creature says, in the colors the chat frame prints them in.
+- **Texts** - want to formulate some roleplay? Draft some text as it would appear in-game, complete
+  with boss whispers and boss announcements.
 - **Raid Wizard** - where everything else goes. A raid is a document in your own data folder:
   bosses in the order they are run, each at the difficulties it has, with the creatures in the
   fight, the abilities they cast filed under a phase, an enrage timer, and the loot, achievements
