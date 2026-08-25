@@ -57,7 +57,8 @@ It adds creature search, item search, real loot tables and real health pools.
 
 ## Tools
 
-- **Item** - create an item tooltip, matching the in-game engine.
+- **Item** - create an item tooltip, or pull existing data from the database and load it, matching
+  the in-game engine.
 - **Spell** - pull a real spell out of the client's `Spell.dbc` and edit it, with its aura drawn as
   a second tooltip.
 - **NPC** - the target frame with real health pools, a dungeon and raid browser built from the
