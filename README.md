@@ -1,14 +1,44 @@
 # Astral — a 3.3.5a Data Kit
 
-Astral makes pictures of Wrath of the Lich King things.
+Astral is a conceptualization tool for Wrath of the Lich King content.
 
-Build an **item tooltip**, a **spell tooltip**, an **NPC target frame**, an **achievement card** or
-a **chat script**, and it draws the way the game draws — using the icons, fonts and border art from
-your own 3.3.5a client — then exports a PNG. Point it at a world database as well and it reads your
-server's real items, creatures and loot tables, so a custom piece can start from the one it will
-sit beside.
+It is where you design a thing before it exists in the game: an item, a spell, a boss, an
+achievement, a line of dialogue — or a whole raid built out of all of them. Everything you make
+draws the way the client draws it, using the icons, fonts and border art from your own 3.3.5a
+install, and exports as a PNG. Point it at a world database as well and it reads your server's real
+items, creatures and loot tables, so a custom piece can start from the one it will sit beside.
 
-![The roadmap](art/roadmap.png)
+The point is the picture you can put in front of someone: this is what I mean, this is what it
+would look like on their screen.
+
+## Examples
+
+One fight that does not exist, built a tool at a time — Overlord Bloodbane, from a
+*Return to Scarlet Enclave*.
+
+**NPC** — the target frame, for one of the adds he summons:
+
+![Malformed Ghoul target frame](art/malformed-ghoul.png)
+
+**Spell** — the spell that summons them, and the ability the fight is built around:
+
+![Army of the Damned](art/army-of-the-damned.png)
+
+![Necrotic Convergence](art/necrotic-convergence.png)
+
+**Texts** — what he shouts while it happens:
+
+![Overlord Bloodbane's encounter texts](art/overlordbloodbanetexts.png)
+
+**Achievement** — for beating the mechanic the fight hides:
+
+![There Must Always Be A... Nevermind](art/there-must-always-be-a-nevermind.png)
+
+**Raid Wizard** — a concept boss fight with every tool used together: the frames, the spells, the
+texts, the loot and the achievement all pasted into one encounter, drawn as a single sheet at
+25 Heroic.
+
+![Overlord Bloodbane, 25 Heroic](art/overlord-bloodbane-25h.png)
 
 ## Getting it
 
@@ -31,7 +61,7 @@ real icons and fonts, the client's spell and achievement tables, and the dungeon
 Connecting a **world database** (AzerothCore or TrinityCore schema) in the same dialog is optional.
 It adds creature search, item search, real loot tables and real health pools.
 
-## The windows
+## Tools
 
 - **Item** — quality, binding, slot, damage with calculated DPS, stats, sockets, set bonuses and
   green `Equip:`/`Use:` lines. Search your database, or browse loot boss by boss and difficulty by
@@ -42,9 +72,34 @@ It adds creature search, item search, real loot tables and real health pools.
   client's own tables, custom difficulty scaling, and portraits captured from the 3D model.
 - **Achievement** — the achievement card in the client's own parchment.
 - **Texts** — what a creature says, in the colors the chat frame prints them in.
+- **Raid Wizard** — where everything else goes. A raid is a document in your own data folder:
+  bosses in the order they are run, each at the difficulties it has, with the creatures in the
+  fight, the abilities they cast filed under a phase, an enrage timer, and the loot, achievements
+  and encounter texts that come with it. Nothing is invented here — each piece is copied in from
+  the tool that already built it. A fight draws as one sheet, or as a sheet per phase.
 
-Every window exports a PNG at 1x–4x, copies to the clipboard, and carries a permalink that reopens
-the exact state still editable.
+Every tool exports a PNG at 1x–4x and copies to the clipboard.
+
+## Future features
+
+- **Tier stat generator** — generate an item with T7–T10 stats and item level from the client's own
+  budget curve (`RandPropPoints.dbc` and `ItemRandomSuffix.dbc`), plus a "Plus" mode that
+  extrapolates hypothetical tiers — a T7.5, or a WotLK-style T11. The maths is derived and verified
+  in `lib/item-budget.js`; what is open is how the panel should feel to use.
+- **Item wizard** — the flow around that maths. Forwards, generate a stat block that costs its
+  budget exactly; backwards, price whatever the editor is showing and say what item level it
+  *really* is, rather than what was typed into the field.
+- **SQL exporter** — export the items you create straight into AzerothCore or TrinityCore:
+  ready-to-run `INSERT` statements for whatever the editor is showing, with only an entry id to
+  supply.
+- **Armory** — build a character and see what your own gear would do to it. Base stats come from
+  the core's own `player_classlevelstats`, the way NPC health already comes from
+  `creature_classlevelstats`, so equipping an item you designed reads out as the real stat block
+  that character would have — the honest test of whether a custom piece is an upgrade or a
+  problem.
+- **Live portraits** — portraits rendered from the client's own `.m2` models with the camera stored
+  inside the model file, so the framing is the game's rather than an approximation. The data half
+  is built and verified; a local renderer is the work left.
 
 ## Roadmap
 
@@ -53,7 +108,6 @@ figures behind each idea, including the WotLK item budget derived from the clien
 
 ## Notes
 
-- Permalinks encode the editor state in the URL fragment and never touch a server.
 - The world-database password stays in the local settings file.
 - Interface font is [Figtree](https://github.com/erikdkennedy/figtree) (SIL Open Font License).
 - Fan-made tool, not affiliated with Blizzard Entertainment. World of Warcraft and its assets are
