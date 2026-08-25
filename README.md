@@ -67,11 +67,8 @@ It adds creature search, item search, real loot tables and real health pools.
 - **Achievement** - create an achievement or load an existing one as it would appear in-game.
 - **Texts** - want to formulate some roleplay? Draft some text as it would appear in-game, complete
   with boss whispers and boss announcements.
-- **Raid Wizard** - where everything else goes. A raid is a document in your own data folder:
-  bosses in the order they are run, each at the difficulties it has, with the creatures in the
-  fight, the abilities they cast filed under a phase, an enrage timer, and the loot, achievements
-  and encounter texts that come with it. Nothing is invented here - each piece is copied in from
-  the tool that already built it. A fight draws as one sheet, or as a sheet per phase.
+- **Raid Wizard** - where everything you build with the previous tools can go. Exports an image
+  where on one sheet you can view target frames, spells, texts and more.
 
 Every tool exports a PNG at 1x-4x and copies to the clipboard.
 
