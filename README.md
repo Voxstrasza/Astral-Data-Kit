@@ -10,19 +10,6 @@ items, creatures and loot tables, so a custom piece can start from the one it wi
 
 Visualize your creativity and see how it would appear in-game.
 
-## Getting it
-
-Download the [latest release](https://github.com/Voxstrasza/Astral-Data-Kit/releases), unzip it
-anywhere and run `Astral.exe`. No installer, no runtime to fetch.
-
-From source, with Node 18 or newer:
-
-```
-npm install
-npm run app        # the app, from source
-npm run package    # build dist\Astral-win32-x64\Astral.exe
-```
-
 ## Initialization
 
 Open **Settings** and point at your 3.3.5a folder - the one containing `Data\`. That turns on the
@@ -83,6 +70,19 @@ Example of raid wizard output:
 - **Live portraits** - portraits rendered from the client's own `.m2` models with the camera stored
   inside the model file, so the framing is the game's rather than an approximation. The data half
   is built and verified; a local renderer is the work left.
+
+## Getting it
+
+Download the [latest release](https://github.com/Voxstrasza/Astral-Data-Kit/releases), unzip it
+anywhere and run `Astral.exe`. No installer, no runtime to fetch.
+
+From source, with Node 18 or newer:
+
+```
+npm install
+npm run app        # the app, from source
+npm run package    # build dist\Astral-win32-x64\Astral.exe
+```
 
 ## Notes
 
