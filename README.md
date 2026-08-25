@@ -80,9 +80,8 @@ Every tool exports a PNG at 1x-4x and copies to the clipboard.
   budget curve (`RandPropPoints.dbc` and `ItemRandomSuffix.dbc`), plus a "Plus" mode that
   extrapolates hypothetical tiers - a T7.5, or a WotLK-style T11. The maths is derived and verified
   in `lib/item-budget.js`; what is open is how the panel should feel to use.
-- **Item wizard** - the flow around that maths. Forwards, generate a stat block that costs its
-  budget exactly; backwards, price whatever the editor is showing and say what item level it
-  *really* is, rather than what was typed into the field.
+- **Item wizard** - build upon the gear formula and create gear beyond Icecrown Citadel, or create
+  new gearsets that fit nicely in existing tiers.
 - **SQL exporter** - export the items you create straight into AzerothCore or TrinityCore:
   ready-to-run `INSERT` statements for whatever the editor is showing, with only an entry id to
   supply.
