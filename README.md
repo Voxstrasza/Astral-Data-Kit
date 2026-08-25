@@ -59,8 +59,8 @@ It adds creature search, item search, real loot tables and real health pools.
 
 - **Item** - create an item tooltip, or pull existing data from the database and load it, matching
   the in-game engine.
-- **Spell** - pull a real spell out of the client's `Spell.dbc` and edit it, with its aura drawn as
-  a second tooltip.
+- **Spell** - create a spell tooltip, or pull existing data from `Spell.dbc` and load it, matching
+  the in-game engine.
 - **NPC** - the target frame with real health pools, a dungeon and raid browser built from the
   client's own tables, custom difficulty scaling, and portraits captured from the 3D model.
 - **Achievement** - the achievement card in the client's own parchment.
