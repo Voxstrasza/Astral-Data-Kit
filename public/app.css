@@ -232,11 +232,24 @@ body {
   align-items: center;
 }
 
-.version {
+/*
+ * The line above the Settings button: who made the program, then which build it is.
+ *
+ * Taken out of the flow as one line rather than as two positioned pieces, so the credit sits
+ * against the version rather than against a guess at how wide the version happens to be.
+ */
+.byline {
   position: absolute;
   bottom: 100%;
   right: 0;
   margin-bottom: 3px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.credit,
+.version {
   color: var(--muted);
   font-size: 11px;
   letter-spacing: 0.4px;
