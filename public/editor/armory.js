@@ -31,25 +31,63 @@ const WEAPONS = ['Main hand', 'Off hand', 'Ranged'];
  * and draws as a dash until phase 2 builds it.
  */
 const SHEET = [
-    { label: 'Health' }, { label: 'Mana' },
-    { label: 'Strength', key: 'str' }, { label: 'Agility', key: 'agi' },
-    { label: 'Stamina', key: 'sta' }, { label: 'Intellect', key: 'int' },
+    { label: 'Health', tag: 'core' },
+    { label: 'Mana', tag: 'mana' },
+    { label: 'Strength', key: 'str', tag: 'core' },
+    { label: 'Agility', key: 'agi', tag: 'core' },
+    { label: 'Stamina', key: 'sta', tag: 'core' },
+    { label: 'Intellect', key: 'int', tag: 'mana' },
+    { label: 'Spirit', key: 'spi', tag: 'mana' },
+    { label: 'Armor', tag: 'core' },
 
-    { label: 'Spirit', key: 'spi' }, { label: 'Armor' },
-    { label: 'Attack power' }, { label: 'Ranged power' },
-    { label: 'Spell power' }, { label: 'Mana regen', key: 'manaRegen', suffix: ' /5s', places: 1 },
+    { label: 'Attack power', tag: 'melee' },
+    { label: 'Melee crit', key: 'meleeCrit', suffix: '%', places: 2, tag: 'melee' },
+    { label: 'Melee hit', tag: 'melee' },
+    { label: 'Melee haste', tag: 'melee' },
+    { label: 'Expertise', tag: 'melee' },
+    { label: 'Armor pen', tag: 'melee' },
 
-    { label: 'Melee crit', key: 'meleeCrit', suffix: '%', places: 2 },
-    { label: 'Spell crit', key: 'spellCrit', suffix: '%', places: 2 },
-    { label: 'Melee hit' }, { label: 'Spell hit' },
-    { label: 'Melee haste' }, { label: 'Spell haste' },
+    { label: 'Ranged power', tag: 'ranged' },
 
-    { label: 'Expertise' }, { label: 'Armor pen' }, { label: 'Dodge' },
-    { label: 'Parry' }, { label: 'Block' }, { label: 'Defense' },
+    { label: 'Spell power', tag: 'spell' },
+    { label: 'Spell crit', key: 'spellCrit', suffix: '%', places: 2, tag: 'spell' },
+    { label: 'Spell hit', tag: 'spell' },
+    { label: 'Spell haste', tag: 'spell' },
+    { label: 'Mana regen', key: 'manaRegen', suffix: ' /5s', places: 1, tag: 'mana' },
 
-    { label: 'Resilience' }, { label: 'Arcane' }, { label: 'Fire' },
-    { label: 'Frost' }, { label: 'Nature' }, { label: 'Shadow' }
+    { label: 'Dodge', tag: 'defense' },
+    { label: 'Parry', tag: 'defense' },
+    { label: 'Block', tag: 'defense' },
+    { label: 'Defense', tag: 'defense' },
+    { label: 'Resilience', tag: 'defense' },
+
+    { label: 'Arcane', tag: 'resist' }, { label: 'Fire', tag: 'resist' },
+    { label: 'Frost', tag: 'resist' }, { label: 'Nature', tag: 'resist' },
+    { label: 'Shadow', tag: 'resist' }
 ];
+
+/*
+ * What each class is actually read for.
+ *
+ * The game's own sheet shows every category to everyone, spell power on a warrior included. This
+ * does not, because a sheet you are reading to judge a piece of gear is better without twelve
+ * lines that will always be zero. Hybrids get both halves rather than a guess at which one they
+ * are playing - a paladin can be any of three things and, until the talent calculator says which,
+ * so can this. "Show every stat" is there for the case this gets wrong, which for a program about
+ * inventing items is a case that will come up.
+ */
+const CLASS_STATS = {
+    1: ['core', 'melee', 'defense', 'resist'],                          // Warrior
+    2: ['core', 'mana', 'melee', 'spell', 'defense', 'resist'],         // Paladin
+    3: ['core', 'mana', 'melee', 'ranged', 'defense', 'resist'],        // Hunter
+    4: ['core', 'melee', 'defense', 'resist'],                          // Rogue
+    5: ['core', 'mana', 'spell', 'resist'],                             // Priest
+    6: ['core', 'melee', 'defense', 'resist'],                          // Death Knight
+    7: ['core', 'mana', 'melee', 'spell', 'defense', 'resist'],         // Shaman
+    8: ['core', 'mana', 'spell', 'resist'],                             // Mage
+    9: ['core', 'mana', 'spell', 'resist'],                             // Warlock
+    11: ['core', 'mana', 'melee', 'spell', 'defense', 'resist']         // Druid
+};
 
 let setup = null;
 let bound = false;
@@ -132,6 +170,7 @@ function showWho()
     $('#armory-guild').value = state.armoryGuild || '';
     $('#armory-guild-on').checked = !!state.armoryGuildShow;
     $('#armory-guild').hidden = !state.armoryGuildShow;
+    $('#armory-all-stats').checked = !!state.armoryAllStats;
 }
 
 /** Death knights start at 55, so the level field says so rather than answering with an error. */
@@ -145,20 +184,34 @@ function clampLevel()
     input.value = String(state.armoryLevel);
 }
 
+/** One line, the way the game writes it: the stat, a colon, the number. */
 function cell(entry, sheet)
 {
     const value = entry.key
         ? (sheet.stats[entry.key] !== undefined ? sheet.stats[entry.key] : sheet[entry.key])
         : undefined;
 
-    const box = el('div', value === undefined ? 'stat pending' : 'stat');
+    const line = el('div', value === undefined ? 'stat pending' : 'stat');
 
-    box.append(el('span', 'stat-label', entry.label));
-    box.append(el('span', 'stat-value', value === undefined
+    line.append(el('span', 'stat-label', `${entry.label}:`));
+    line.append(el('span', 'stat-value', value === undefined
         ? '-'
         : `${entry.places ? value.toFixed(entry.places) : Math.round(value)}${entry.suffix || ''}`));
 
-    return box;
+    return line;
+}
+
+/** The lines this class is read for, or all of them when the box below the sheet is ticked. */
+function linesFor(cls)
+{
+    if (state.armoryAllStats)
+    {
+        return SHEET;
+    }
+
+    const tags = CLASS_STATS[cls] || Object.keys(CLASS_STATS);
+
+    return SHEET.filter((entry) => tags.includes(entry.tag));
 }
 
 async function refresh()
@@ -177,7 +230,8 @@ async function refresh()
         return;
     }
 
-    $('#armory-stat-grid').replaceChildren(...SHEET.map((entry) => cell(entry, sheet)));
+    $('#armory-stat-grid').replaceChildren(
+        ...linesFor(state.armoryClass).map((entry) => cell(entry, sheet)));
 
     /*
      * Base health is not health: what stamina adds to it is part of the pipeline that does not
@@ -251,6 +305,12 @@ async function initArmory()
         state.armoryClass = Number(e.target.value);
         showWho();
         clampLevel();
+        refresh();
+    });
+
+    $('#armory-all-stats').addEventListener('change', (e) =>
+    {
+        state.armoryAllStats = e.target.checked;
         refresh();
     });
 

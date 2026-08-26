@@ -123,6 +123,12 @@ function defaultState()
         armoryGuild: '',
         armoryGuildShow: false,
 
+        /*
+         * Off by default: the sheet shows what the class is read for. On when you are checking
+         * something odd, which in a program about inventing items does happen.
+         */
+        armoryAllStats: false,
+
         achIcon: 'achievement_boss_lichking',
         achTitle: '',
         achDescription: '',
@@ -205,7 +211,7 @@ const FIELDS_BY_KIND = {
     text: ['textLines'],
     armory: [
         'armoryRace', 'armoryClass', 'armoryLevel',
-        'armoryName', 'armoryGuild', 'armoryGuildShow'
+        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats'
     ]
 };
 

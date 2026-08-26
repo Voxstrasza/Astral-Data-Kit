@@ -2015,31 +2015,32 @@ main.armory [data-panel="armory"] {
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2px 26px;
+  margin-bottom: 10px;
 }
 
+/*
+ * A line, not a box. A character sheet is a list of "Strength: 174" and reads better as one, in
+ * the client's own UI font: AstralGame is FRIZQT__.TTF, loaded from the user's client at start-up,
+ * with a stack behind it for before it arrives and for when no client is set.
+ */
 .stat {
+  font-family: AstralGame, Figtree, system-ui, sans-serif;
+  font-size: 15px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 5px 7px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  gap: 6px;
+  align-items: baseline;
+  padding: 2px 0;
   min-width: 0;
 }
 
 .stat-label {
-  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .stat-value {
-  font-size: 14px;
   color: var(--text);
 }
 
@@ -2074,6 +2075,6 @@ main.armory [data-panel="armory"] {
   }
 
   .stat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

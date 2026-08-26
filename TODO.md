@@ -246,8 +246,18 @@ hunter, shaman and druid.
       the way the sheet builders already use AstralGame for text quoting the game.
 - [x] Level starts at 80 and drops as far as 1, and a death knight's field floors at 55 rather than
       answering with an error.
-- [ ] The stat panel is one wide box under the weapon row, not a tall column and not tabbed. About
-      six stats to a row, grouped so a group does not straddle two rows where it can be helped.
+- [x] The stat panel is one wide box under the weapon row, not a tall column and not tabbed.
+- [x] **Lines, not boxes, in the client's own font.** Each stat reads "Strength: 174" in
+      `AstralGame`, which is `FRIZQT__.TTF` loaded from the user's client at start-up. Boxes framed
+      thirty numbers that needed no framing.
+- [x] **Only the stats the class is read for.** The game's own sheet shows every category to
+      everyone, spell power on a warrior included; this does not, because a sheet you are reading
+      to judge a piece of gear is worse for twelve lines that will always be zero. Warriors, rogues
+      and death knights lose the mana and spell groups; casters lose the melee and defense ones;
+      hybrids keep both halves rather than guessing which one they are, since a paladin is any of
+      three things until the talent calculator says otherwise. A **Show every stat** box under the
+      panel undoes the filter, which matters here more than in a normal armory: the whole point is
+      inventing items, and an invented item can put spell power on a warrior.
 - [ ] Each slot takes an item from the saved store, from the database search, or from whatever the
       Item window is currently showing. Enforce the slot: a helm goes in the head slot and nowhere
       else. Two-handers take both weapon slots.
@@ -385,6 +395,31 @@ Do not iterate on whether a number looks right.
 - [ ] `.additem` a deliberately broken custom item on the test realm and compare that too. The item
       wizard's `identify()` can price the same item and say how many times a T10 chest's budget it
       costs, which pairs well on the same panel.
+
+## Parked - the player frame, with a class icon where the portrait goes
+
+Draw **health** in the game's own player frame rather than as a cell in the stat panel, with the
+class icon in the portrait ring instead of a rendered model. That keeps the Armory's promise - no
+model anywhere - while the pool reads the way it does in game.
+
+Health only. Not the rune border, not the death knight's own frame art, not rage or energy or
+runic power. Those are all in the client and none of them is the point.
+
+**Almost none of this is new code**, which is why it is worth parking rather than dismissing.
+Checked in the client's own FrameXML on 2026-08-25:
+
+- `PlayerFrame.xml` names `Interface\TargetingFrame\UI-TargetingFrame` and
+  `Interface\TargetingFrame\UI-StatusBar`. The player frame is the *target* frame's texture,
+  mirrored. Both are already extracted into `public/ui` as `unit-frame.png` and
+  `unit-statusbar.png`, and `renderUnitFrame` in `public/render.js` already draws them with a
+  health bar. So this is a horizontal flip and a second entry point, not new art and not a new
+  renderer.
+- The class icons are one sprite sheet, `Interface\Glues\CharacterCreate\UI-CharacterCreate-Classes.blp`.
+  **Its grid and class order are the one thing not yet checked** - confirm those before writing the
+  crop, rather than assuming the obvious layout.
+
+Whether health then leaves the stat grid or stays in both places is worth deciding when it is
+built, not now.
 
 ## Deliberately not doing
 
