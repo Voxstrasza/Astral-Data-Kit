@@ -339,6 +339,22 @@ button:focus-visible {
   flex-basis: 100%;
 }
 
+/*
+ * The only links in the program are the ones on the Home page, and they open in the real browser
+ * rather than in the window. Default blue on a dark panel reads as broken, so they take the
+ * accent the rest of the interface uses.
+ */
+.hint a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.hint a:hover,
+.hint a:focus-visible {
+  border-bottom-color: var(--accent);
+}
+
 button {
   font: inherit;
   cursor: pointer;
