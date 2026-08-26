@@ -2,11 +2,11 @@
 
 Astral is a conceptualization tool for Wrath of the Lich King content.
 
-It is where you design a thing before it exists in the game: an item, a spell, a boss, an
-achievement, a line of dialogue - or a whole raid built out of all of them. Everything you make
-draws the way the client draws it, using the icons, fonts and border art from your own 3.3.5a
-install, and exports as a PNG. Point it at a world database as well and it reads your server's real
-items, creatures and loot tables, so a custom piece can start from the one it will sit beside.
+Design something before it exists in the game. Items, spells, a boss, an achievement, lines of
+dialogue. Put it all together and receive a wiki style export in PNG format. Everything you create
+is shown as it would be in-game, utilizing icons, fonts, and border art from your 3.3.5a client.
+Connect your AzerothCore or TrinityCore database and it will read items, creatures and loot tables,
+so a custom piece can be built from it.
 
 Visualize your creativity and see how it would appear in-game.
 
