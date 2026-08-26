@@ -1172,6 +1172,10 @@ main.no-preview {
   justify-content: center;
 }
 
+main.no-preview.armory {
+  grid-template-columns: minmax(0, 1220px);
+}
+
 main.no-preview .editor {
   max-height: none;
 }
@@ -1824,4 +1828,252 @@ main.home > * {
 .saved-mixed {
   margin-top: 6px;
   align-items: center;
+}
+
+/* ------------------------------------------------------------------- armory */
+
+/*
+ * The character sheet with no character in it. Taking the model out is what lets the two slot
+ * columns sit beside each other rather than down either side of a portrait, which leaves the
+ * width for a stat panel laid out across instead of down.
+ */
+
+/*
+ * The pickers sit up under the Settings button rather than at the edge of the centered column.
+ * Absolute against main, whose padding box is the window, so they land in the same right margin
+ * the topbar uses however wide the window is. main is the containing block, not .editor, so its
+ * overflow rule does not clip this.
+ */
+main.armory {
+  position: relative;
+}
+
+.armory-top {
+  display: flex;
+  justify-content: flex-end;
+  position: absolute;
+  top: 0;
+  right: 20px;
+}
+
+main.armory [data-panel="armory"] {
+  padding-top: 86px;
+}
+
+/* The group shrinks to the width of the picker row, so the button below centers under the three
+   rather than under the whole page. */
+.armory-top-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.armory-top-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.armory-top-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.armory-top-row input[type="number"] {
+  width: 72px;
+}
+
+.armory-body {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 200px;
+  gap: 14px;
+  align-items: start;
+}
+
+/* The two side boxes sit at the outer edges and the doll centers between them, so the space to
+   the left of the slots and the space to their right are the same. */
+.armory-racials,
+.armory-who {
+  grid-row: 1;
+}
+
+.armory-doll {
+  grid-row: 1;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.armory-stats {
+  grid-column: 1 / -1;
+}
+
+.armory-racials {
+  min-height: 320px;
+}
+
+/* What the talent calculator decided, sitting where the game puts it: over the character. */
+.armory-spec {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Who the character is, for the export. */
+.armory-who {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 190px;
+}
+
+.armory-who label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.armory-who label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Narrow columns, so a slot reads as a box that holds one item rather than a wide bar. */
+.armory-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 300px));
+  gap: 8px;
+}
+
+.slot-col,
+.slot-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * The weapons keep the armor slots' width rather than sharing one row three ways: at a third of
+ * the width a long single-word item name would be squeezed, and every slot on the page holding
+ * the same size box is worth more than the game's exact bottom row. Ranged sits centered under
+ * the pair.
+ */
+.slot-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 300px));
+  gap: 6px 8px;
+  max-width: 608px;
+}
+
+.slot-row .slot:nth-child(3) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 300px;
+}
+
+.slot-row .slot {
+  flex: 1;
+}
+
+/* An empty slot is a box with the name of what belongs in it, until it can hold an item. */
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  min-height: 56px;
+}
+
+.slot-name {
+  white-space: nowrap;
+}
+
+/* Big enough to read as the item square it will hold, rather than a bullet beside a label. */
+.slot-icon {
+  flex: 0 0 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 7px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-value {
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* A stat the gear pipeline has not been built for yet, drawn rather than hidden. */
+.stat.pending .stat-value {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+.equipped-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.equipped-table th {
+  text-align: left;
+  font-weight: normal;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding: 4px 6px;
+}
+
+.equipped-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (max-width: 700px) {
+  .armory-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

@@ -7,6 +7,7 @@ import { state, runtime } from './state.js';
 import { api, postJson } from './api.js';
 import { status, update } from './preview.js';
 import { setIcon, loadIcons, loadGameFonts, loadAssets } from './icons.js';
+import { initArmory } from './armory.js';
 
 /*
  * The two badges in the top bar.
@@ -102,7 +103,7 @@ async function applyClientPath(pathValue)
 
         if (client.ok)
         {
-            await Promise.all([loadIcons(), loadGameFonts(), loadAssets()]);
+            await Promise.all([loadIcons(), loadGameFonts(), loadAssets(), initArmory()]);
             setIcon(state.icon);
             update();
         }

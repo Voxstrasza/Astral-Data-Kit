@@ -46,6 +46,7 @@
         <button type="button" role="tab" data-kind="achievement">Achievement</button>
         <button type="button" role="tab" data-kind="text">Texts</button>
         <button type="button" role="tab" data-kind="raid">Raid Wizard</button>
+        <button type="button" role="tab" data-kind="armory">Armory</button>
       </div>
 
       <div class="topbar-actions">
@@ -157,7 +158,7 @@
               you are looking at - neither reaches the file. Every option here is remembered per
               window, so a transparent target frame does not quietly change how your items export.
             </p>
-          </fieldset>
+          </fieldset>
         </div>
 
         <!-- Achievement ------------------------------------------------------------ -->
@@ -232,6 +233,69 @@
           <fieldset>
             <legend>Raids</legend>
             <div id="raid-panel"></div>
+          </fieldset>
+        </div>
+
+        <!-- Armory ----------------------------------------------------------------- -->
+        <div data-panel="armory" hidden>
+          <div class="armory-top">
+            <div class="armory-top-group">
+              <div class="armory-top-row">
+                <label>Race<select id="armory-race"></select></label>
+                <label>Class<select id="armory-class"></select></label>
+                <label>Level<input type="number" id="armory-level" min="1" max="80" value="80" /></label>
+              </div>
+              <button type="button" id="btn-talents" class="ghost" disabled
+                      title="The talent calculator is not built yet">Talent calculator</button>
+            </div>
+          </div>
+
+          <div class="armory-body">
+            <fieldset class="armory-racials">
+              <legend>Racials</legend>
+              <div id="armory-racials"></div>
+            </fieldset>
+
+            <div class="armory-doll">
+              <!-- Filled in by the talent calculator: the spec is whichever tree holds the
+                   most points, so there is nothing to choose here. -->
+              <div class="armory-spec" id="armory-spec">no talents spent</div>
+
+              <div class="armory-slots">
+                <div class="slot-col" id="armory-slots-left"></div>
+                <div class="slot-col" id="armory-slots-right"></div>
+              </div>
+
+              <div class="slot-row" id="armory-slots-weapon"></div>
+            </div>
+
+            <!-- For the exported picture rather than for the numbers. -->
+            <fieldset class="armory-who">
+              <legend>Customization</legend>
+              <label>Character name
+                <input type="text" id="armory-name" maxlength="24" placeholder="Unnamed" />
+              </label>
+              <label class="check">
+                <input type="checkbox" id="armory-guild-on" /> Guild name
+              </label>
+              <input type="text" id="armory-guild" maxlength="24" placeholder="Guild" hidden />
+            </fieldset>
+
+            <fieldset class="armory-stats">
+              <legend>Stats</legend>
+              <div class="stat-grid" id="armory-stat-grid"></div>
+              <p class="hint" id="armory-stat-note"></p>
+            </fieldset>
+          </div>
+
+          <fieldset class="armory-equipped">
+            <legend>Equipped</legend>
+            <table class="equipped-table">
+              <thead>
+                <tr><th>Item</th><th>Item level</th><th>Slot</th><th>Source</th></tr>
+              </thead>
+              <tbody id="armory-equipped"></tbody>
+            </table>
           </fieldset>
         </div>
 

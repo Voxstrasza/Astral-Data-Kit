@@ -29,6 +29,7 @@ import { bindItemWizard } from './item-wizard.js';
 import { showRaids, releaseIcon } from './raids.js';
 import { bindSaved } from './saved.js';
 import { bindAchievementSearch, loadAchievementCategories } from './achievement.js';
+import { initArmory } from './armory.js';
 import { seedExample } from './example.js';
 import { M } from './wow.js';
 
@@ -133,6 +134,7 @@ async function init()
     bindItemSearch();
     bindItemWizard();
     bindSaved();
+    initArmory();
 
     /*
      * These all write into the current mode's own view settings, so ticking transparent while

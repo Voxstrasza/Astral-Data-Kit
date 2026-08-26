@@ -106,6 +106,23 @@ function defaultState()
          */
         textLines: [],
 
+        /*
+         * The Armory. Human warrior at 80 is the default because it is the combination every
+         * client has and the one whose numbers are easiest to check against a real character.
+         */
+        armoryRace: 1,
+        armoryClass: 1,
+        armoryLevel: 80,
+
+        /*
+         * Who the character is, for the exported picture rather than for the numbers. There is no
+         * spec field: in Wrath the spec is wherever the talent points went, so the calculator owns
+         * it and nothing here needs to hold a second opinion.
+         */
+        armoryName: '',
+        armoryGuild: '',
+        armoryGuildShow: false,
+
         achIcon: 'achievement_boss_lichking',
         achTitle: '',
         achDescription: '',
@@ -185,7 +202,11 @@ const FIELDS_BY_KIND = {
         'achIcon', 'achTitle', 'achDescription', 'achReward', 'achPoints', 'achEarned',
         'achCriteria', 'achCategory'
     ],
-    text: ['textLines']
+    text: ['textLines'],
+    armory: [
+        'armoryRace', 'armoryClass', 'armoryLevel',
+        'armoryName', 'armoryGuild', 'armoryGuildShow'
+    ]
 };
 
 /**
