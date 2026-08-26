@@ -795,11 +795,6 @@ code {
   flex: 1;
 }
 
-.npc-row .npc-sub {
-  color: var(--muted);
-  font-size: 11.5px;
-}
-
 .npc-row .npc-meta {
   color: var(--muted);
   font-size: 11.5px;
