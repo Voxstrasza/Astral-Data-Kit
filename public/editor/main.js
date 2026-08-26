@@ -24,6 +24,7 @@ import { bindBrowser } from './instances.js';
 import { bindTheme } from './theme.js';
 import { bindSpellSearch } from './spell-search.js';
 import { bindItemSearch } from './item-search.js';
+import { bindUpdateNotice } from './update.js';
 import { bindItemWizard } from './item-wizard.js';
 import { showRaids, releaseIcon } from './raids.js';
 import { bindSaved } from './saved.js';
@@ -128,6 +129,7 @@ async function init()
      */
     $('#icon-dialog').addEventListener('close', releaseIcon);
 
+    bindUpdateNotice();
     bindItemSearch();
     bindItemWizard();
     bindSaved();
