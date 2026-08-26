@@ -394,7 +394,7 @@ function bindHealthStep()
 }
 
 /*
- * Custom difficulty scaling — roadmap item 6.
+ * Custom difficulty scaling.
  *
  * Item 5 picks a harder version of a boss that really exists; this invents one. Each press
  * multiplies the current pool, so the presses compound the way a percentage increase does rather
