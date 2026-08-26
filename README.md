@@ -1,4 +1,4 @@
-# Astral - a 3.3.5a Data Kit
+# Astral - 3.3.5a Data Kit
 
 Astral is a conceptualization tool for Wrath of the Lich King content.
 
