@@ -225,9 +225,37 @@ function renderBoss(boss, instance)
          * and 10-heroic, and 277 on 25-heroic — four separate lists behind one name. Showing the
          * base entry alone, which is what this did at first, hides three quarters of the raid.
          */
+        /*
+         * Where the difficulties come from, in order of what is most specific.
+         *
+         * An encounter with no creature of its own has no difficulty list either, and the
+         * Assembly of Iron is exactly that - three bosses, no credited creature. Its members
+         * each carry the full 10 and 25, so the union of theirs is the encounter's, and the
+         * drops can be asked for per size the way every other fight can.
+         */
+        const fromMembers = () =>
+        {
+            const seen = new Map();
+
+            for (const member of boss.members || [])
+            {
+                for (const tier of member.difficulties || [])
+                {
+                    if (!seen.has(tier.difficulty))
+                    {
+                        seen.set(tier.difficulty, { difficulty: tier.difficulty, entry: 0 });
+                    }
+                }
+            }
+
+            return [...seen.values()].sort((a, b) => a.difficulty - b.difficulty);
+        };
+
         const tiers = boss.difficulties.length
             ? boss.difficulties
-            : (boss.chests || []).map((c) => ({ difficulty: c.difficulty, entry: 0 }));
+            : (boss.chests || []).length
+                ? (boss.chests || []).map((c) => ({ difficulty: c.difficulty, entry: 0 }))
+                : fromMembers();
 
         if (tiers.length)
         {
