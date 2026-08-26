@@ -1204,54 +1204,6 @@ main.home > * {
   z-index: 1;
 }
 
-/* ---------------------------------------------------------------- roadmap */
-
-/*
- * The roadmap render at the foot of the Home page.
- *
- * It is 3200x3828, so it is fitted to the column and read by scrolling the page; the Full size
- * button hands it back its real width inside a box that scrolls on both axes rather than letting
- * a 3200px image widen the whole layout.
- */
-.roadmap-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-}
-
-/*
- * A fieldset takes its min-width from its content, so without this the 3200px picture widens the
- * panel at full size instead of scrolling inside it.
- */
-#roadmap {
-  min-width: 0;
-}
-
-.roadmap-frame {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel-2);
-  overflow: hidden;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.roadmap-frame img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.roadmap-frame.zoom {
-  max-height: calc(100vh - 200px);
-  overflow: auto;
-}
-
-.roadmap-frame.zoom img {
-  width: auto;
-  max-width: none;
-}
-
 /*
  * A badge that is off rather than wrong.
  *

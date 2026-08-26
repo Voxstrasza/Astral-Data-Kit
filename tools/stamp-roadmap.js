@@ -25,13 +25,6 @@ const BASE = path.join(ROOT, 'art', 'roadmap-base.png');
 const OUT = path.join(ROOT, 'art', 'roadmap.png');
 
 /*
- * The copy the program itself shows at the foot of its Home page. public/ is what ships — art/
- * is not in APP_CONTENTS — so the picture has to be written to both or the packaged app keeps
- * showing the roadmap as it was the day it was built.
- */
-const APP_OUT = path.join(ROOT, 'public', 'roadmap.png');
-
-/*
  * Card boxes in the image's own 3200-pixel width, measured off the render.
  *
  * 4 — Raid wizard: raids as documents, bosses with difficulties, phases and abilities, and the
@@ -438,9 +431,7 @@ app.whenReady().then(async () =>
     const bytes = Buffer.from(dataUrl.split(',')[1], 'base64');
 
     fs.writeFileSync(OUT, bytes);
-    fs.writeFileSync(APP_OUT, bytes);
     console.log(`wrote ${OUT} (${(bytes.length / 1024 / 1024).toFixed(1)} MB)`);
-    console.log(`wrote ${APP_OUT}`);
     console.log(`stamped: ${DONE.map((d) => d.label).join(', ') || 'none'}`);
     console.log(`appended: ${NEW_CARDS.map((card) => card.number + ' ' + card.title).join(', ') || 'none'}`);
 

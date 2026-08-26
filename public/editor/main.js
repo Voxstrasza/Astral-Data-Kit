@@ -128,7 +128,6 @@ async function init()
      */
     $('#icon-dialog').addEventListener('close', releaseIcon);
 
-    bindRoadmap();
     bindItemSearch();
     bindItemWizard();
     bindSaved();
@@ -570,28 +569,6 @@ function bindHealthScaling()
 
     $('#btn-scale-reset').addEventListener('click', resetScaling);
     paintScaling();
-}
-
-/*
- * The roadmap picture on the Home page: fitted to the column, or given its real 3200px width
- * inside a box that scrolls. The button is the only way back out, so it reports its state.
- */
-function bindRoadmap()
-{
-    const button = $('#btn-roadmap-zoom');
-
-    if (!button)
-    {
-        return;
-    }
-
-    button.addEventListener('click', () =>
-    {
-        const zoomed = $('.roadmap-frame').classList.toggle('zoom');
-
-        button.setAttribute('aria-pressed', zoomed ? 'true' : 'false');
-        button.textContent = zoomed ? 'Fit to page ⤡' : 'Full size ⤢';
-    });
 }
 
 init();

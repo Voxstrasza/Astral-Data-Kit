@@ -33,7 +33,8 @@ It adds creature search, item search, real loot tables and real health pools.
 - **Raid Wizard** - where everything you build with the previous tools can go. Exports an image
   where on one sheet you can view target frames, spells, texts and more.
 
-Every tool exports a PNG at 1x-4x and copies to the clipboard.
+Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports are PNG
+format at 1x-4x.
 
 ## Examples
 

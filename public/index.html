@@ -87,47 +87,34 @@
           </fieldset>
 
           <fieldset>
-            <legend>The editors</legend>
+            <legend>Tools</legend>
             <p class="hint">
-              <strong>Item</strong> - quality, binding, slot and weapon type, damage with a
-              calculated DPS, stats, sockets, set bonuses and green
-              <code>Equip:</code>/<code>Use:</code> lines with the exact in-game wording as presets.
-              The Type field follows the slot, so a Head can only be an armor class and a Main Hand
-              only a weapon. <strong>Find an item</strong> searches your database by name or entry,
-              or browses loot boss by boss, and loads a real drop into the editor to work from.
+              <strong>Item</strong> - create an item tooltip, or pull existing data from the
+              database and load it, matching the in-game engine.
             </p>
             <p class="hint">
-              <strong>Spell</strong> - search the client's <code>Spell.dbc</code> by name or
-              id and pull a real spell in complete with its rank, cost, range, cast time, cooldown,
-              icon and description, then edit any of it. A spell can carry its
-              <strong>accompanying buff</strong>, which draws as a second tooltip and exports as its
-              own image, the way the game shows the aura separately from the spell that applies it.
+              <strong>Spell</strong> - create a spell tooltip, or pull existing data from
+              <code>Spell.dbc</code> and load it, matching the in-game engine.
             </p>
             <p class="hint">
-              <strong>NPC</strong> - the target frame: portrait, health and power bars, name,
-              level and classification in the client's own border art. Search creatures by name or
-              entry, or browse dungeons and raids by expansion, where each boss offers a button per
-              difficulty the instance really has. Custom scaling invents a harder version of any of
-              them, and portraits can be captured from the live 3D model.
+              <strong>NPC</strong> - in-game target frame with health pools. Create a creature or
+              pull a dungeon/raid creature from the database. Customize the scaling and pull
+              portraits from the 3D model, matching the in-game engine.
             </p>
             <p class="hint">
-              <strong>Achievement</strong> - the achievement card in the client's own
-              parchment, earned or unearned, with points, reward line and criteria. Search the
-              client's achievements and load one in to edit.
+              <strong>Achievement</strong> - create an achievement or load an existing one as it
+              would appear in-game.
             </p>
             <p class="hint">
-              <strong>Texts</strong> - what a creature says, drawn as the chat frame prints
-              it. Name the speaker, pick say, yell, whisper or emote, and the color follows the
-              client's own. Add a line per thing spoken and two NPCs hold a conversation.
+              <strong>Texts</strong> - want to formulate some roleplay? Draft some text as it would
+              appear in-game, complete with boss whispers and boss announcements.
             </p>
             <p class="hint">
-              <strong>Raid Wizard</strong> - where the other windows go. A raid is a document in
-              your own data folder: bosses in the order they are run, each built at the difficulties
-              it has, with the creatures in the fight, the abilities they cast filed under a phase,
-              an enrage timer, and the loot, achievements and encounter texts that come with it.
-              Nothing is made here - it is taken from the window that already built it. A fight
-              draws as one sheet, or as a sheet per phase.
+              <strong>Raid Wizard</strong> - where everything you build with the previous tools can
+              go. Exports an image where on one sheet you can view target frames, spells, texts and
+              more.
             </p>
+
           </fieldset>
 
           <fieldset>
@@ -142,9 +129,9 @@
           <fieldset>
             <legend>Exporting</legend>
             <p class="hint">
-              Every editor exports a PNG at 1x&ndash;4x with an optional transparent background, or
-              copies the image straight to the clipboard. A spell carrying an aura saves two files
-              rather than one, since they are two tooltips in the game.
+              Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports
+              are PNG format at 1x-4x. A spell carrying an aura saves two files rather than one,
+              since they are two tooltips in the game.
             </p>
             <p class="hint">
               The address bar always holds a permalink to exactly what you are looking at, and it
@@ -155,27 +142,7 @@
               Preview and export options are remembered per window, so a transparent target frame
               does not quietly change how your items export.
             </p>
-          </fieldset>
-          <fieldset id="roadmap">
-            <legend>Roadmap</legend>
-            <p class="hint">
-              What is built and what is coming, in the order it was worked out. Everything with a
-              stamp on it is in the program already.
-            </p>
-
-            <div class="roadmap-actions">
-              <button type="button" id="btn-roadmap-zoom" class="ghost" aria-pressed="false">Full size &#10530;</button>
-            </div>
-
-            <!--
-              Fit to the column by default and scroll inside its own box at full size: the render is
-              3200px wide, so letting it size the page would put a horizontal scrollbar under every
-              other window as well.
-            -->
-            <div class="roadmap-frame">
-              <img id="roadmap-img" src="roadmap.png" alt="Astral roadmap" loading="lazy" />
-            </div>
-          </fieldset>
+          </fieldset>
         </div>
 
         <!-- Achievement ------------------------------------------------------------ -->
