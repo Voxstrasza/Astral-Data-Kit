@@ -6,7 +6,7 @@ import { $ } from './dom.js';
 import { state, runtime } from './state.js';
 import { api, postJson } from './api.js';
 import { status, update } from './preview.js';
-import { setIcon, loadIcons, loadGameFonts, loadAssets } from './icons.js';
+import { setIcon, currentIconName, loadIcons, loadGameFonts, loadAssets } from './icons.js';
 import { initArmory } from './armory.js';
 
 /*
@@ -103,7 +103,16 @@ async function applyClientPath(pathValue)
         if (client.ok)
         {
             await Promise.all([loadIcons(), loadGameFonts(), loadAssets(), initArmory()]);
-            setIcon(state.icon);
+
+            /*
+             * Repaint whichever window is showing, not the item one.
+             *
+             * `setIcon` writes into the current mode's own icon field, so handing it `state.icon`
+             * while the Spell window was open assigned the item's icon to the spell - importing a
+             * client turned a question mark into a sword. `currentIconName()` is the same value for
+             * the item window and the right one everywhere else.
+             */
+            setIcon(currentIconName());
             update();
         }
     }
