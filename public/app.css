@@ -2400,3 +2400,53 @@ main.armory [data-panel="armory"] {
 .talent-arrow.is-met {
   background: #3fbf5f;
 }
+
+/* ------------------------------------------------------------------- racials */
+
+/*
+ * One racial to a row: its own icon, its name, and what it is worth in a line under it. Every one
+ * is listed, including the ones that change no number, because being able to Shadowmeld is part of
+ * being a night elf even though the sheet never moves for it.
+ */
+.racial {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.racial-icon {
+  flex: 0 0 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  background-size: cover;
+  background-position: center;
+}
+
+.racial-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.racial-name {
+  font-size: 12px;
+}
+
+.racial-effect {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* A weapon racial with the wrong weapon in hand: present, and doing nothing. */
+.racial.is-off .racial-icon {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.racial.is-off .racial-effect {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+

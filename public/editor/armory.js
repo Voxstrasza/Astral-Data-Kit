@@ -99,6 +99,26 @@ const CLASS_STATS = {
     11: ['core', 'mana', 'melee', 'spell', 'defense', 'resist']         // Druid
 };
 
+/** Aura names as a racial should read them, rather than as the budget table spells them. */
+const STAT_WORDS = {
+    str: 'strength', agi: 'agility', sta: 'stamina', int: 'intellect', spi: 'spirit',
+    meleeCrit: 'crit', spellCrit: 'spell crit', meleeHit: 'hit', spellHit: 'spell hit',
+    meleeHaste: 'haste', attackPower: 'attack power', rangedPower: 'ranged attack power',
+    blockValue: 'block value', spellPower: 'spell power', spellPen: 'spell penetration',
+    manaRegen: 'mana per 5 sec', health: 'health', armor: 'armor'
+};
+
+/*
+ * The editor's weapon labels back to the subclass the client numbers them by, for the racials that
+ * wait on a weapon. `WEAPON_TYPES` in lib/items.js is the same table read the other way; a label
+ * covers both the one and two-handed kind, and the first match is enough because every racial mask
+ * that names a family names both.
+ */
+const WEAPON_SUBCLASS = {
+    'Axe': 0, 'Bow': 2, 'Gun': 3, 'Mace': 4, 'Polearm': 6, 'Sword': 7, 'Staff': 10,
+    'Fist Weapon': 13, 'Dagger': 15, 'Thrown': 16, 'Crossbow': 18, 'Wand': 19
+};
+
 let setup = null;
 let bound = false;
 
@@ -352,6 +372,7 @@ function equip(slot, item)
     }
 
     drawSlots();
+    drawRacials();
     refresh();
 }
 
@@ -538,6 +559,154 @@ function openPicker(slot)
     $('#armory-picker-search').focus();
 }
 
+
+/* ------------------------------------------------------------------------ racials */
+
+/*
+ * The racials of whichever race is picked, with their real icons and their real tooltips.
+ *
+ * Every one is listed, including the ones that change no number. Blood Fury, Shadowmeld and War
+ * Stomp are as much a part of being an orc, a night elf or a tauren as the passives are, and a
+ * panel that quietly dropped half of them would look broken rather than principled. The ones that
+ * do nothing to the sheet say so instead.
+ */
+let racials = [];
+
+async function loadRacials()
+{
+    const answer = await api(`/api/character/racials?race=${state.armoryRace}`);
+
+    racials = answer.racials || [];
+    drawRacials();
+}
+
+/** What an aura contribution reads as under the icon: "+5 expertise", "+5% intellect". */
+function auraLine(one)
+{
+    const sign = one.value < 0 ? '' : '+';
+    const name = STAT_WORDS[one.to] || one.to;
+
+    return `${sign}${one.value}${one.percent ? '%' : ''} ${name}`;
+}
+
+function drawRacials()
+{
+    const host = $('#armory-racials');
+
+    /*
+     * Only the ones that move a number.
+     *
+     * Blood Fury, Shadowmeld, War Stomp and Arcane Torrent are abilities you press, and Hardiness
+     * and Command are passives about things this sheet does not show - stun duration and pet
+     * damage. Listing them made the panel longer without making it say more. What stays is what
+     * the stat block is actually reading, and a weapon racial stays even when it is doing nothing,
+     * greyed, because "you would have five expertise with an axe" is worth knowing.
+     */
+    const shown = racials.filter((racial) => racial.stats.length);
+
+    if (!shown.length)
+    {
+        host.replaceChildren(el('p', 'hint', racials.length
+            ? 'No stat changing racials.'
+            : 'Point Astral at your client to read these.'));
+        return;
+    }
+
+    host.replaceChildren(...shown.map((racial) =>
+    {
+        const row = el('div', 'racial');
+        const icon = el('span', 'racial-icon');
+
+        if (racial.icon)
+        {
+            icon.style.backgroundImage = `url("${iconUrl(racial.icon)}")`;
+        }
+
+        const text = el('span', 'racial-text');
+
+        text.append(el('span', 'racial-name', racial.name));
+
+        /*
+         * Lit or grayed by whether it is doing anything. A weapon racial with no weapon in hand is
+         * the case this is for: the orc's expertise is there, and it is worth nothing right now.
+         */
+        const live = racial.stats.filter((one) => conditionHolds(one));
+
+        text.append(el('span', 'racial-effect', racial.stats.map(auraLine).join(', ')));
+
+        if (!live.length)
+        {
+            row.classList.add('is-off');
+        }
+
+        row.append(icon, text);
+        row.addEventListener('mouseenter', () => showRacialTooltip(row, racial));
+        row.addEventListener('mouseleave', hideHover);
+
+        return row;
+    }));
+}
+
+/** Whether a weapon condition is met by what is in the weapon slots right now. */
+function conditionHolds(one)
+{
+    if (!one.condition)
+    {
+        return true;
+    }
+
+    for (const slot of ['Main hand', 'Off hand', 'Ranged'])
+    {
+        const item = worn.get(slot);
+
+        if (item && WEAPON_SUBCLASS[item.itemType] !== undefined
+            && one.condition.itemClass === 2
+            && (one.condition.subclassMask & (1 << WEAPON_SUBCLASS[item.itemType])))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+async function showRacialTooltip(node, racial)
+{
+    await ensureTooltipFont();
+
+    if (!node.matches(':hover'))
+    {
+        return;
+    }
+
+    const lines = [
+        { l: racial.name, lc: M.C.white, r: '', rc: M.C.gray, kind: 'title' },
+        { l: '', kind: 'gap' },
+        { l: racial.description || 'No description in the client.', lc: M.C.gold, r: '', rc: M.C.white, kind: 'body' }
+    ];
+
+    if (racial.stats.length && !racial.stats.every(conditionHolds))
+    {
+        lines.push({ l: '', kind: 'gap' });
+        lines.push({ l: 'Requires appropriate weapon equipped.', lc: M.C.red, r: '', rc: M.C.white, kind: 'body' });
+    }
+
+    const canvas = R.renderTooltip(lines, {
+        icon: null, iconPlacement: 'none', maxWidth: 300, transparent: false, borderColor: '#4a4a4a'
+    }, 1);
+
+    const host = hoverHost();
+
+    host.replaceChildren(canvas);
+    host.hidden = false;
+
+    const box = node.getBoundingClientRect();
+    const width = canvas.width / (window.devicePixelRatio || 1);
+    const height = canvas.height / (window.devicePixelRatio || 1);
+
+    host.style.left = `${Math.round(Math.min(box.right + 10, window.innerWidth - width - 8))}px`;
+    host.style.top = `${Math.round(Math.max(8, Math.min(box.top, window.innerHeight - height - 8)))}px`;
+}
 /** The race list, and the classes that race can be, both straight out of the client. */
 function fillPickers()
 {
@@ -668,7 +837,8 @@ async function refresh()
         race: state.armoryRace,
         class: state.armoryClass,
         level: state.armoryLevel,
-        items: [...worn.values()]
+        items: [...worn.values()],
+        talents: state.armoryTalents || {}
     });
 
     if (sheet.error)
@@ -767,6 +937,7 @@ async function initArmory()
 
     fillPickers();
     showSpec();
+    await loadRacials();
     await refresh();
 
     if (bound)
@@ -797,6 +968,7 @@ async function initArmory()
     {
         state.armoryRace = Number(e.target.value);
         fillPickers();
+        loadRacials();
         refresh();
     });
 
@@ -814,6 +986,19 @@ async function initArmory()
     });
 
     $('#btn-talents').addEventListener('click', () => openTalents(state.armoryClass, showSpec));
+
+    /*
+     * The sheet is recomputed when the calculator closes rather than on every point.
+     *
+     * Spending a point is a click and the window sits over the sheet while it happens, so posting
+     * a character per click would be twenty requests nobody is looking at. The spec line above the
+     * slots does update live, because that is inside the window.
+     */
+    $('#talent-dialog').addEventListener('close', () =>
+    {
+        showSpec();
+        refresh();
+    });
 
     $('#armory-all-stats').addEventListener('change', (e) =>
     {

@@ -415,66 +415,61 @@ backwards through the loot tables. Measured on the live database:
 This turns the equipped list into something exportable in its own right: a custom tier with a
 source per piece is a loot table, which is the shape the raid sheet already draws.
 
-## Phase 4 - racials
+## Phase 4 - racials - **DONE**
 
-They are derivable, not a hand-written list. `SkillLine.dbc` has one racial line per race - 101
-Dwarven, 124 Tauren, 125 Orc, 126 Night Elf, 220 Undead, 733 Troll, 753 Gnome, 754 Human, 756 Blood
-Elf, 760 Draenei - and `SkillLineAbility.dbc` gives every spell on each with a race mask. Reading
-the orc line back gives Blood Fury, Hardiness, Axe Specialization and Command.
+Derived, not written out. `SkillLine.dbc` has one racial line per race and `SkillLineAbility.dbc`
+names every spell on it, so `racials()` in lib/character.js reads the list out of the client and a
+client with a race this program never heard of still answers.
 
-- [ ] Pull the list per race and dedupe: the same racial appears several times for its ranks and
-      its variants (Command shows up five times on the orc line).
-- [ ] Read what each one does from `Spell.dbc`. Verified field offsets: Effect at 71-73, base points
-      at 80-82, **aura type at 95-97**, misc value at 110-112, equipped item class at 68 and its
-      subclass mask at 69. Worked examples, all read out rather than assumed:
+- [x] Pull the list per race and dedupe by name: a racial appears once per rank and per variant, and
+      Command is on the orc line five times over.
+- [x] Read what each does from `Spell.dbc` through `lib/auras.js`, the aura-id to stat map. Aura ids
+      are AzerothCore's own `AuraType` out of SpellAuraDefines.h; about twenty-five reach the sheet.
+      The four worked examples in the old plan all reproduce exactly: Axe Specialization 5 expertise
+      with weapon mask 8195, Mace Specialization 3, The Human Spirit 3% spirit, Expansive Mind 5%
+      intellect.
+- [x] **Base points are one below the number the game shows**, everywhere, confirmed by those four.
+- [x] The weapon condition is data and is used as data. `EquippedItemClass` 2 with subclass mask
+      8195 is fist, axe and two-handed axe, so the orc's expertise lights up with an axe in hand and
+      greys out without one - measured end to end, 0 expertise bare, 5 holding Shadowmourne, 0
+      holding a sword.
+- [x] **Only passive spells count.** Blood Fury carries two attack power auras and is a two-minute
+      cooldown; reading them put six attack power on an orc who was not using it. The core tells
+      them apart with `SPELL_ATTR0_PASSIVE` and so does this.
+- [x] **Descriptions can lie, and the effect index does too.** Heroic Presence is still the party
+      area aura in 3.3.5a - effect 35, not 6 - even though the draenei version by Wrath is the self
+      one. Reading only effect 6 loses the draenei their one percent hit, so both are read.
+- [x] The panel lists only what moves a number. Blood Fury, Shadowmeld and Arcane Torrent are
+      abilities you press, and Hardiness and Command are passives about stun duration and pet
+      damage, which this sheet does not show. A weapon racial stays even while it is doing nothing,
+      greyed with its effect struck through, because "you would have five expertise with an axe" is
+      worth knowing. Each row carries its real icon and its real tooltip.
+- [ ] The night elf case is still unchecked in game. Quickness is auras 184 and 185, attacker hit
+      chance, not dodge - so nothing on this sheet moves for it. Whether Wrath's own sheet folds it
+      into displayed dodge is not something the data answers.
 
-      20574 Axe Specialization    aura 240 (expertise)  base 4   itemClass 2 subclassMask 8195
-      20864 Mace Specialization   aura 240              base 2   itemClass 2 subclassMask 48
-      20595 Gun Specialization    aura 52  (crit pct)   base 0   itemClass 2 subclassMask 8
-      20591 Expansive Mind        aura 137 (stat pct)   base 4
-      20598 The Human Spirit      aura 137              base 2
-      20550 Endurance             aura 282 (base hp pct) base 4
-       6562 Heroic Presence       aura 54, 55           base 0
-      20582 Quickness             aura 184, 185         base -3, -3
+## Phase 5 - talent calculator - **DONE**
 
-- [ ] **Base points are one less than the number the game shows.** Axe Specialization stores 4 and
-      grants 5 expertise; Gun Specialization stores 0 and grants 1% crit. A first pass that trusts
-      the raw field is wrong by exactly one everywhere and still looks right.
-- [ ] The weapon condition is data, so use it. `itemClass 2` is weapon and `8195` decodes to fist,
-      axe and two-handed axe, so the orc's expertise lights up when an axe is equipped and grays
-      out when it is not. Human is mace and two-hand mace, dwarf is guns. No hardcoded weapon
-      lists.
-- [ ] The aura-id to stat map is the part that gets written by hand. About twenty-five ids matter.
-      Everything else on those lines is an active - Blood Fury, Shadowmeld, War Stomp, Arcane
-      Torrent - and belongs in the list marked as changing nothing, not in the maths.
-- [ ] **Descriptions can lie.** Heroic Presence still reads "for you and all party members" in the
-      3.3.5 client, and its row is the party area aura (effect 35), though the draenei version by
-      Wrath is the self one. Drive the numbers off the effect values, let the description be flavor.
-- [ ] Check the night elf case in game rather than reasoning about it. Quickness stores two -3
-      effects as auras 184 and 185, which are attacker hit chance, not dodge. Whether Wrath's sheet
-      folds that into displayed dodge or leaves it invisible is not something the data answers.
-
-## Phase 5 - talent calculator
-
-One tree set per class, and it feeds the sheet.
-
-- [ ] `Talent.dbc` has everything the drawing needs, verified: id, tab, tier, column, up to five
-      spell ranks at fields 4-8, prerequisite talent at 13 and its rank at 16. 139 talents have a
-      prerequisite. Trees run 25 to 31 talents each; protection warrior is tab 163 with 27, reading
-      out in the right order (tier 0 is Improved Bloodrage, Shield Specialization, Improved Thunder
-      Clap; Anticipation sits at tier 1 column 2).
-- [ ] Icons come from the spell of each rank through `SpellIcon.dbc`, which the spell search
-      already resolves.
-- [ ] The rules: 71 points at 80, five points per tier below the one you are spending in,
-      prerequisites satisfied before their dependents, and taking a point back cannot orphan
-      anything below it.
-- [ ] Wire the stat-affecting ones into the pipeline through the same aura map Phase 4 builds. It
-      is the same mechanism: Anticipation is aura 49, dodge percent; Toughness is aura 142 on base
-      resistance.
-- [ ] Know the exception before it bites. Some talents are `SPELL_AURA_DUMMY` and are implemented
-      in core script code rather than in the spell data, matched on `SpellIconID` - Predatory
-      Strikes in `UpdateAttackPowerAndDamage` is one. Those need transcribing individually, or
-      leaving out and saying so.
+- [x] `Talent.dbc` read into three trees per class: id, tab, tier, column, up to five spell ranks,
+      prerequisite and its rank. **The prerequisite rank is zero-based and always the parent's
+      maximum** - measured, `PrereqRank + 1` equals the parent's rank count in all 137 rows that
+      have one, which is to say the rule is "the talent above must be maxed" and the field is a
+      restatement of it.
+- [x] Icons and text come from the spell of each rank. The tooltip is the game's own, drawn by the
+      renderer the rest of the program uses, and shows the rank you are on and what the next one
+      would buy.
+- [x] The rules: level minus nine points, five per tier below the one being spent in, prerequisites
+      maxed first. Taking a point back re-validates the tree rather than reasoning about what sits
+      below what, so the orphan rule falls out of the other three.
+- [x] The tree art is the client's own, named by `TalentTab.dbc` and tiled from four BLPs. They are
+      not four equal quarters and they are not fully painted: 256x256, 64x256, 256x128 and 64x128 of
+      file holding a 300 by 331 sheet, so the sizes are scaled to put the opaque part where it
+      belongs and push the padding out to be clipped.
+- [x] Wired into the pipeline through the same aura map Phase 4 built. Anticipation at 5/5 moves a
+      warrior's dodge from 5.00% to 10.00%, through the panel rather than in a test.
+- [ ] The `SPELL_AURA_DUMMY` talents are still out. Predatory Strikes and its kind are implemented
+      in core script and matched on `SpellIconID`, so they need transcribing one at a time or
+      leaving out and saying so. Saying so, for now.
 - [ ] Glyphs are out of scope for the first version.
 
 ## Phase 6 - the sheet as a picture
