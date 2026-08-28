@@ -211,7 +211,22 @@ const LIST_DEFAULTS = {
     requires: () => ({ text: '', unmet: false }),
     effects: () => ({ kind: 'Equip', preset: M.EQUIP_PRESETS[0], value: 100, text: '' }),
     setPieces: () => '',
-    setBonuses: () => ({ count: 2, text: '' }),
+
+    /*
+     * Each bonus asks for two more pieces than the deepest one already there: 2, 4, 6, 8.
+     *
+     * A set's thresholds only ever climb, so adding three bonuses and getting three that all read
+     * (2) means retyping two of them every time. Two is the step because that is what a Wrath tier
+     * set uses; sets that break the pattern - Bloodfang wants 3, 5 and 8 - are a number away, and
+     * this at least puts them in order.
+     */
+    setBonuses: () =>
+    {
+        const deepest = (state.setBonuses || [])
+            .reduce((most, bonus) => Math.max(most, Number(bonus.count) || 0), 0);
+
+        return { count: deepest + 2, text: '' };
+    },
     achCriteria: () => ({ text: '', done: true }),
 
     /* A new line follows the one above it: same speaker, same kind, ready for the words. */
