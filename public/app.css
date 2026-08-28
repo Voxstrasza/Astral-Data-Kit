@@ -353,14 +353,6 @@ fieldset.highlight {
   background: linear-gradient(180deg, var(--highlight), var(--panel));
 }
 
-/*
- * A legend naming three tooltip lines is a label, not a heading — in gold it shouted louder than
- * the sections that actually matter, so those opt out.
- */
-legend.plain {
-  color: var(--muted);
-}
-
 legend {
   color: var(--accent);
   font-size: 12px;
