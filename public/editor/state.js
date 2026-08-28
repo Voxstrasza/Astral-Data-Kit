@@ -27,6 +27,10 @@ function defaultState()
         block: 0,
         durability: 0,
         reqLevel: 80,
+
+        /* Whether the level line is printed. On by default; a reputation item comes in with it
+           off, since the standing is the requirement worth reading there. */
+        reqLevelShow: true,
         itemLevel: 0,
 
         stats: [],
@@ -38,6 +42,10 @@ function defaultState()
 
         setName: '',
         setPieces: [],
+
+        /* The same roster with a slot on each piece, so the Armory can tell which of them are on:
+           a heroic variant is in the set under a different name and only the slot lines up. */
+        setRoster: [],
         setBonuses: [],
 
         flavor: '',
@@ -187,8 +195,8 @@ const FIELDS_BY_KIND = {
     item: [
         'icon', 'name', 'quality', 'heroic', 'conjured', 'binding', 'unique', 'uniqueN',
         'slot', 'itemType', 'hasWeapon', 'dmgMin', 'dmgMax', 'speed', 'armor', 'block',
-        'durability', 'reqLevel', 'itemLevel', 'stats', 'resistances', 'sockets', 'socketBonus',
-        'requires', 'effects', 'setName', 'setPieces', 'setBonuses', 'flavor', 'madeBy',
+        'durability', 'reqLevel', 'reqLevelShow', 'itemLevel', 'stats', 'resistances', 'sockets', 'socketBonus',
+        'requires', 'effects', 'setName', 'setPieces', 'setRoster', 'setBonuses', 'flavor', 'madeBy',
         'sellGold', 'sellSilver', 'sellCopper'
     ],
     spell: [

@@ -11,7 +11,7 @@
 
 import { $ } from './dom.js';
 import { api } from './api.js';
-import { state } from './state.js';
+import { state, FIELDS_BY_KIND } from './state.js';
 import { status, update } from './preview.js';
 import { syncForm } from './form.js';
 import { renderLists } from './lists.js';
@@ -30,12 +30,15 @@ const QUALITY_COLOR = (quality) => M.qualityColor(quality);
  */
 function applyItem(item)
 {
-    const fields = [
-        'name', 'quality', 'heroic', 'binding', 'slot', 'itemType', 'hasWeapon', 'dmgMin',
-        'dmgMax', 'speed', 'armor', 'block', 'durability', 'reqLevel', 'itemLevel', 'stats',
-        'resistances', 'effects', 'sockets', 'socketBonus', 'flavor', 'sellGold', 'sellSilver',
-        'sellCopper'
-    ];
+    /*
+     * The item window's own fields, taken from the one list that already names them.
+     *
+     * This was a second copy written out by hand, and it drifted: `requires` was never on it, so a
+     * loaded item arrived with its class and reputation lines stripped, and the set block went the
+     * same way. Reading `FIELDS_BY_KIND` means a field added to the editor reaches this path
+     * without anyone remembering to add it twice.
+     */
+    const fields = FIELDS_BY_KIND.item;
 
     for (const field of fields)
     {

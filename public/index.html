@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Astral - 3.3.5a Data Kit</title>
+    <title>Astral - Data Kit</title>
     <link rel="icon" href="logo.png" />
     <link rel="stylesheet" href="app.css" />
     <script>
@@ -27,7 +27,7 @@
         against; without it the notice would be placed against the bar and sit under the tabs.
       -->
       <div class="brand-wrap">
-        <img class="brand" src="logo.png" alt="Astral - 3.3.5a Data Kit" />
+        <img class="brand" src="logo.png" alt="Astral - Data Kit" />
 
         <div id="update-bubble" class="update-bubble" role="status" hidden>
           <span>
@@ -46,7 +46,7 @@
         <button type="button" role="tab" data-kind="achievement">Achievement</button>
         <button type="button" role="tab" data-kind="text">Texts</button>
         <button type="button" role="tab" data-kind="raid">Raid Wizard</button>
-        <button type="button" role="tab" data-kind="armory">Armory</button>
+        <button type="button" role="tab" data-kind="armory">Armory <span class="wip-tag">[WIP]</span></button>
       </div>
 
       <div class="topbar-actions">
@@ -70,7 +70,7 @@
         <!-- Home ------------------------------------------------------------------ -->
         <div data-panel="home">
           <fieldset class="highlight">
-            <legend>Astral - 3.3.5a Data Kit</legend>
+            <legend>Astral - Data Kit</legend>
             <p class="hint">
               Astral is a conceptualization tool for Wrath of the Lich King content.
             </p>
@@ -135,6 +135,13 @@
               <strong>Raid Wizard</strong> - where everything you build with the previous tools can
               go. Exports an image where on one sheet you can view target frames, spells, texts and
               more.
+            </p>
+            <p class="hint">
+              <strong>Armory <span class="wip-tag">[WIP]</span></strong> - build a character and
+              read the stat block it would really have. Pick a race, class and level, fill the
+              nineteen slots from the database or from gear you invented, and the sheet totals live.
+              Talents come from a calculator per class, racials are applied and listed, and set
+              bonuses light up at the piece counts they need.
             </p>
           </fieldset>
 
@@ -225,6 +232,10 @@
 
         <!-- Armory ----------------------------------------------------------------- -->
         <div data-panel="armory" hidden>
+          <!-- The Armory is not finished, and it should say so on its face rather than in a note
+               someone has to read. Drawn over everything and clickable through. -->
+          <div class="armory-wip" aria-hidden="true">WORK IN PROGRESS</div>
+
           <!-- Said once, up here, rather than on every slot: a title on a slot is a second tooltip
                that opens on top of the item's own one. -->
           <p class="hint armory-how">Click a slot to add an item. Right click to remove.</p>
@@ -362,7 +373,15 @@
             </div>
 
             <div class="row">
-              <label class="narrow">Req. level<input type="number" data-bind="reqLevel" /></label>
+              <!-- The tick decides whether the line is printed at all: plenty of items carry a
+                   required level in the database and never show one. -->
+              <label class="narrow">Req. level
+                <span class="with-tick">
+                  <input type="number" data-bind="reqLevel" />
+                  <input type="checkbox" class="tick" data-bind="reqLevelShow"
+                         title="Show the level requirement on the tooltip" />
+                </span>
+              </label>
               <label class="narrow">Item level<input type="number" data-bind="itemLevel" /></label>
               <label class="narrow">Durability<input type="number" data-bind="durability" /></label>
             </div>

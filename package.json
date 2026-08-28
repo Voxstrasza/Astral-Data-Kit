@@ -1,7 +1,7 @@
 {
   "name": "astral-data-kit",
-  "version": "1.6.1",
-  "description": "Astral - 3.3.5a Data Kit. Builds WotLK item tooltips, spell tooltips, NPC target frames, achievement cards and chat scripts from your own game client.",
+  "version": "1.7.0",
+  "description": "Astral - Data Kit. Builds WotLK item tooltips, spell tooltips, NPC target frames, achievement cards and chat scripts from your own game client.",
   "private": false,
   "main": "electron/main.js",
   "scripts": {

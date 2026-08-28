@@ -2507,3 +2507,68 @@ main.armory [data-panel="armory"] {
 button.to-armory {
   margin-left: auto;
 }
+
+/*
+ * A field with a tick beside it: the number, and whether it is printed at all. Small on purpose -
+ * it is a switch on one line, not a setting of its own.
+ */
+.with-tick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.with-tick input[type="number"] {
+  min-width: 0;
+  flex: 1;
+}
+
+.with-tick .tick {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  cursor: pointer;
+}
+
+/*
+ * The Armory's work-in-progress stamp.
+ *
+ * Fixed rather than absolute so it stays over the middle of the window however far the page is
+ * scrolled, and it disappears with the panel because a hidden panel draws none of its children.
+ * `pointer-events: none` is what keeps it a stamp rather than a wall - every slot, button and
+ * tooltip underneath still works.
+ */
+.armory-wip {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 800;
+  font-size: clamp(56px, 11vw, 190px);
+  letter-spacing: 12px;
+  white-space: nowrap;
+  text-transform: uppercase;
+
+  color: var(--accent);
+  opacity: 0.13;
+  transform: rotate(-16deg);
+
+  /* An outline as well as a fill, so it reads over both the dark panels and the pale ones. */
+  -webkit-text-stroke: 2px var(--accent);
+}
+
+/*
+ * The [WIP] beside the Armory tab. Gold from the variable, so it darkens with the light theme the
+ * way the rest of the interface's gold does, and it keeps its color on the active tab too.
+ */
+.wip-tag {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  vertical-align: 1px;
+}

@@ -372,6 +372,14 @@ function buildItemLines(s)
         body(`Durability ${Number(s.durability)} / ${Number(s.durability)}`);
     }
 
+    /*
+     * Requirements, which is where the class and reputation lines land too.
+     *
+     * The game prints all of these in the same block between durability and the level requirement:
+     * "Classes: Warrior", "Requires Revered with The Ashen Verdict", "Requires Revered with the
+     * Ashen Verdict". They are one editable list rather than three fields, so a loaded item and an
+     * invented one produce the same thing and either can be corrected by hand.
+     */
     for (const req of s.requires || [])
     {
         if (req.text)
@@ -380,7 +388,9 @@ function buildItemLines(s)
         }
     }
 
-    if (Number(s.reqLevel) > 0)
+    /* The tick beside the field, not the number, decides whether this line exists. Absent means
+       shown, so a permalink written before the tick existed still reads the way it did. */
+    if (s.reqLevelShow !== false && Number(s.reqLevel) > 0)
     {
         body(`Requires Level ${Number(s.reqLevel)}`);
     }

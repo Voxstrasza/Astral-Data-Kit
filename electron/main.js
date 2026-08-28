@@ -23,7 +23,7 @@ const { Instances } = require('../lib/instances');
 const { CustomIcons } = require('../lib/custom-icons');
 const { Spells } = require('../lib/spells');
 const { Achievements } = require('../lib/achievements');
-const { ItemDisplay, ItemSets } = require('../lib/items');
+const { ItemDisplay, ItemSets, Factions } = require('../lib/items');
 const { ItemBudget } = require('../lib/item-budget');
 const { Character } = require('../lib/character');
 const { Raids } = require('../lib/raids');
@@ -41,6 +41,7 @@ let spells = null;
 let achievements = null;
 let itemDisplay = null;
 let itemSets = null;
+let factions = null;
 let itemBudget = null;
 let character = null;
 let raids = null;
@@ -167,6 +168,7 @@ function reopenClient()
     if (achievements) { achievements.reset(); }
     if (itemDisplay) { itemDisplay.reset(); }
     if (itemSets) { itemSets.reset(); }
+    if (factions) { factions.reset(); }
     if (itemBudget) { itemBudget.reset(); }
     if (character) { character.reset(); }
     if (portraitCameras) { portraitCameras.reset(); }
@@ -222,6 +224,7 @@ app.whenReady().then(() =>
     achievements = new Achievements(assets);
     itemDisplay = new ItemDisplay(assets);
     itemSets = new ItemSets(assets);
+    factions = new Factions(assets);
     itemBudget = new ItemBudget(assets);
     character = new Character(assets);
     raids = new Raids(path.join(userData, 'raids'));
@@ -246,7 +249,7 @@ app.whenReady().then(() =>
         const result = await routes.handle(
             {
             assets, settings, worldDb, instances, customIcons, spells, achievements,
-            itemDisplay, itemSets, itemBudget, character, raids, saved, portraitCameras, reopenClient
+            itemDisplay, itemSets, factions, itemBudget, character, raids, saved, portraitCameras, reopenClient
         },
             parsed.pathname,
             parsed.searchParams,
