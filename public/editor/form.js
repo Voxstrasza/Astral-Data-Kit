@@ -114,6 +114,10 @@ function syncForm()
     // Home alone gets the throne behind it; the two placeholders are plain.
     $('main').classList.toggle('home', state.kind === 'home');
 
+    /* The Armory is three boxes across with a six-wide stat panel under them, so it gets more
+       room than the 900px the other one-column pages sit in. */
+    $('main').classList.toggle('armory', state.kind === 'armory');
+
     syncHealthSlider();
 
     syncConditionals();

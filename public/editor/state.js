@@ -27,6 +27,10 @@ function defaultState()
         block: 0,
         durability: 0,
         reqLevel: 80,
+
+        /* Whether the level line is printed. On by default; a reputation item comes in with it
+           off, since the standing is the requirement worth reading there. */
+        reqLevelShow: true,
         itemLevel: 0,
 
         stats: [],
@@ -38,6 +42,10 @@ function defaultState()
 
         setName: '',
         setPieces: [],
+
+        /* The same roster with a slot on each piece, so the Armory can tell which of them are on:
+           a heroic variant is in the set under a different name and only the slot lines up. */
+        setRoster: [],
         setBonuses: [],
 
         flavor: '',
@@ -106,6 +114,32 @@ function defaultState()
          */
         textLines: [],
 
+        /*
+         * The Armory. Human warrior at 80 is the default because it is the combination every
+         * client has and the one whose numbers are easiest to check against a real character.
+         */
+        armoryRace: 1,
+        armoryClass: 1,
+        armoryLevel: 80,
+
+        /*
+         * Who the character is, for the exported picture rather than for the numbers. There is no
+         * spec field: in Wrath the spec is wherever the talent points went, so the calculator owns
+         * it and nothing here needs to hold a second opinion.
+         */
+        armoryName: '',
+        armoryGuild: '',
+        armoryGuildShow: false,
+
+        /*
+         * Off by default: the sheet shows what the class is read for. On when you are checking
+         * something odd, which in a program about inventing items does happen.
+         */
+        armoryAllStats: false,
+
+        /* Talent id -> points in it. Empty until the calculator is opened. */
+        armoryTalents: {},
+
         achIcon: 'achievement_boss_lichking',
         achTitle: '',
         achDescription: '',
@@ -114,12 +148,6 @@ function defaultState()
         /* Earned draws the colored parchment and shield; unearned draws the desaturated pair. */
         achEarned: true,
         achCriteria: [],
-        /*
-         * Which category it is filed under. This does not appear on the card, but it is what the
-         * multi-achievement panel will lay its tree out from, and loading a real achievement
-         * should not throw the answer away. 92 is General, the first heading in game.
-         */
-        achCategory: 92,
 
         /*
          * Preview and export options, kept per mode.
@@ -167,8 +195,8 @@ const FIELDS_BY_KIND = {
     item: [
         'icon', 'name', 'quality', 'heroic', 'conjured', 'binding', 'unique', 'uniqueN',
         'slot', 'itemType', 'hasWeapon', 'dmgMin', 'dmgMax', 'speed', 'armor', 'block',
-        'durability', 'reqLevel', 'itemLevel', 'stats', 'resistances', 'sockets', 'socketBonus',
-        'requires', 'effects', 'setName', 'setPieces', 'setBonuses', 'flavor', 'madeBy',
+        'durability', 'reqLevel', 'reqLevelShow', 'itemLevel', 'stats', 'resistances', 'sockets', 'socketBonus',
+        'requires', 'effects', 'setName', 'setPieces', 'setRoster', 'setBonuses', 'flavor', 'madeBy',
         'sellGold', 'sellSilver', 'sellCopper'
     ],
     spell: [
@@ -182,10 +210,13 @@ const FIELDS_BY_KIND = {
         'unitDisplayId', 'unitScalePct', 'unitScaleBase', 'unitPowerScalePct', 'unitPowerScaleBase'
     ],
     achievement: [
-        'achIcon', 'achTitle', 'achDescription', 'achReward', 'achPoints', 'achEarned',
-        'achCriteria', 'achCategory'
+        'achIcon', 'achTitle', 'achDescription', 'achReward', 'achPoints', 'achEarned', 'achCriteria'
     ],
-    text: ['textLines']
+    text: ['textLines'],
+    armory: [
+        'armoryRace', 'armoryClass', 'armoryLevel',
+        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats', 'armoryTalents'
+    ]
 };
 
 /**

@@ -18,7 +18,7 @@ import { syncForm } from './form.js';
 import { renderLists } from './lists.js';
 import { setIcon, iconUrl } from './icons.js';
 
-/* The category tree, fetched once. Also what the Category select under Custom is built from. */
+/* The category tree, fetched once, for browsing the finder by heading. */
 let tree = null;
 
 /**
@@ -33,7 +33,6 @@ function applyAchievement(achievement)
     state.achDescription = achievement.description || '';
     state.achReward = achievement.reward || '';
     state.achPoints = achievement.points || 0;
-    state.achCategory = achievement.category;
 
     if (achievement.icon)
     {
@@ -134,10 +133,14 @@ function renderResults(results, onPick, caption)
  * its own — General has dozens — so making it a group label would have put them out of reach.
  * Depth is carried by indentation instead, and every level stays selectable.
  */
-function fillCategorySelects()
+function fillCategorySelect()
 {
     const browse = $('#ach-category');
-    const assign = $('[data-bind="achCategory"]');
+
+    if (!browse)
+    {
+        return;
+    }
 
     const options = [];
 
@@ -155,36 +158,21 @@ function fillCategorySelects()
 
     tree.forEach((root) => walk(root, 0));
 
-    for (const select of [browse, assign])
+    browse.textContent = '';
+
+    const blank = document.createElement('option');
+
+    blank.value = '';
+    blank.textContent = 'Browse…';
+    browse.appendChild(blank);
+
+    for (const option of options)
     {
-        if (!select)
-        {
-            continue;
-        }
+        const el = document.createElement('option');
 
-        select.textContent = '';
-
-        // Only the browse select gets an empty row; an achievement is always filed somewhere.
-        if (select === browse)
-        {
-            const blank = document.createElement('option');
-            blank.value = '';
-            blank.textContent = 'Browse…';
-            select.appendChild(blank);
-        }
-
-        for (const option of options)
-        {
-            const el = document.createElement('option');
-            el.value = option.id;
-            el.textContent = option.label;
-            select.appendChild(el);
-        }
-    }
-
-    if (assign)
-    {
-        assign.value = state.achCategory;
+        el.value = option.id;
+        el.textContent = option.label;
+        browse.appendChild(el);
     }
 }
 
@@ -196,8 +184,8 @@ function noClient()
 /**
  * Loads the category tree.
  *
- * Called at start-up alongside the icon and font loads: 86 rows, and having it in hand means the
- * Category select under Custom is populated before the tab is ever opened.
+ * Called at start-up alongside the icon and font loads: 86 rows, so the browse select is filled
+ * before the tab is ever opened.
  */
 async function loadAchievementCategories()
 {
@@ -212,11 +200,11 @@ async function loadAchievementCategories()
         }
 
         tree = result.categories || [];
-        fillCategorySelects();
+        fillCategorySelect();
     }
     catch
     {
-        // Leaves the selects empty; the hint already says a client is what they want.
+        // Leaves the select empty; the hint already says a client is what they want.
     }
 }
 

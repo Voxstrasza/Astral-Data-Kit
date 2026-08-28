@@ -75,7 +75,9 @@ const EQUIP_PRESETS = [
     'Improves haste rating by {N}.',
     'Improves hit rating by {N}.',
     'Increases attack power by {N}.',
+    'Increases ranged attack power by {N}.',
     'Increases spell power by {N}.',
+    'Increases your spell penetration by {N}.',
     'Improves your resilience rating by {N}.',
     'Increases your expertise rating by {N}.',
     'Increases defense rating by {N}.',
@@ -370,6 +372,14 @@ function buildItemLines(s)
         body(`Durability ${Number(s.durability)} / ${Number(s.durability)}`);
     }
 
+    /*
+     * Requirements, which is where the class and reputation lines land too.
+     *
+     * The game prints all of these in the same block between durability and the level requirement:
+     * "Classes: Warrior", "Requires Revered with The Ashen Verdict", "Requires Revered with the
+     * Ashen Verdict". They are one editable list rather than three fields, so a loaded item and an
+     * invented one produce the same thing and either can be corrected by hand.
+     */
     for (const req of s.requires || [])
     {
         if (req.text)
@@ -378,7 +388,9 @@ function buildItemLines(s)
         }
     }
 
-    if (Number(s.reqLevel) > 0)
+    /* The tick beside the field, not the number, decides whether this line exists. Absent means
+       shown, so a permalink written before the tick existed still reads the way it did. */
+    if (s.reqLevelShow !== false && Number(s.reqLevel) > 0)
     {
         body(`Requires Level ${Number(s.reqLevel)}`);
     }
@@ -400,13 +412,24 @@ function buildItemLines(s)
 
     if (s.setName)
     {
+        /*
+         * The set block, counted against what is actually worn when the caller knows.
+         *
+         * An item tooltip on its own cannot know - the Item window is showing one piece and nothing
+         * else - so `setWorn` and `setOn` are absent there and it reads 0 of however many, every
+         * line grey, which is what the game shows for a piece sitting in a bag. The Armory hands
+         * both in, and then it lights the way it does on a character.
+         */
         const pieces = (s.setPieces || []).filter(Boolean);
+        const on = s.setOn || [];
+        const count = Number(s.setWorn) || 0;
+
         push({ l: '', kind: 'gap' });
-        body(`${s.setName} (0/${pieces.length || Number(s.setCount) || 0})`, C.gold);
+        body(`${s.setName} (${count}/${pieces.length || Number(s.setCount) || 0})`, C.gold);
 
         for (const piece of pieces)
         {
-            body(piece, C.socketEmpty);
+            body(piece, on.includes(piece) ? C.white : C.socketEmpty);
         }
 
         if ((s.setBonuses || []).length)
@@ -417,7 +440,8 @@ function buildItemLines(s)
             {
                 if (bonus.text)
                 {
-                    body(`(${bonus.count}) Set: ${bonus.text}`, C.socketEmpty);
+                    body(`(${bonus.count}) Set: ${bonus.text}`,
+                        count >= Number(bonus.count) ? C.green : C.socketEmpty);
                 }
             }
         }

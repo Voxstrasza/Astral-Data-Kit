@@ -28,7 +28,7 @@ const OUT = path.join(ROOT, 'dist', 'Astral-win32-x64');
 const pkg = require(path.join(ROOT, 'package.json'));
 
 const PRODUCT = 'Astral';
-const DESCRIPTION = 'Astral - 3.3.5a Data Kit';
+const DESCRIPTION = 'Astral - Data Kit';
 const EXE = `${PRODUCT}.exe`;
 
 /** Files and folders that make up the app itself, copied into resources/app. */

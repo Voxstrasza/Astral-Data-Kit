@@ -248,9 +248,13 @@ body {
   gap: 8px;
 }
 
+/*
+ * The interface's own gold, taken from the variable rather than written out, so it darkens with
+ * the light theme instead of staying a yellow that white cannot hold.
+ */
 .credit,
 .version {
-  color: var(--muted);
+  color: var(--accent);
   font-size: 11px;
   letter-spacing: 0.4px;
   white-space: nowrap;
@@ -306,21 +310,34 @@ main {
    * Without the minimum it ended wherever its last fieldset did, so a short window — Texts with
    * two lines in it — left the left third of the app as bare background below the panels, which
    * read as the page having failed to finish drawing rather than as a short form.
+   *
+   * The 125px is what is above and below it, written out rather than rounded: an 85px top bar (a
+   * 68px logo, 8px of padding either side, 1px of border) and main's own 20px of padding top and
+   * bottom. It was 110px, which left the page 15px taller than the window in every mode — enough
+   * to scroll the whole layout by, for no reason and with nothing to see.
    */
-  min-height: calc(100vh - 110px);
-  max-height: calc(100vh - 110px);
+  min-height: calc(100vh - 125px);
+  max-height: calc(100vh - 125px);
   overflow-y: auto;
   padding-right: 6px;
 }
 
 /*
  * The surface behind that column, so its full height is visible rather than implied.
+ *
+ * Pinned like the preview beside it, and for the same reason. The column is already the height of
+ * the window and scrolls its own contents, but it used to sit at the top of a page that could be
+ * taller - a big tooltip makes the right column overflow - so scrolling the window carried the
+ * whole form off the top and left bare background where it had been. Sticking it at the same
+ * offset the preview uses means the two columns hold their place and only their insides move.
  */
 main:not(.no-preview) .editor {
   background: linear-gradient(180deg, rgb(255 255 255 / 2%), transparent 240px);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 12px 12px 0;
+  position: sticky;
+  top: 84px;
 }
 
 fieldset {
@@ -726,7 +743,9 @@ button.primary {
 }
 
 #settings-dialog,
-#instance-dialog {
+#instance-dialog,
+#armory-picker,
+#talent-dialog {
   width: min(720px, 94vw);
   max-height: 88vh;
   background: var(--panel);
@@ -737,7 +756,9 @@ button.primary {
 }
 
 #settings-dialog::backdrop,
-#instance-dialog::backdrop {
+#instance-dialog::backdrop,
+#armory-picker::backdrop,
+#talent-dialog::backdrop {
   background: rgb(0 0 0 / 60%);
 }
 
@@ -1170,6 +1191,10 @@ main.no-preview .preview {
 main.no-preview {
   grid-template-columns: minmax(0, 900px);
   justify-content: center;
+}
+
+main.no-preview.armory {
+  grid-template-columns: minmax(0, 1220px);
 }
 
 main.no-preview .editor {
@@ -1824,4 +1849,726 @@ main.home > * {
 .saved-mixed {
   margin-top: 6px;
   align-items: center;
+}
+
+/* ------------------------------------------------------------------- armory */
+
+/*
+ * The character sheet with no character in it. Taking the model out is what lets the two slot
+ * columns sit beside each other rather than down either side of a portrait, which leaves the
+ * width for a stat panel laid out across instead of down.
+ */
+
+/*
+ * The pickers sit up under the Settings button rather than at the edge of the centered column.
+ * Absolute against main, whose padding box is the window, so they land in the same right margin
+ * the topbar uses however wide the window is. main is the containing block, not .editor, so its
+ * overflow rule does not clip this.
+ */
+main.armory {
+  position: relative;
+}
+
+.armory-top {
+  display: flex;
+  justify-content: flex-end;
+  position: absolute;
+  top: 0;
+  right: 20px;
+}
+
+main.armory [data-panel="armory"] {
+  padding-top: 86px;
+}
+
+/* The group shrinks to the width of the picker row, so the button below centers under the three
+   rather than under the whole page. */
+.armory-top-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.armory-top-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.armory-top-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.armory-top-row input[type="number"] {
+  width: 72px;
+}
+
+.armory-body {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 200px;
+  gap: 14px;
+  align-items: start;
+}
+
+/* The two side boxes sit at the outer edges and the doll centers between them, so the space to
+   the left of the slots and the space to their right are the same. */
+.armory-racials,
+.armory-who {
+  grid-row: 1;
+}
+
+.armory-doll {
+  grid-row: 1;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.armory-stats {
+  grid-column: 1 / -1;
+}
+
+.armory-racials {
+  min-height: 320px;
+}
+
+/* What the talent calculator decided, sitting where the game puts it: over the character. */
+.armory-spec {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Who the character is, for the export. */
+.armory-who {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 190px;
+}
+
+.armory-who label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.armory-who label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Narrow columns, so a slot reads as a box that holds one item rather than a wide bar. */
+.armory-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 300px));
+  gap: 8px;
+}
+
+.slot-col,
+.slot-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * The weapons keep the armor slots' width rather than sharing one row three ways: at a third of
+ * the width a long single-word item name would be squeezed, and every slot on the page holding
+ * the same size box is worth more than the game's exact bottom row. Ranged sits centered under
+ * the pair.
+ */
+.slot-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 300px));
+  gap: 6px 8px;
+  max-width: 608px;
+}
+
+.slot-row .slot:nth-child(3) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 300px;
+}
+
+.slot-row .slot {
+  flex: 1;
+}
+
+/*
+ * Said once at the head of the panel, since a slot carries no title of its own.
+ *
+ * Out of the flow and pinned to the top of main, the way the pickers opposite it are: the panel
+ * leaves a band clear for those, and that band is empty on this side. Centred, so it stacks over
+ * the spec line rather than hugging the left edge.
+ */
+.armory-how {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* An empty slot is a box with the name of what belongs in it, until it can hold an item. */
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  min-height: 56px;
+}
+
+.slot-name {
+  white-space: nowrap;
+}
+
+/* Big enough to read as the item square it will hold, rather than a bullet beside a label. */
+.slot-icon {
+  flex: 0 0 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2px 26px;
+  margin-bottom: 10px;
+}
+
+/*
+ * The five schools, on their own line under the sheet and inside the same box. Their labels are
+ * short enough that the sheet's 190px columns leave a lot of air, so they get narrower ones and
+ * come out as the row of five the game reads as.
+ */
+.stat-resists {
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  margin-top: -6px;
+}
+
+/*
+ * A line, not a box. A character sheet is a list of "Strength: 174" and reads better as one, since
+ * boxes framed thirty numbers that needed no framing.
+ *
+ * The font is the program's own, inherited rather than set, so the sheet matches the chrome around
+ * it. This was AstralGame - the client's own FRIZQT__.TTF - on the reasoning that a sheet quoting
+ * the game should be set in the game's face. It did not buy the resemblance: what makes the game's
+ * sheet read the way it does is its layout, not its typeface. Reading like the game is still
+ * wanted here and is still unsolved.
+ */
+.stat {
+  font-size: 15px;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 2px 0;
+  min-width: 0;
+}
+
+.stat-label {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.stat-value {
+  color: var(--text);
+}
+
+/* A stat the gear pipeline has not been built for yet, drawn rather than hidden. */
+.stat.pending .stat-value {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+/* ------------------------------------------------------------- armory picker */
+
+/*
+ * Filling a slot. Two sources behind one dialog: the database, which is where most of the haystack
+ * is, and the pieces you invented, one button away in the corner rather than down a second path.
+ *
+ * The box, the border and the backdrop come from the rule the settings and instance dialogs share
+ * — a dialog left out of that list gets the browser's own white frame, which is what this one had
+ * at first. Only the width is its own: a list of item rows wants less room than an instance
+ * browser.
+ */
+#armory-picker {
+  width: min(680px, 92vw);
+}
+
+.picker-sources {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* The source that is showing reads as pressed, so which list this is is never a guess. */
+.picker-source.is-on {
+  background: var(--panel-2);
+  color: var(--text);
+  border-color: var(--accent, var(--line));
+}
+
+#armory-picker-search {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.picker-results {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 220px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+/* A filled slot stops being a label and becomes the item, so the rack reads at a glance. */
+.slot.filled {
+  color: var(--text);
+}
+
+.slot.filled .slot-name {
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.slot-icon.has-item {
+  background-size: cover;
+  background-position: center;
+}
+
+
+/*
+ * The tooltip that hangs off a slot. Positioned in script, since where it fits depends on where the
+ * slot is; everything here is only about keeping it above the page and out of the pointer's way.
+ */
+.armory-hover {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 55%));
+}
+
+.armory-hover canvas {
+  display: block;
+}
+
+.equipped-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.equipped-table th {
+  text-align: left;
+  font-weight: normal;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding: 4px 6px;
+}
+
+.equipped-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (max-width: 700px) {
+  .armory-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------ talent calculator */
+
+/*
+ * Three trees side by side, the way the game's own frame and every calculator built on it lays
+ * them out. Wider than the other dialogs because three four-column grids is what it has to hold.
+ */
+#talent-dialog {
+  /* As wide and as tall as the window allows: three eleven-tier trees side by side is what it
+     has to hold, and scrolling a talent tree is the thing the game never makes you do. */
+  width: min(1180px, 97vw);
+  max-height: 94vh;
+}
+
+#talent-dialog .dialog-body {
+  max-height: calc(94vh - 52px);
+}
+
+/*
+ * The spec sits in the middle of the window rather than wherever the flex row leaves room. Taken
+ * out of the flow to do it: the title on the left and the count and buttons on the right are not
+ * the same width, so centering it between them would not centre it on the window.
+ */
+#talent-dialog .dialog-head {
+  position: relative;
+}
+
+.talent-head-spec {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--accent);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.talent-head-spent {
+  align-self: center;
+  color: var(--accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.talent-trees {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.talent-tree {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 10px;
+}
+
+/*
+ * The tree's name sits over the middle of its own column, with the points it holds off to the
+ * right. Centred out of the flow rather than between its neighbours, since there is nothing on the
+ * left to balance the count on the right.
+ */
+.talent-tree-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  position: relative;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.talent-tree-head strong {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.talent-tree-points {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The grid is the tree: a talent is placed by its own tier and column rather than by the order it
+ * was read in, so the gaps the game leaves are left as gaps.
+ */
+.talent-grid {
+  display: grid;
+  gap: 14px 20px;
+  justify-content: center;
+  position: relative;
+  padding: 10px 8px;
+  border-radius: 6px;
+
+  /*
+   * The four client tiles as one sheet, dimmed so a gold icon still reads over it.
+   *
+   * The tiles are not four equal quarters and they are not fully painted. Measured out of the
+   * client: 256x256, 64x256, 256x128 and 64x128, but the right pair is opaque only to column 44
+   * and the bottom pair only to row 75. So the art is a 300 by 331 sheet sitting inside 320 by 384
+   * of file, and stretching the files to fit the box dragged their transparent padding into view —
+   * which is the black band that appeared down the bottom and the right.
+   *
+   * The sizes below scale each tile so that its *opaque* part lands where it belongs, and the two
+   * positions past 100% push the padding out of the box to be clipped:
+   *
+   *   256/300 = 85.333%   64/300 = 21.333%   256/331 = 77.341%   128/331 = 38.671%
+   *
+   * A background-position percentage aligns that point of the image with the same point of the
+   * box, so placing an image of width w at offset x needs x / (100% - w) — 108.47% and 126.11%.
+   */
+  background-repeat: no-repeat;
+  background-size:
+    85.333% 77.341%,
+    21.333% 77.341%,
+    85.333% 38.671%,
+    21.333% 38.671%;
+  background-position: 0 0, 108.47% 0, 0 126.11%, 108.47% 126.11%;
+  box-shadow: inset 0 0 0 9999px rgb(0 0 0 / 45%);
+}
+
+.talent {
+  position: relative;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+}
+
+.talent-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px;
+}
+
+/*
+ * The game's own reading of a rank counter: gold once it is finished, green while there is still a
+ * point to put in it, and plain white when it is empty.
+ */
+.talent.maxed {
+  border-color: var(--accent);
+}
+
+.talent.partial {
+  border-color: #1eff00;
+}
+
+/* A talent that cannot take a point yet is dimmed rather than hidden - the shape of the tree is
+   worth seeing before it is reachable. */
+.talent.locked .talent-icon {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.talent-rank {
+  position: absolute;
+  right: -6px;
+  bottom: -7px;
+  min-width: 20px;
+  padding: 0 3px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.talent.partial .talent-rank {
+  color: #1eff00;
+}
+
+.talent.maxed .talent-rank {
+  color: var(--accent);
+}
+
+/*
+ * The line from a talent to the one it waits for, drawn in the same grid so it needs no measuring:
+ * it spans the cells between the two and sits behind them.
+ */
+.talent-arrow {
+  align-self: stretch;
+  justify-self: center;
+  background: var(--line);
+  pointer-events: none;
+}
+
+.talent-arrow.down {
+  width: 2px;
+  margin: -14px 0;
+}
+
+.talent-arrow.across {
+  height: 2px;
+  align-self: center;
+  justify-self: stretch;
+  margin: 0 -20px;
+}
+
+.talent-arrow.is-met {
+  background: #3fbf5f;
+}
+
+/* ------------------------------------------------------------------- racials */
+
+/*
+ * One racial to a row: its own icon, its name, and what it is worth in a line under it. Every one
+ * is listed, including the ones that change no number, because being able to Shadowmeld is part of
+ * being a night elf even though the sheet never moves for it.
+ */
+.racial {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.racial-icon {
+  flex: 0 0 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  background-size: cover;
+  background-position: center;
+}
+
+.racial-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.racial-name {
+  font-size: 12px;
+}
+
+.racial-effect {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* A weapon racial with the wrong weapon in hand: present, and doing nothing. */
+.racial.is-off .racial-icon {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.racial.is-off .racial-effect {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+
+/* ---------------------------------------------------------------- set bonuses */
+
+/*
+ * The game's own colouring: what you are wearing is lit, what you are not is grey, and a bonus
+ * turns green the moment enough pieces are on.
+ */
+.set + .set {
+  margin-top: 12px;
+}
+
+.set-name {
+  color: var(--accent);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.set-pieces,
+.set-bonuses {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 12px;
+}
+
+.set-bonuses {
+  margin-top: 8px;
+}
+
+.set-piece,
+.set-bonus {
+  color: var(--muted);
+}
+
+.set-piece.is-on {
+  color: var(--text);
+}
+
+.set-bonus.is-on {
+  color: #1eff00;
+}
+
+/* Off on its own at the right: the one button here that is not about the saved list. */
+button.to-armory {
+  margin-left: auto;
+}
+
+/*
+ * A field with a tick beside it: the number, and whether it is printed at all. Small on purpose -
+ * it is a switch on one line, not a setting of its own.
+ */
+.with-tick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.with-tick input[type="number"] {
+  min-width: 0;
+  flex: 1;
+}
+
+.with-tick .tick {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  cursor: pointer;
+}
+
+/*
+ * The Armory's work-in-progress stamp.
+ *
+ * Fixed rather than absolute so it stays over the middle of the window however far the page is
+ * scrolled, and it disappears with the panel because a hidden panel draws none of its children.
+ * `pointer-events: none` is what keeps it a stamp rather than a wall - every slot, button and
+ * tooltip underneath still works.
+ */
+.armory-wip {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 800;
+  font-size: clamp(56px, 11vw, 190px);
+  letter-spacing: 12px;
+  white-space: nowrap;
+  text-transform: uppercase;
+
+  color: var(--accent);
+  opacity: 0.13;
+  transform: rotate(-16deg);
+
+  /* An outline as well as a fill, so it reads over both the dark panels and the pale ones. */
+  -webkit-text-stroke: 2px var(--accent);
+}
+
+/*
+ * The [WIP] beside the Armory tab. Gold from the variable, so it darkens with the light theme the
+ * way the rest of the interface's gold does, and it keeps its color on the active tab too.
+ */
+.wip-tag {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  vertical-align: 1px;
 }

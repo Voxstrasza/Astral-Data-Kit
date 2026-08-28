@@ -17,7 +17,7 @@ import { renderLists, LIST_DEFAULTS } from './lists.js';
 import { populateSelects, bindInputs, syncForm } from './form.js';
 import { setIcon, currentIconName, renderIconGrid, loadIcons, loadAssets, loadGameFonts, bindCustomIcons } from './icons.js';
 import { update, status, exportCanvas, exportParts, fileName } from './preview.js';
-import { refreshStatus, applyClientPath, applyDbSettings } from './settings.js';
+import { refreshStatus, applyClientPath, applyDbSettings, disconnectDb, readyLine } from './settings.js';
 import { renderNpcResults } from './npc.js';
 import { autoPortrait } from './model-viewer.js';
 import { bindBrowser } from './instances.js';
@@ -29,6 +29,7 @@ import { bindItemWizard } from './item-wizard.js';
 import { showRaids, releaseIcon } from './raids.js';
 import { bindSaved } from './saved.js';
 import { bindAchievementSearch, loadAchievementCategories } from './achievement.js';
+import { initArmory } from './armory.js';
 import { seedExample } from './example.js';
 import { M } from './wow.js';
 
@@ -133,6 +134,7 @@ async function init()
     bindItemSearch();
     bindItemWizard();
     bindSaved();
+    initArmory();
 
     /*
      * These all write into the current mode's own view settings, so ticking transparent while
@@ -256,6 +258,7 @@ async function init()
 
     $('#btn-apply-client').addEventListener('click', () => applyClientPath($('#client-path').value.trim()));
     $('#btn-apply-db').addEventListener('click', applyDbSettings);
+    $('#btn-disconnect-db').addEventListener('click', disconnectDb);
 
     // The native folder picker only exists in the desktop shell.
     if (window.astral && window.astral.isDesktop)
@@ -271,7 +274,7 @@ async function init()
 
             $('#client-path').value = result.path;
             $('#client-status').textContent = result.ok
-                ? `Ready - ${(result.icons || 0).toLocaleString()} icons available.`
+                ? readyLine(result)
                 : `Could not use that folder: ${result.reason}`;
 
             await refreshStatus();

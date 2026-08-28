@@ -6,7 +6,8 @@ import { $ } from './dom.js';
 import { state, runtime } from './state.js';
 import { api, postJson } from './api.js';
 import { status, update } from './preview.js';
-import { setIcon, loadIcons, loadGameFonts, loadAssets } from './icons.js';
+import { setIcon, currentIconName, loadIcons, loadGameFonts, loadAssets } from './icons.js';
+import { initArmory } from './armory.js';
 
 /*
  * The two badges in the top bar.
@@ -53,7 +54,6 @@ async function refreshStatus()
         }
 
         $('#client-path').value = info.settings.clientPath || '';
-        $('#db-enabled').checked = !!info.settings.db.enabled;
         $('#db-host').value = info.settings.db.host;
         $('#db-port').value = info.settings.db.port;
         $('#db-user').value = info.settings.db.user;
@@ -95,15 +95,24 @@ async function applyClientPath(pathValue)
         const client = result.client || {};
 
         $('#client-status').textContent = client.ok
-            ? `Ready - ${client.icons.toLocaleString()} icons available.`
+            ? readyLine(client)
             : `Could not use that folder: ${client.reason || 'unknown error'}`;
 
         await refreshStatus();
 
         if (client.ok)
         {
-            await Promise.all([loadIcons(), loadGameFonts(), loadAssets()]);
-            setIcon(state.icon);
+            await Promise.all([loadIcons(), loadGameFonts(), loadAssets(), initArmory()]);
+
+            /*
+             * Repaint whichever window is showing, not the item one.
+             *
+             * `setIcon` writes into the current mode's own icon field, so handing it `state.icon`
+             * while the Spell window was open assigned the item's icon to the spell - importing a
+             * client turned a question mark into a sword. `currentIconName()` is the same value for
+             * the item window and the right one everywhere else.
+             */
+            setIcon(currentIconName());
             update();
         }
     }
@@ -113,12 +122,27 @@ async function applyClientPath(pathValue)
     }
 }
 
-async function applyDbSettings()
+/**
+ * What a freshly opened client came with.
+ *
+ * Both places that import one say it the same way, so the count cannot end up different depending
+ * on whether the folder was typed or browsed for. The spell count is left off rather than printed
+ * as zero when the table would not parse - a client with icons and no spells is still usable, and
+ * "0 spells" reads like a failure when the icons plainly worked.
+ */
+function readyLine(client)
 {
-    $('#db-status').textContent = 'Connecting…';
+    const spells = Number(client.spells) || 0;
 
+    return `Ready - ${(client.icons || 0).toLocaleString()} icons`
+        + (spells ? `, ${spells.toLocaleString()} spells` : '')
+        + ' available.';
+}
+
+/** What the form is showing, minus `enabled`, which each caller decides for itself. */
+function currentDbForm()
+{
     const db = {
-        enabled: $('#db-enabled').checked,
         host: $('#db-host').value.trim(),
         port: Number($('#db-port').value) || 3306,
         user: $('#db-user').value.trim(),
@@ -133,13 +157,28 @@ async function applyDbSettings()
         db.password = typed;
     }
 
+    return db;
+}
+
+async function applyDbSettings()
+{
+    $('#db-status').textContent = 'Connecting…';
+
+    /*
+     * Connecting is what asks for it, so there is no separate tick to say so. `enabled` is still
+     * the flag the server reads at start-up to decide whether to open a pool; this button sets it
+     * and Disconnect clears it.
+     */
+    const db = { ...currentDbForm(), enabled: true };
+
     try
     {
         const result = await postJson('api/settings', { db });
         const outcome = result.db || {};
 
         $('#db-status').textContent = outcome.ok
-            ? `Connected - ${outcome.creatures.toLocaleString()} creatures.`
+            ? `Connected - ${outcome.creatures.toLocaleString()} creatures,`
+                + ` ${outcome.items.toLocaleString()} items.`
             : `Not connected: ${outcome.reason || 'unknown error'}`;
 
         await refreshStatus();
@@ -150,4 +189,30 @@ async function applyDbSettings()
     }
 }
 
-export { paintBadges, refreshStatus, applyClientPath, applyDbSettings };
+/**
+ * Unhook the database without forgetting how to reach it.
+ *
+ * The host, user and database stay in the form and on disk, so reconnecting is one press rather
+ * than typing it all again. Only `enabled` changes, which is what the server reads to decide
+ * whether to hold a pool open at all.
+ */
+async function disconnectDb()
+{
+    $('#db-status').textContent = 'Disconnecting…';
+
+    try
+    {
+        await postJson('api/settings', { db: { ...currentDbForm(), enabled: false } });
+
+        $('#db-status').textContent = 'Disconnected. NPC and Item search are off until you connect'
+            + ' again; everything that reads the client still works.';
+
+        await refreshStatus();
+    }
+    catch (err)
+    {
+        $('#db-status').textContent = `Failed: ${err.message}`;
+    }
+}
+
+export { paintBadges, refreshStatus, applyClientPath, applyDbSettings, disconnectDb, readyLine };

@@ -23,8 +23,9 @@ const { Instances } = require('../lib/instances');
 const { CustomIcons } = require('../lib/custom-icons');
 const { Spells } = require('../lib/spells');
 const { Achievements } = require('../lib/achievements');
-const { ItemDisplay } = require('../lib/items');
+const { ItemDisplay, ItemSets, Factions } = require('../lib/items');
 const { ItemBudget } = require('../lib/item-budget');
+const { Character } = require('../lib/character');
 const { Raids } = require('../lib/raids');
 const { Saved } = require('../lib/saved');
 const routes = require('../lib/routes');
@@ -39,7 +40,10 @@ let customIcons = null;
 let spells = null;
 let achievements = null;
 let itemDisplay = null;
+let itemSets = null;
+let factions = null;
 let itemBudget = null;
+let character = null;
 let raids = null;
 let saved = null;
 let portraitCameras = null;
@@ -163,10 +167,35 @@ function reopenClient()
     if (spells) { spells.reset(); }
     if (achievements) { achievements.reset(); }
     if (itemDisplay) { itemDisplay.reset(); }
+    if (itemSets) { itemSets.reset(); }
+    if (factions) { factions.reset(); }
     if (itemBudget) { itemBudget.reset(); }
+    if (character) { character.reset(); }
     if (portraitCameras) { portraitCameras.reset(); }
 
-    return assets.open(settings.data.clientPath);
+    const opened = assets.open(settings.data.clientPath);
+
+    /*
+     * How many spells came with it, alongside the icon count.
+     *
+     * This forces Spell.dbc to parse a moment earlier than it otherwise would - the first tooltip
+     * or talent tree was going to do it anyway - and in exchange the import says what it got rather
+     * than only what it got in pictures. A client without the table still opens: the count is left
+     * off and everything that does not need spells carries on.
+     */
+    if (opened.ok && spells)
+    {
+        try
+        {
+            opened.spells = spells.load().spells.length;
+        }
+        catch
+        {
+            /* No Spell.dbc, or one this reader will not take. The icons still count. */
+        }
+    }
+
+    return opened;
 }
 
 function serveStatic(pathname)
@@ -194,7 +223,10 @@ app.whenReady().then(() =>
     spells = new Spells(assets);
     achievements = new Achievements(assets);
     itemDisplay = new ItemDisplay(assets);
+    itemSets = new ItemSets(assets);
+    factions = new Factions(assets);
     itemBudget = new ItemBudget(assets);
+    character = new Character(assets);
     raids = new Raids(path.join(userData, 'raids'));
     saved = new Saved(path.join(userData, 'saved'));
     portraitCameras = new PortraitCameras(assets);
@@ -217,7 +249,7 @@ app.whenReady().then(() =>
         const result = await routes.handle(
             {
             assets, settings, worldDb, instances, customIcons, spells, achievements,
-            itemDisplay, itemBudget, raids, saved, portraitCameras, reopenClient
+            itemDisplay, itemSets, factions, itemBudget, character, raids, saved, portraitCameras, reopenClient
         },
             parsed.pathname,
             parsed.searchParams,

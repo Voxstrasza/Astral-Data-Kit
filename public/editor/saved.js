@@ -139,12 +139,57 @@ async function saveCurrent(kind)
             editing.set(kind, result.entry.id);
             status(`Saved ${result.entry.name}`);
             refresh(kind);
+
+            return result.entry;
         }
     }
     catch (err)
     {
         status(`Could not save: ${err.message}`);
     }
+
+    return null;
+}
+
+/**
+ * Keep this item where the Armory can find it.
+ *
+ * It saves and stops there. Equipping it is the Armory's business, and a button that jumped you
+ * into another window would be deciding for you that this piece is the one you want on right now,
+ * which is rarely true while a set is being built.
+ *
+ * The store is the ordinary saved-items folder rather than a second one per slot. A saved item
+ * already carries the slot it was built for, so the picker finds it by reading that; a per-slot
+ * folder would only add a second place for the same item to live, chosen when it was saved and
+ * wrong the moment its slot is edited.
+ */
+async function saveForArmory()
+{
+    const entry = await saveCurrent('item');
+
+    if (!entry)
+    {
+        return;
+    }
+
+    /* The saved entry is a wrapper; the item itself is `fields`. */
+    const item = entry.fields || {};
+
+    /*
+     * The warning is the point of saying anything at all here. Only the editor's preset lines are
+     * priced and read; a stat written as its own sentence is prose to the program, and a piece full
+     * of them reads on the character sheet as a piece with no stats, with nothing to say why.
+     */
+    const written = (item.effects || []).filter((e) => e.preset === 'custom' && e.text).length;
+    const where = item.slot
+        ? `under Custom gear in the ${item.slot} slot`
+        : 'under Custom gear, though with no slot set nothing will offer it';
+
+    status(`Saved ${entry.name} ${where}.`
+        + (written
+            ? ` ${written} hand-written line${written === 1 ? '' : 's'} will not be read`
+                + ' - only the preset ones move the sheet.'
+            : ''));
 }
 
 async function remove(kind, entry)
@@ -209,6 +254,21 @@ function render(kind)
     bar.appendChild(button(`Build a PNG of all ${entries.length}`, 'add',
         () => exportSet(kind),
         `Draws every saved ${kind} as one sheet, under the title below`));
+
+    /*
+     * Items only, and off on its own at the right: this is the one button here that is not about
+     * the saved list, so it reads better apart from the three that are.
+     */
+    if (kind === 'item')
+    {
+        const armory = button('Save for Armory', 'add', saveForArmory,
+            'Saves this item where the Armory can find it, under the slot it is built for. Only'
+            + ' the preset stat lines are read - a stat written as its own sentence will not move'
+            + ' the sheet.');
+
+        armory.classList.add('to-armory');
+        bar.appendChild(armory);
+    }
 
     host.appendChild(bar);
 

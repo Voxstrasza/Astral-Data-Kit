@@ -1,4 +1,4 @@
-# Astral - 3.3.5a Data Kit
+# Astral - Data Kit
 
 Astral is a conceptualization tool for Wrath of the Lich King content.
 
@@ -32,6 +32,8 @@ It adds creature search, item search, real loot tables and real health pools.
   with boss whispers and boss announcements.
 - **Raid Wizard** - where everything you build with the previous tools can go. Exports an image
   where on one sheet you can view target frames, spells, texts and more.
+- **Armory** *(work in progress)* - build a character and simulate stats with your created gear
+  using the in-game stat formulas.
 
 Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports are PNG
 format at 1x-4x.
@@ -67,7 +69,6 @@ Example of raid wizard output:
 - **SQL exporter** - export the items you create straight into AzerothCore or TrinityCore:
   ready-to-run `INSERT` statements for whatever the editor is showing, with only an entry id to
   supply.
-- **Armory** - build a character and simulate stats with your created gear.
 - **Live portraits** - portraits rendered from the client's own `.m2` models with the camera stored
   inside the model file, so the framing is the game's rather than an approximation. The data half
   is built and verified; a local renderer is the work left.
