@@ -251,17 +251,24 @@ function render(kind)
         }, 'Keeps this as a second entry rather than replacing the one it came from'));
     }
 
-    /* Items only: the other kinds have nothing to wear. */
-    if (kind === 'item')
-    {
-        bar.appendChild(button('Save for Armory', 'add', saveForArmory,
-            'Saves this item and puts it on, in the slot it is built for. Only the preset stat'
-            + ' lines are read - a stat written as its own sentence will not move the sheet.'));
-    }
-
     bar.appendChild(button(`Build a PNG of all ${entries.length}`, 'add',
         () => exportSet(kind),
         `Draws every saved ${kind} as one sheet, under the title below`));
+
+    /*
+     * Items only, and off on its own at the right: this is the one button here that is not about
+     * the saved list, so it reads better apart from the three that are.
+     */
+    if (kind === 'item')
+    {
+        const armory = button('Save for Armory', 'add', saveForArmory,
+            'Saves this item where the Armory can find it, under the slot it is built for. Only'
+            + ' the preset stat lines are read - a stat written as its own sentence will not move'
+            + ' the sheet.');
+
+        armory.classList.add('to-armory');
+        bar.appendChild(armory);
+    }
 
     host.appendChild(bar);
 

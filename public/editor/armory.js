@@ -245,7 +245,14 @@ async function showHover(slotNode, item)
     const prepared = {
         ...item,
         kind: 'item',
-        effects: (item.effects || []).map((e) => ({ kind: e.kind, text: effectText(e) }))
+        effects: (item.effects || []).map((e) => ({ kind: e.kind, text: effectText(e) })),
+
+        /*
+         * What the tooltip cannot work out for itself: how many of this set are on, and which of
+         * its named pieces they are. Without these it reads "0/5" with everything grey, which is
+         * right for a piece in a bag and wrong for one being worn.
+         */
+        ...setContext(item)
     };
 
     const canvas = R.renderTooltip(M.buildLines(prepared), {
@@ -764,9 +771,9 @@ function showSpec()
 {
     const talents = talentSummary();
 
-    $('#armory-spec').textContent = talents.spent
-        ? `${talents.spec} - ${talents.spent} of ${talents.available} points`
-        : 'no talents spent';
+    /* The three counts already say how many points are spent, so the total said it twice. How many
+       are left is on the calculator's own header, which is where you are when it matters. */
+    $('#armory-spec').textContent = talents.spent ? talents.spec : 'no talents spent';
 }
 
 /** Death knights start at 55, so the level field says so rather than answering with an error. */
@@ -862,6 +869,7 @@ async function refresh()
         ...lines.filter((entry) => entry.tag === 'resist').map((entry) => cell(entry, sheet)));
 
     drawEquipped();
+    drawSets();
 
     /* The line under the sheet is for what went wrong, and nothing did. */
     $('#armory-stat-note').textContent = '';
@@ -874,6 +882,183 @@ async function refresh()
  * about which slots count and what an empty off hand is worth, and inventing them would put a
  * number on the panel that nothing can check. The item's own field needs inventing nothing.
  */
+
+/* --------------------------------------------------------------------------- sets */
+
+/*
+ * The set block, counted from what is on rather than from what one piece claims.
+ *
+ * A single item's tooltip can only ever say "(0/5)", because an item does not know what else is
+ * worn. Here everything is, so the count is real and a bonus lights up at its threshold the way the
+ * game lights it.
+ *
+ * Grouped by set *name*, which is what makes a custom tier work: a piece you invented with the same
+ * set name as another joins it and counts toward it, whether the others are yours or the
+ * database's. Real sets get their name from `ItemSet.dbc`, so two tiers that look alike - the
+ * Ymirjar Lord's Battlegear and the Ymirjar Lord's Plate - stay apart on their own names rather
+ * than being merged by a family resemblance.
+ */
+function wornSets()
+{
+    const sets = new Map();
+
+    for (const item of worn.values())
+    {
+        const name = (item.setName || '').trim();
+
+        if (!name)
+        {
+            continue;
+        }
+
+        if (!sets.has(name))
+        {
+            sets.set(name, { name, worn: [], slots: [], pieces: [], roster: [], bonuses: [] });
+        }
+
+        const set = sets.get(name);
+
+        set.worn.push(item.name || '(no name)');
+        set.slots.push(item.slot || '');
+
+        /*
+         * The roster and the bonuses come off whichever piece carries them. A custom piece may
+         * list neither, and then the set is as long as the pieces actually equipped.
+         */
+        if ((item.setPieces || []).length > set.pieces.length)
+        {
+            set.pieces = item.setPieces.filter(Boolean);
+        }
+
+        if ((item.setRoster || []).length > set.roster.length)
+        {
+            set.roster = item.setRoster;
+        }
+
+        if ((item.setBonuses || []).length > set.bonuses.length)
+        {
+            set.bonuses = item.setBonuses.filter((b) => b && b.text);
+        }
+    }
+
+    return [...sets.values()];
+}
+
+/**
+ * One set's roster as it should read, with each row lit or not.
+ *
+ * A row shows the piece you are *wearing* where you are wearing one, which is what the game does:
+ * put a Sanctified Ymirjar Lord's Helmet on and the Ymirjar Lord's Helmet row becomes the
+ * sanctified name. The slot is what joins them - the roster names the un-sanctified piece and the
+ * heroic variants are in the set without being in its list, so names never match and slots always
+ * do. A custom set has no slots on its roster, so there it falls back to names.
+ */
+function rosterFor(set)
+{
+    if (!set.roster.length)
+    {
+        const names = set.pieces.length ? set.pieces : set.worn;
+
+        return names.map((name) => ({ name, on: set.worn.includes(name) }));
+    }
+
+    const mine = [...worn.values()].filter((item) => (item.setName || '').trim() === set.name);
+
+    return set.roster.map((piece) =>
+    {
+        const item = mine.find((one) => one.slot === piece.slot);
+
+        return { name: (item && item.name) || piece.name, on: !!item };
+    });
+}
+
+/**
+ * How much of one item's set is on, for its tooltip.
+ *
+ * The tooltip cannot work this out for itself - it is drawing one item and knows nothing of the
+ * other eighteen slots - so the count and the roster are handed to it already resolved.
+ */
+function setContext(item)
+{
+    const name = (item.setName || '').trim();
+    const set = name ? wornSets().find((one) => one.name === name) : null;
+
+    if (!set)
+    {
+        return {};
+    }
+
+    const roster = rosterFor(set);
+
+    return {
+        setWorn: set.worn.length,
+        setPieces: roster.map((piece) => piece.name),
+        setOn: roster.filter((piece) => piece.on).map((piece) => piece.name)
+    };
+}
+
+function drawSets()
+{
+    const host = $('#armory-sets');
+    const sets = wornSets();
+
+    if (!sets.length)
+    {
+        host.replaceChildren(el('p', 'hint',
+            'Equip two or more pieces of a set and its bonuses show here.'));
+        return;
+    }
+
+    host.replaceChildren(...sets.map((set) =>
+    {
+        const box = el('div', 'set');
+        const total = Math.max(set.pieces.length, set.worn.length);
+
+        box.append(el('div', 'set-name', `${set.name} (${set.worn.length}/${total})`));
+
+        /*
+         * The roster, with what is on lit and the rest grey - the game's own arrangement. A set
+         * whose pieces are not named lists what is worn instead of an empty block.
+         */
+        const list = el('div', 'set-pieces');
+
+        for (const piece of rosterFor(set))
+        {
+            const line = el('div', 'set-piece', piece.name);
+
+            if (piece.on)
+            {
+                line.classList.add('is-on');
+            }
+
+            list.append(line);
+        }
+
+        box.append(list);
+
+        if (set.bonuses.length)
+        {
+            const bonuses = el('div', 'set-bonuses');
+
+            for (const bonus of set.bonuses)
+            {
+                const line = el('div', 'set-bonus', `(${bonus.count}) Set: ${bonus.text}`);
+
+                if (set.worn.length >= Number(bonus.count))
+                {
+                    line.classList.add('is-on');
+                }
+
+                bonuses.append(line);
+            }
+
+            box.append(bonuses);
+        }
+
+        return box;
+    }));
+}
+
 function drawEquipped()
 {
     const rows = [...worn.entries()];
@@ -916,6 +1101,7 @@ async function initArmory()
 {
     drawSlots();
     drawEquipped();
+    drawSets();
 
     try
     {

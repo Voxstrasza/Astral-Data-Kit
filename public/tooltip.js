@@ -402,13 +402,24 @@ function buildItemLines(s)
 
     if (s.setName)
     {
+        /*
+         * The set block, counted against what is actually worn when the caller knows.
+         *
+         * An item tooltip on its own cannot know - the Item window is showing one piece and nothing
+         * else - so `setWorn` and `setOn` are absent there and it reads 0 of however many, every
+         * line grey, which is what the game shows for a piece sitting in a bag. The Armory hands
+         * both in, and then it lights the way it does on a character.
+         */
         const pieces = (s.setPieces || []).filter(Boolean);
+        const on = s.setOn || [];
+        const count = Number(s.setWorn) || 0;
+
         push({ l: '', kind: 'gap' });
-        body(`${s.setName} (0/${pieces.length || Number(s.setCount) || 0})`, C.gold);
+        body(`${s.setName} (${count}/${pieces.length || Number(s.setCount) || 0})`, C.gold);
 
         for (const piece of pieces)
         {
-            body(piece, C.socketEmpty);
+            body(piece, on.includes(piece) ? C.white : C.socketEmpty);
         }
 
         if ((s.setBonuses || []).length)
@@ -419,7 +430,8 @@ function buildItemLines(s)
             {
                 if (bonus.text)
                 {
-                    body(`(${bonus.count}) Set: ${bonus.text}`, C.socketEmpty);
+                    body(`(${bonus.count}) Set: ${bonus.text}`,
+                        count >= Number(bonus.count) ? C.green : C.socketEmpty);
                 }
             }
         }

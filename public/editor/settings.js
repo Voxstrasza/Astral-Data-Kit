@@ -95,7 +95,7 @@ async function applyClientPath(pathValue)
         const client = result.client || {};
 
         $('#client-status').textContent = client.ok
-            ? `Ready - ${client.icons.toLocaleString()} icons available.`
+            ? readyLine(client)
             : `Could not use that folder: ${client.reason || 'unknown error'}`;
 
         await refreshStatus();
@@ -111,6 +111,23 @@ async function applyClientPath(pathValue)
     {
         $('#client-status').textContent = `Failed: ${err.message}`;
     }
+}
+
+/**
+ * What a freshly opened client came with.
+ *
+ * Both places that import one say it the same way, so the count cannot end up different depending
+ * on whether the folder was typed or browsed for. The spell count is left off rather than printed
+ * as zero when the table would not parse - a client with icons and no spells is still usable, and
+ * "0 spells" reads like a failure when the icons plainly worked.
+ */
+function readyLine(client)
+{
+    const spells = Number(client.spells) || 0;
+
+    return `Ready - ${(client.icons || 0).toLocaleString()} icons`
+        + (spells ? `, ${spells.toLocaleString()} spells` : '')
+        + ' available.';
 }
 
 /** What the form is showing, minus `enabled`, which each caller decides for itself. */
@@ -189,4 +206,4 @@ async function disconnectDb()
     }
 }
 
-export { paintBadges, refreshStatus, applyClientPath, applyDbSettings, disconnectDb };
+export { paintBadges, refreshStatus, applyClientPath, applyDbSettings, disconnectDb, readyLine };

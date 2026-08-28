@@ -2005,9 +2005,20 @@ main.armory [data-panel="armory"] {
   flex: 1;
 }
 
-/* Said once at the head of the panel, since a slot carries no title of its own. */
+/*
+ * Said once at the head of the panel, since a slot carries no title of its own.
+ *
+ * Out of the flow and pinned to the top of main, the way the pickers opposite it are: the panel
+ * leaves a band clear for those, and that band is empty on this side. Centred, so it stacks over
+ * the spec line rather than hugging the left edge.
+ */
 .armory-how {
-  margin: 0 0 10px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  white-space: nowrap;
 }
 
 /* An empty slot is a box with the name of what belongs in it, until it can hold an item. */
@@ -2450,3 +2461,49 @@ main.armory [data-panel="armory"] {
   text-decoration: line-through;
 }
 
+
+/* ---------------------------------------------------------------- set bonuses */
+
+/*
+ * The game's own colouring: what you are wearing is lit, what you are not is grey, and a bonus
+ * turns green the moment enough pieces are on.
+ */
+.set + .set {
+  margin-top: 12px;
+}
+
+.set-name {
+  color: var(--accent);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.set-pieces,
+.set-bonuses {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 12px;
+}
+
+.set-bonuses {
+  margin-top: 8px;
+}
+
+.set-piece,
+.set-bonus {
+  color: var(--muted);
+}
+
+.set-piece.is-on {
+  color: var(--text);
+}
+
+.set-bonus.is-on {
+  color: #1eff00;
+}
+
+/* Off on its own at the right: the one button here that is not about the saved list. */
+button.to-armory {
+  margin-left: auto;
+}

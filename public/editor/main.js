@@ -17,7 +17,7 @@ import { renderLists, LIST_DEFAULTS } from './lists.js';
 import { populateSelects, bindInputs, syncForm } from './form.js';
 import { setIcon, currentIconName, renderIconGrid, loadIcons, loadAssets, loadGameFonts, bindCustomIcons } from './icons.js';
 import { update, status, exportCanvas, exportParts, fileName } from './preview.js';
-import { refreshStatus, applyClientPath, applyDbSettings, disconnectDb } from './settings.js';
+import { refreshStatus, applyClientPath, applyDbSettings, disconnectDb, readyLine } from './settings.js';
 import { renderNpcResults } from './npc.js';
 import { autoPortrait } from './model-viewer.js';
 import { bindBrowser } from './instances.js';
@@ -274,7 +274,7 @@ async function init()
 
             $('#client-path').value = result.path;
             $('#client-status').textContent = result.ok
-                ? `Ready - ${(result.icons || 0).toLocaleString()} icons available.`
+                ? readyLine(result)
                 : `Could not use that folder: ${result.reason}`;
 
             await refreshStatus();
