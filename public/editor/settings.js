@@ -54,7 +54,6 @@ async function refreshStatus()
         }
 
         $('#client-path').value = info.settings.clientPath || '';
-        $('#db-enabled').checked = !!info.settings.db.enabled;
         $('#db-host').value = info.settings.db.host;
         $('#db-port').value = info.settings.db.port;
         $('#db-user').value = info.settings.db.user;
@@ -114,12 +113,10 @@ async function applyClientPath(pathValue)
     }
 }
 
-async function applyDbSettings()
+/** What the form is showing, minus `enabled`, which each caller decides for itself. */
+function currentDbForm()
 {
-    $('#db-status').textContent = 'Connecting…';
-
     const db = {
-        enabled: $('#db-enabled').checked,
         host: $('#db-host').value.trim(),
         port: Number($('#db-port').value) || 3306,
         user: $('#db-user').value.trim(),
@@ -134,13 +131,28 @@ async function applyDbSettings()
         db.password = typed;
     }
 
+    return db;
+}
+
+async function applyDbSettings()
+{
+    $('#db-status').textContent = 'Connecting…';
+
+    /*
+     * Connecting is what asks for it, so there is no separate tick to say so. `enabled` is still
+     * the flag the server reads at start-up to decide whether to open a pool; this button sets it
+     * and Disconnect clears it.
+     */
+    const db = { ...currentDbForm(), enabled: true };
+
     try
     {
         const result = await postJson('api/settings', { db });
         const outcome = result.db || {};
 
         $('#db-status').textContent = outcome.ok
-            ? `Connected - ${outcome.creatures.toLocaleString()} creatures.`
+            ? `Connected - ${outcome.creatures.toLocaleString()} creatures,`
+                + ` ${outcome.items.toLocaleString()} items.`
             : `Not connected: ${outcome.reason || 'unknown error'}`;
 
         await refreshStatus();
@@ -151,4 +163,30 @@ async function applyDbSettings()
     }
 }
 
-export { paintBadges, refreshStatus, applyClientPath, applyDbSettings };
+/**
+ * Unhook the database without forgetting how to reach it.
+ *
+ * The host, user and database stay in the form and on disk, so reconnecting is one press rather
+ * than typing it all again. Only `enabled` changes, which is what the server reads to decide
+ * whether to hold a pool open at all.
+ */
+async function disconnectDb()
+{
+    $('#db-status').textContent = 'Disconnecting…';
+
+    try
+    {
+        await postJson('api/settings', { db: { ...currentDbForm(), enabled: false } });
+
+        $('#db-status').textContent = 'Disconnected. NPC and Item search are off until you connect'
+            + ' again; everything that reads the client still works.';
+
+        await refreshStatus();
+    }
+    catch (err)
+    {
+        $('#db-status').textContent = `Failed: ${err.message}`;
+    }
+}
+
+export { paintBadges, refreshStatus, applyClientPath, applyDbSettings, disconnectDb };

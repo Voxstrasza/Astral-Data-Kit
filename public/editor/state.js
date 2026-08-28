@@ -129,6 +129,9 @@ function defaultState()
          */
         armoryAllStats: false,
 
+        /* Talent id -> points in it. Empty until the calculator is opened. */
+        armoryTalents: {},
+
         achIcon: 'achievement_boss_lichking',
         achTitle: '',
         achDescription: '',
@@ -137,12 +140,6 @@ function defaultState()
         /* Earned draws the colored parchment and shield; unearned draws the desaturated pair. */
         achEarned: true,
         achCriteria: [],
-        /*
-         * Which category it is filed under. This does not appear on the card, but it is what the
-         * multi-achievement panel will lay its tree out from, and loading a real achievement
-         * should not throw the answer away. 92 is General, the first heading in game.
-         */
-        achCategory: 92,
 
         /*
          * Preview and export options, kept per mode.
@@ -205,13 +202,12 @@ const FIELDS_BY_KIND = {
         'unitDisplayId', 'unitScalePct', 'unitScaleBase', 'unitPowerScalePct', 'unitPowerScaleBase'
     ],
     achievement: [
-        'achIcon', 'achTitle', 'achDescription', 'achReward', 'achPoints', 'achEarned',
-        'achCriteria', 'achCategory'
+        'achIcon', 'achTitle', 'achDescription', 'achReward', 'achPoints', 'achEarned', 'achCriteria'
     ],
     text: ['textLines'],
     armory: [
         'armoryRace', 'armoryClass', 'armoryLevel',
-        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats'
+        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats', 'armoryTalents'
     ]
 };
 

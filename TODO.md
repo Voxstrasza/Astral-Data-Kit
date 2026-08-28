@@ -143,36 +143,53 @@ Mana regen checks out: a naked draenei priest reads 40.4 per five seconds, the r
 spirit. Health regen was written and then removed along with `gtRegenHPPerSpt` and `gtOCTRegenHP`,
 which nothing else reads, because the sheet does not show it. See the scope rule above.
 
-## Phase 2 - `lib/character.js`, the pipeline
+## Phase 2 - the pipeline - **DONE**
 
-Shaped like `lib/item-budget.js`: the tables at the top with where each came from, then a handful
-of methods. **Order of operations is the whole game.** Base stats, then flat gear, then percentage
-auras, then everything derived. Get that order wrong and every number drifts a little and still
-looks plausible.
+It landed in `lib/character.js` beside Phase 1's conversions rather than in a new file, as
+`sheet(race, class, level, gear)`. **Order of operations is the whole game**, and the function is
+written in that order with the gap for the step that does not exist yet: base stats, then flat
+gear, then percentage auras (racials and talents, phases 4 and 5), then everything derived. Get
+that order wrong and every number drifts a little and still looks plausible.
 
-- [ ] `base(race, class, level)` from Phase 1.
-- [ ] Gear aggregation. `budgetStats()` in `lib/items.js` already turns an editor item, custom or
-      loaded, into `{str, sta, crit, haste, ...}`. Reuse it rather than writing a second reader.
-- [ ] Health: `stamina < 20 ? stamina : 20 + (stamina - 20) * 10`, added to BaseHP. Mana is the
+`gear` is `{ stats, armor, resistances }`, already aggregated rather than slot by slot, with
+`stats` in the budget names `lib/items.js` speaks. Leaving it out answers for the naked character,
+which is the case to check against the game first because a wrong number there can only be one of
+these formulas.
+
+- [x] `base(race, class, level)` from Phase 1.
+- [x] Gear aggregation takes what `budgetStats()` in `lib/items.js` already produces, rather than a
+      second reader. Nothing calls it with gear yet; the slots in phase 3 are what will.
+- [x] Health: `stamina < 20 ? stamina : 20 + (stamina - 20) * 10`, added to BaseHP. Mana is the
       same shape with intellect and 15. (`GetHealthBonusFromStamina`, `GetManaBonusFromIntellect`.)
-- [ ] Armor: item armor, then `+ agility * 2`. (`Player::UpdateArmor`.)
-- [ ] Attack power (`Player::UpdateAttackPowerAndDamage`), melee:
-      - warrior, paladin, DK: `level * 3 + strength * 2 - 20`
-      - hunter, shaman, rogue: `level * 2 + strength + agility - 20`
-      - druid, and the rest: see the function, druid depends on form
-      ranged: hunter `level * 2 + agility - 10`, rogue and warrior `level + agility - 10`,
-      everyone else `agility - 10`.
-- [ ] Block: base 5%, plus defense skill over level cap times 0.04, plus block rating.
-      Block value from strength.
-- [ ] Dodge. `Player::GetDodgeFromAgility` gives it, using `dodge_base[]` (warrior 0.036640, druid
-      0.056097, hunter is negative at -0.040873) and `crit_to_dodge[]`, a per-class ratio over 1.15
-      since 3.2. Both halves it returns are summed, plus defense skill over the level cap times
-      0.04, plus dodge rating, plus any dodge percent aura.
-- [ ] Parry: base 5%, plus the same defense contribution, plus parry rating and any parry aura.
-      Only warrior, paladin, DK, hunter, rogue and shaman parry at all; the rest read zero.
-- [ ] Mana regen from spirit, built in phase 1. The sheet shows two numbers, while casting and
-      while not, so the five-second rule needs the casting one as well.
-- [ ] Expertise, hit, haste, armor penetration, resilience straight off the ratings.
+- [x] Armor: item armor, then `+ agility * 2`. (`Player::UpdateArmor`.)
+- [x] Attack power, melee and ranged, per class. A druid reads caster form: cat, bear and moonkin
+      each have their own formula and all three lean on Predatory Strikes, which is a talent the
+      core implements in script code. Forms are a phase 5 problem.
+- [x] Block: base 5%, plus defense over the level cap times 0.04, plus block rating. Block value
+      from strength, `strength * 0.5 - 10`.
+- [x] Dodge, from `dodge_base[]` and `crit_to_dodge[]`, both transcribed. There is no dodge table
+      in the client: dodge per agility is proportional to crit per agility, so
+      `gtChanceToMeleeCrit` answers both.
+- [x] Parry: base 5% plus the same defense contribution and parry rating, for the six classes that
+      parry at all. The other four read zero.
+- [x] Mana regen, both numbers. Outside the five-second rule spirit counts in full; inside it only
+      the fraction a talent lets through, which with no talents is none of it. What mp5 gear adds
+      is in both, since it ticks either way.
+- [x] Expertise, hit, haste, armor penetration, resilience off the ratings. Hit, crit and haste are
+      each one rating that buys different amounts of melee and of spell, so every one of them reads
+      its own row rather than sharing an answer.
+- [x] Defense skill is five per level plus what defense rating buys, truncated once so the number
+      the sheet prints and the avoidance it grants cannot disagree.
+
+**Two things to put in front of a real character**, both faithful to the core and neither checked
+against the game yet:
+
+- **Block and parry do not ask what is equipped.** The core turns both on from a learned passive
+  and never looks for a shield or a weapon, so a warrior holding nothing reads 5% block. Whether
+  the client's own paper doll shows that, or zeroes it without a shield, is what a naked warrior
+  answers.
+- **A naked hunter reads 0% dodge**, because `dodge_base` is negative for hunters and base agility
+  does not cover it, and the core clamps the sum at zero.
 
 **Settled: undiminished, and diminishing returns are not modeled at all.** The sheet reports what
 the character has, not what happens to it when something swings. That is also what AzerothCore
@@ -246,16 +263,22 @@ hunter, shaman and druid.
       the way the sheet builders already use AstralGame for text quoting the game.
 - [x] Level starts at 80 and drops as far as 1, and a death knight's field floors at 55 rather than
       answering with an error.
-- [x] The stat panel is one wide box under the weapon row, not a tall column and not tabbed.
-- [x] **Lines, not boxes, in the client's own font.** Each stat reads "Strength: 174" in
-      `AstralGame`, which is `FRIZQT__.TTF` loaded from the user's client at start-up. Boxes framed
-      thirty numbers that needed no framing.
+- [x] The stat panel is one wide box under the weapon row, not a tall column and not tabbed, with
+      the five resistances on their own line at its foot rather than flowing into its columns.
+      Same box, one break: they are one thought and short enough that the sheet's wide columns put
+      Fire beside Resilience and carried Frost onto the next row.
+- [x] **Lines, not boxes**, in the program's own Figtree. Each stat reads "Strength: 174" on a line
+      because boxes framed thirty numbers that needed no framing. It was set in `AstralGame`, the
+      client's `FRIZQT__.TTF`, and put back to Figtree on 2026-08-27: what makes the game's sheet
+      read the way it does is its layout, so the typeface on its own bought no resemblance while
+      making this panel disagree with every other panel in the program. **Reading like the game is
+      still wanted and still open**, and it is a layout question rather than a font one.
 - [x] **Only the stats the class is read for.** The game's own sheet shows every category to
       everyone, spell power on a warrior included; this does not, because a sheet you are reading
       to judge a piece of gear is worse for twelve lines that will always be zero. Warriors, rogues
       and death knights lose the mana and spell groups; casters lose the melee and defense ones;
       hybrids keep both halves rather than guessing which one they are, since a paladin is any of
-      three things until the talent calculator says otherwise. A **Show every stat** box under the
+      three things until the talent calculator says otherwise. A **Show all stats** box under the
       panel undoes the filter, which matters here more than in a normal armory: the whole point is
       inventing items, and an invented item can put spell power on a warrior.
 - [ ] Each slot takes an item from the saved store, from the database search, or from whatever the
@@ -263,6 +286,90 @@ hunter, shaman and druid.
       else. Two-handers take both weapon slots.
 - [ ] `searchItems` in `lib/world-db.js` has no slot filter today, only name and entry. It needs an
       InventoryType filter so a search opened from the boots slot cannot return a helm.
+
+### Filling a slot, and where the items come from
+
+**Nothing new is stored.** A saved item already carries its slot: `slot` is in `FIELDS_BY_KIND.item`
+in `public/editor/state.js`, filled from the Slot select in the Item window, and `saved.list('item')`
+answers with each entry's whole payload rather than a summary. So the picker filters what is already
+there, and no second store, no per-slot folders and no second save action are needed.
+
+That was worth settling rather than building the obvious thing, because a parallel store costs more
+than it looks: an item saved the ordinary way would not appear in the Armory, a piece saved twice
+needs a rule for which copy wins when one is edited, and `slot` is editable - a folder chosen at
+save time is wrong the moment a helm is changed to a shoulder, while a filter read at open time
+cannot go stale.
+
+- [ ] Clicking an empty slot opens a picker over three sources: saved items whose `slot` fits, the
+      database search filtered by InventoryType, and whatever the Item window is showing right now.
+- [ ] The slot names do not match one to one, so a small mapping table decides what fits. Finger 1
+      and Finger 2 both take `Finger` and Trinket 1 and 2 take `Trinket`; Main hand takes
+      `Main Hand`, `One-Hand` and `Two-Hand`; Off hand takes `Off Hand`, `Held In Off-hand` and
+      shields.
+- [ ] **Save for Armory**, a button in the Item window, for the loop this feature exists for:
+      build a piece, put it on, read the sheet. It equips what is on screen into the slot the item
+      itself names, and switches to the Armory. It does not save a second copy anywhere - the name
+      is the one the button was asked for, and what it does is send rather than store.
+- [ ] **It carries a disclaimer, because a hand-written stat is not read.** The sheet only moves for
+      the editor's preset lines; a stat typed as its own sentence is prose to the program and is
+      worth nothing on the character. Say so on the button rather than letting a custom piece read
+      as a pile of zeroes with no explanation.
+
+### Every stat the sheet is read for
+
+**The rule: if the editor can put a stat on an item, the sheet either moves for it or it is on the
+list below of stats that deliberately do nothing.** Audited on 2026-08-27 against `lib/items.js` and
+the pipeline, and `tools/stat-coverage.js` is the check that keeps it true.
+
+What lands, and the aggregator that gets it there: `equipped(items)` in `lib/items.js` sums a rack
+of editor items into the `{ stats, armor, resistances }` shape `sheet()` takes. Three sources, not
+one, because the editor does not keep an item's numbers in a single place - the stat rows and green
+lines through `budgetStats()`, armor as its own field, resistances as their own list - and a
+shield's block value is a fourth. It sums rather than replaces and does not care which slot anything
+came from; enforcing that is the panel's job and is settled before a set of items reaches here.
+
+- [x] **Two stat types were reaching the editor as free text and being dropped.** `RATING_CUSTOM`
+      emitted ranged attack power (39) and spell penetration (47) as `preset: 'custom'` with the
+      number baked into the sentence, and `LINE_TO_BUDGET` is built only from `RATING_LINES`, so
+      `budgetStats()` never saw them. Both were promoted on 2026-08-27, into `RATING_LINES` and into
+      the editor's own `EQUIP_PRESETS` in `public/tooltip.js`, which is the list a user actually
+      picks from. Same sentences, so no tooltip changed; they are now pickable instead of typed,
+      and priced instead of ignored.
+- [x] **The two pre-3.0 spell stats are not both spell power**, which is what this file said before
+      the core was read. `Player::_ApplyItemMods` sends 42 to `ApplySpellDamageBonus`, which moves
+      the damage field of every school - the number the spell tab shows - so 42 is spell power in
+      everything but name. 41 goes to `ApplySpellHealingBonus`, which touches the healing field
+      alone, and 3.3.5a has no healing line: 3.0 merged the two and the sheet kept the damage half.
+      So **41 moves nothing on a character sheet**, however generously its sentence is written.
+      Both are matched on the fixed half of their sentence and named anyway, because names are read
+      twice: the sheet ignores what it has no line for, and `lib/item-budget.js` prices everything
+      it is given. `spellDamage` and `spellPower` cost the same there, so 42 changes no price, and
+      41 is now priced at half - which is what it was worth and what it was never priced at, since
+      a custom line used to reach neither reader.
+- [x] `sheet()` reads `worn.rangedAp`, which had been written against a budget name nothing could
+      produce. The promotion above makes that branch reachable, and the test confirms it moves
+      `rangedPower`.
+- [x] **Armor and resistances are not stat rows** - they are their own item fields, and `equipped()`
+      picks them up. Holy is dropped on the way: `item_template` has a holy column, the game never
+      gave players holy resistance, and the paper doll has no line for it, so a holy value stays on
+      the tooltip and off the character.
+- [x] **Block value has two sources**: the shield's own `block` field and stat type 48. They add,
+      the way `_ApplyItemMods` and `GetShieldBlockValue` both feed the one flat modifier beside
+      `strength * 0.5 - 10`. Written down because it is the sort of thing that is otherwise
+      discovered twice.
+- [ ] **Weapon damage and speed are missing entirely.** `hasWeapon`, `dmgMin`, `dmgMax` and `speed`
+      are item fields, the scope table lists damage and speed on both the melee and the ranged tab,
+      and neither the panel nor the pipeline has them. Equipping a weapon has to move them, and the
+      two together are what a DPS number would be built from. The one thing `equipped()` still does
+      not read.
+- [ ] **Spell penetration is probably in scope and is missing from the scope table above.** Wrath's
+      spell tab shows it. It is priced and aggregated already; it is on the test's silent list only
+      until the paper doll is checked, and adding it is then one line on the panel and one in
+      `sheet()`.
+- [x] Deliberately reads nothing, and the test knows it: **health per 5 sec** (46) and the healing
+      half of 41, because the paper doll shows neither - the same call the scope rule made in phase
+      1. Gems and enchants are out of the first version and are not on this list; they are absent
+      rather than ignored.
 - [ ] An equipped list under the sheet: every filled slot as a row, with the item's name in its
       quality color, its item level, the slot it is in, and where it comes from.
 - [ ] **No average item level.** Each equipped row carries its own item level and that is all. An
@@ -383,6 +490,14 @@ One tree set per class, and it feeds the sheet.
 You run AzerothCore and you have the client, so the reference is directly observable and numeric.
 Do not iterate on whether a number looks right.
 
+- [x] **`tools/stat-coverage.js`.** It puts one stat on one item at a time and asks the sheet what
+      moved, comparing a geared sheet against a naked one, so a stat cannot pass by being spelled
+      like something else. Anything that moves nothing fails unless it
+      is on the tool's own silent list. It also checks the editor's `EQUIP_PRESETS` against the
+      `RATING_LINES` `budgetStats` can price, since those are two lists with nothing joining them
+      and a sentence in one and not the other is a stat you can pick that does nothing. Today it
+      reports 17 of 17 presets priced and no failures, having been red on four until the promotions
+      above landed. Needs the client, like the probe beside it.
 - [ ] A probe that dumps race, class, spec, level, gear and every derived stat, so it can be put
       side by side with the in-game character sheet, column by column.
 - [ ] Naked first: a level 80 of each class with nothing equipped should match the sheet exactly

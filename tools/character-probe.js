@@ -7,8 +7,8 @@
  * server, so a character standing in Dalaran is the reference. This prints the same quantities the
  * character sheet shows, in the same units, for comparing column by column.
  *
- * Phase 1 covers base stats and the conversions. Health, mana, attack power and the defensive
- * percentages arrive with the pipeline in phase 2 and will print here too.
+ * Naked is the case to check first: with nothing equipped, a number that disagrees with the game
+ * can only be one of these formulas, never the gear pipeline that will feed them.
  *
  * Usage: node tools/character-probe.js [race] [class] [level] ["C:\path\to\client"]
  *        node tools/character-probe.js 1 1 80
@@ -127,31 +127,58 @@ function everyClassAt80(character)
     }
 }
 
-/** One character, naked, as the sheet would show it. */
+/** One character, naked, in the order the game's own sheet reads. */
 function oneCharacter(character, race, cls, level)
 {
-    const base = character.base(race, cls, level);
+    const sheet = character.sheet(race, cls, level);
 
-    if (!base)
+    if (!sheet)
     {
         console.error(`No such character: ${RACES[race] || race} ${CLASSES[cls] || cls} at level ${level}.`);
         process.exit(1);
     }
 
+    const line = (name, value) => console.log(`  ${name.padEnd(24)}${value}`);
+    const pct = (name, value) => line(name, `${value.toFixed(2)}%`);
+
     console.log(`${RACES[race] || race} ${CLASSES[cls] || cls}, level ${level}, nothing equipped`);
     console.log('');
-    console.log(`  strength   ${base.str}`);
-    console.log(`  agility    ${base.agi}`);
-    console.log(`  stamina    ${base.sta}`);
-    console.log(`  intellect  ${base.int}`);
-    console.log(`  spirit     ${base.spi}`);
+    line('health', Math.round(sheet.health));
+
+    if (sheet.mana)
+    {
+        line('mana', Math.round(sheet.mana));
+    }
+
     console.log('');
-    console.log(`  base health ${base.baseHealth}   base mana ${base.baseMana}`);
-    console.log('   (base health excludes what stamina adds; that arrives with phase 2)');
+    line('strength', sheet.stats.str);
+    line('agility', sheet.stats.agi);
+    line('stamina', sheet.stats.sta);
+    line('intellect', sheet.stats.int);
+    line('spirit', sheet.stats.spi);
     console.log('');
-    console.log(`  melee crit from agility   ${character.meleeCritFromAgility(cls, level, base.agi).toFixed(2)}%`);
-    console.log(`  spell crit from intellect ${character.spellCritFromIntellect(cls, level, base.int).toFixed(2)}%`);
-    console.log(`  mana regen from spirit    ${character.manaRegenPer5(cls, level, base.spi, base.int).toFixed(1)} per 5s`);
+    line('armor', Math.round(sheet.armor));
+    line('attack power', Math.round(sheet.attackPower));
+    line('ranged attack power', Math.round(sheet.rangedPower));
+    pct('melee crit', sheet.meleeCrit);
+    pct('spell crit', sheet.spellCrit);
+    line('expertise', sheet.expertise);
+    console.log('');
+    line('defense', sheet.defense);
+    pct('dodge', sheet.dodge);
+    pct('parry', sheet.parry);
+    pct('block', sheet.block);
+    line('block value', Math.round(sheet.blockValue));
+
+    if (sheet.mana)
+    {
+        console.log('');
+        line('mana regen', `${sheet.manaRegen.toFixed(1)} per 5s`);
+        line('mana regen, casting', `${sheet.manaRegenCasting.toFixed(1)} per 5s`);
+    }
+
+    console.log('');
+    console.log('  everything above is undiminished, which is what the character sheet field holds');
     console.log('');
 
     const table = character.ratingTable(cls, level);

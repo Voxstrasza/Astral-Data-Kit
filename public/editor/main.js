@@ -17,7 +17,7 @@ import { renderLists, LIST_DEFAULTS } from './lists.js';
 import { populateSelects, bindInputs, syncForm } from './form.js';
 import { setIcon, currentIconName, renderIconGrid, loadIcons, loadAssets, loadGameFonts, bindCustomIcons } from './icons.js';
 import { update, status, exportCanvas, exportParts, fileName } from './preview.js';
-import { refreshStatus, applyClientPath, applyDbSettings } from './settings.js';
+import { refreshStatus, applyClientPath, applyDbSettings, disconnectDb } from './settings.js';
 import { renderNpcResults } from './npc.js';
 import { autoPortrait } from './model-viewer.js';
 import { bindBrowser } from './instances.js';
@@ -258,6 +258,7 @@ async function init()
 
     $('#btn-apply-client').addEventListener('click', () => applyClientPath($('#client-path').value.trim()));
     $('#btn-apply-db').addEventListener('click', applyDbSettings);
+    $('#btn-disconnect-db').addEventListener('click', disconnectDb);
 
     // The native folder picker only exists in the desktop shell.
     if (window.astral && window.astral.isDesktop)
