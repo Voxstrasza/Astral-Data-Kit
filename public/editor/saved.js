@@ -12,7 +12,6 @@
  * FIELDS_BY_KIND says what to keep, and the renderers say how to draw it.
  */
 
-import { showCharacter } from './armory.js';
 import { $, el, button } from './dom.js';
 import { api, postJson } from './api.js';
 import { state, fieldsOf } from './state.js';
@@ -111,10 +110,6 @@ function load(kind, entry)
     setIcon(state[KINDS[kind].icon] || '');
     update();
     render(kind);
-
-    /* The Armory draws from state rather than being bound to it, so it is told rather than
-       left to notice. */
-    if (kind === 'armory') { showCharacter(); }
 
     status(`Loaded ${entry.name}`);
 }

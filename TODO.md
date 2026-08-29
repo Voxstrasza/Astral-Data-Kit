@@ -593,6 +593,15 @@ client with a race this program never heard of still answers.
       exports as a PNG like everything else Astral makes.
 - [ ] Saved characters as a kind in the saved store, and a place on a raid sheet.
 
+      **The kind does not exist yet, whatever `FIELDS_BY_KIND` suggests.** `fieldsOf('armory')`
+      works, so it is easy to conclude the saved half is done - it is not. `KINDS` in
+      `public/editor/saved.js` lists item, spell, unit and achievement and nothing else, so nothing
+      saves or loads a character, and that is on purpose until someone asks for it.
+
+      What a character *does* survive today is the permalink: `encodeState` takes the whole state,
+      and `state.armoryWorn` puts the gear in it. Measured - a link with a trinket in it comes back
+      with the trinket, its slot and its source.
+
 **Built on 2026-08-28 and removed again on 2026-08-29**, at the request of whoever has to look at
 it: the implementation was not the wanted one. Both boxes are open again and `render.js`,
 `preview.js`, `raid-sheet.js`, `raid-boss.js` and `lib/raids.js` are back to where they were.

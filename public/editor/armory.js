@@ -1328,24 +1328,6 @@ function drawEquipped()
 
 
 /**
- * A character that was just loaded from the saved store, put on screen.
- *
- * `load()` in saved.js copies the fields into state and no further - which is enough for a window
- * whose form is the state, and not enough here: the slots, the racials and the numbers are all
- * drawn from it rather than bound to it.
- */
-async function showCharacter()
-{
-    loadWorn();
-    fillPickers();
-    drawSlots();
-    showWho();
-    showSpec();
-    await loadRacials();
-    await refresh();
-}
-
-/**
  * Called at start-up, and again whenever the client folder changes underneath us.
  *
  * The pickers are rebuilt every time; the handlers are bound once, since binding them twice would
@@ -1474,4 +1456,4 @@ async function initArmory()
     });
 }
 
-export { initArmory, showCharacter };
+export { initArmory };
