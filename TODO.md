@@ -589,8 +589,42 @@ client with a race this program never heard of still answers.
 
 ## Phase 6 - the sheet as a picture
 
-- [ ] `renderCharacterSheet` beside `renderUnitFrame` in `public/render.js`, so a built character
-      exports as a PNG like everything else Astral makes.
+- [ ] **A character sheet as a picture, laid out like the character creation screen.** Said on
+      2026-08-29, and it is the design rather than a hint at one:
+
+      - The **race art from the character creation screen** behind it, one per race, with death
+        knights getting their own rather than borrowing their race's.
+      - The **name across the top**.
+      - The **loot drawn as its real tooltips** - not a list of names, the tooltips the program
+        already renders everywhere else.
+      - The **stats underneath** them.
+
+      The tooltip half is machinery that exists: `renderTooltip` draws an item from the same lines
+      the Item window uses, and the raid sheet already flows a row of them. What is new is the art
+      and the arrangement.
+
+      **The art is in the client and was checked on 2026-08-29**, under
+      `Interface\Glues\CharacterCreate\`:
+
+      | file | what it holds |
+      |---|---|
+      | `UI-CharacterCreate-Races.blp` | the race icons |
+      | `UI-CharacterCreate-Races2.blp` | the rest of them, Wrath having outgrown one sheet |
+      | `UI-CharacterCreate-RacesRound.blp` | the same set, round |
+      | `UI-CharacterCreate-Classes.blp` | the class icons, death knight among them |
+      | `UI-CharacterCreate-Background.blp` | the screen behind all of it |
+
+      **The grids are the thing to establish first, not to assume.** `Interface\GlueXML\`
+      `CharacterCreate.lua` and `.xml` are both in the client index, and between them they hold the
+      real `SetTexCoord` numbers - which beats measuring a sprite sheet by eye, the way the talent
+      tree art had to be. One attempt to read the Lua out of the archive came back empty, so
+      whether it extracts is the first thing to find out. Note also that these sheets are not
+      fully painted: the talent backgrounds were 256x256 of file holding a 300x331 image, and
+      there is no reason to expect these to be tidier.
+
+      Since the panel is full width, **decide where the picture goes before deciding what it looks
+      like** - see below.
+
 - [ ] Saved characters as a kind in the saved store, and a place on a raid sheet.
 
       **The kind does not exist yet, whatever `FIELDS_BY_KIND` suggests.** `fieldsOf('armory')`
