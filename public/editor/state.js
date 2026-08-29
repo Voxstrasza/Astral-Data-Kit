@@ -140,6 +140,28 @@ function defaultState()
         /* Talent id -> points in it. Empty until the calculator is opened. */
         armoryTalents: {},
 
+        /*
+         * Where each equipped piece comes from, by slot.
+         *
+         * On the character rather than on the item, deliberately: the same invented chest can be
+         * "Yogg-Saron 25 heroic" in one set and something else in another, and an item saved once
+         * has no business carrying one set's story. A slot with no key here has not been asked
+         * yet and gets filled in from the loot tables; a slot with an empty string was cleared on
+         * purpose and stays cleared.
+         */
+        armorySources: {},
+
+        /*
+         * What is equipped, by slot.
+         *
+         * Whole items rather than references, the same reason the sheet request sends them whole:
+         * half of what can be worn here is something you invented and has no entry to refer back
+         * to. It lives in state rather than in the panel so that a saved character keeps its gear
+         * - without it, saving one kept the race, the level and the talents and quietly dropped
+         * everything it was wearing.
+         */
+        armoryWorn: {},
+
         achIcon: 'achievement_boss_lichking',
         achTitle: '',
         achDescription: '',
@@ -215,7 +237,8 @@ const FIELDS_BY_KIND = {
     text: ['textLines'],
     armory: [
         'armoryRace', 'armoryClass', 'armoryLevel',
-        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats', 'armoryTalents'
+        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats', 'armoryTalents',
+        'armorySources', 'armoryWorn'
     ]
 };
 

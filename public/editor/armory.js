@@ -29,7 +29,7 @@ import { openTalents, talentSummary, clearTalents } from './talents.js';
  */
 const LEFT = ['Head', 'Neck', 'Shoulder', 'Back', 'Chest', 'Shirt', 'Tabard', 'Wrist'];
 const RIGHT = ['Hands', 'Waist', 'Legs', 'Feet', 'Finger 1', 'Finger 2', 'Trinket 1', 'Trinket 2'];
-const WEAPONS = ['Main hand', 'Off hand', 'Ranged'];
+const WEAPONS = ['Main hand', 'Off hand'];
 
 /*
  * The sheet, six to a row, grouped the way the game groups them.
@@ -48,6 +48,10 @@ const SHEET = [
     { label: 'Spirit', key: 'spi', tag: 'mana' },
     { label: 'Armor', key: 'armor', tag: 'core' },
 
+    { label: 'Damage', key: 'mainHand', part: 'damage', tag: 'melee' },
+    { label: 'Speed', key: 'mainHand', part: 'speed', tag: 'melee' },
+    { label: 'Off hand damage', key: 'offHand', part: 'damage', tag: 'melee' },
+    { label: 'Off hand speed', key: 'offHand', part: 'speed', tag: 'melee' },
     { label: 'Attack power', key: 'attackPower', tag: 'melee' },
     { label: 'Melee crit', key: 'meleeCrit', suffix: '%', places: 2, tag: 'melee' },
     { label: 'Melee hit', key: 'meleeHit', suffix: '%', places: 2, tag: 'melee' },
@@ -55,6 +59,8 @@ const SHEET = [
     { label: 'Expertise', key: 'expertise', tag: 'melee' },
     { label: 'Armor pen', key: 'armorPen', suffix: '%', places: 2, tag: 'melee' },
 
+    { label: 'Ranged damage', key: 'ranged', part: 'damage', tag: 'ranged' },
+    { label: 'Ranged speed', key: 'ranged', part: 'speed', tag: 'ranged' },
     { label: 'Ranged power', key: 'rangedPower', tag: 'ranged' },
 
     { label: 'Spell power', key: 'spellPower', tag: 'spell' },
@@ -120,6 +126,7 @@ const WEAPON_SUBCLASS = {
 };
 
 let setup = null;
+
 let bound = false;
 
 /** An option element. The shared select() builder wires its own handler, so this is by hand. */
@@ -142,6 +149,30 @@ function option(value, label, selected)
  * what it is for is being read out rather than being carried in a permalink.
  */
 const worn = new Map();
+
+/*
+ * The map and the saved field, kept in step.
+ *
+ * The panel works in a Map because order matters and slots come and go; the state works in a
+ * plain object because that is what gets saved and put in a link. Rather than make every reader
+ * choose, the Map stays the working copy and these two are called at the three places it
+ * actually changes.
+ */
+function keepWorn()
+{
+    state.armoryWorn = Object.fromEntries(worn);
+}
+
+/** The other direction: a character that was just loaded, or a link that was just opened. */
+function loadWorn()
+{
+    worn.clear();
+
+    for (const [slot, item] of Object.entries(state.armoryWorn || {}))
+    {
+        if (item) { worn.set(slot, item); }
+    }
+}
 
 /** The slot the picker was opened from, and which of its two sources is showing. */
 let picking = '';
@@ -326,11 +357,83 @@ function slotBox(name)
 
         e.preventDefault();
         worn.delete(name);
+        keepWorn();
+        forgetSource(name);
         drawSlots();
         refresh();
     });
 
     return box;
+}
+
+/*
+ * The last weapon slot's name, which is also the key it is worn under.
+ *
+ * A warrior, rogue, hunter, priest, mage or warlock reads Ranged; a paladin reads Libram, a death
+ * knight Sigil, a shaman Totem and a druid Idol. The table is the server's, sent with the setup,
+ * so the word and the InventoryTypes behind it cannot drift apart.
+ */
+function rangedSlot()
+{
+    return (setup && setup.rangedSlots && setup.rangedSlots[state.armoryClass]) || 'Ranged';
+}
+
+/** The three slots under the two columns, with the last one named for the class. */
+function weaponSlots()
+{
+    return [...WEAPONS, rangedSlot()];
+}
+
+/*
+ * The source map, guaranteed to exist.
+ *
+ * A character saved before the field existed comes back without it, and every reader would
+ * otherwise have to say so itself.
+ */
+function sourceMap()
+{
+    if (!state.armorySources) { state.armorySources = {}; }
+
+    return state.armorySources;
+}
+
+/*
+ * The last slot changes its name with the class, so whatever is in it has to follow.
+ *
+ * A bow is not a libram. Rather than leave a piece filed under a slot the panel has stopped
+ * drawing, it moves across when the new slot would take it and comes off when it would not -
+ * which between the ranged and the relic halves is always, since they share no InventoryType.
+ */
+function retuneRanged()
+{
+    const wanted = rangedSlot();
+    const every = ['Ranged', ...Object.values((setup && setup.rangedSlots) || {})];
+
+    for (const name of every)
+    {
+        if (name === wanted || !worn.has(name))
+        {
+            continue;
+        }
+
+        const item = worn.get(name);
+        const fits = ((setup && setup.slots && setup.slots[wanted]) || []).includes(item.slot);
+
+        /* A piece keeps where it came from when it moves across; when it comes off, so does that. */
+        const was = sourceMap()[name];
+
+        worn.delete(name);
+        keepWorn();
+        forgetSource(name);
+
+        if (fits)
+        {
+            worn.set(wanted, item);
+            keepWorn();
+
+            if (was !== undefined) { sourceMap()[wanted] = was; }
+        }
+    }
 }
 
 function drawSlots()
@@ -343,7 +446,10 @@ function drawSlots()
      */
     hideHover();
 
-    for (const [id, names] of [['left', LEFT], ['right', RIGHT], ['weapon', WEAPONS]])
+    /* Before the slots are drawn, not after: the loop below asks which three to draw. */
+    retuneRanged();
+
+    for (const [id, names] of [['left', LEFT], ['right', RIGHT], ['weapon', weaponSlots()]])
     {
         const host = $(`#armory-slots-${id}`);
 
@@ -361,11 +467,16 @@ function drawSlots()
  */
 function equip(slot, item)
 {
+    forgetSource(slot);
+
     worn.set(slot, item);
+    keepWorn();
 
     if (slot === 'Main hand' && item.slot === 'Two-Hand')
     {
         worn.delete('Off hand');
+        keepWorn();
+        forgetSource('Off hand');
     }
 
     if (slot === 'Off hand')
@@ -375,6 +486,8 @@ function equip(slot, item)
         if (main && main.slot === 'Two-Hand')
         {
             worn.delete('Main hand');
+            keepWorn();
+            forgetSource('Main hand');
         }
     }
 
@@ -662,7 +775,7 @@ function conditionHolds(one)
         return true;
     }
 
-    for (const slot of ['Main hand', 'Off hand', 'Ranged'])
+    for (const slot of weaponSlots())
     {
         const item = worn.get(slot);
 
@@ -803,25 +916,49 @@ function lookup(sheet, key)
     return sheet[key];
 }
 
+/*
+ * What one line reads as.
+ *
+ * A weapon slot answers with a whole hand rather than a number - a range, a swing, and nothing
+ * to round - so the two lines it fills say which half of it they are quoting. Everything else is
+ * one number, its places and its suffix.
+ */
+function read(entry, value)
+{
+    if (entry.part === 'damage')
+    {
+        return `${Math.round(value.min)} - ${Math.round(value.max)}`;
+    }
+
+    if (entry.part === 'speed')
+    {
+        return value.speed.toFixed(2);
+    }
+
+    return `${entry.places ? value.toFixed(entry.places) : Math.round(value)}${entry.suffix || ''}`;
+}
+
 /** One line, the way the game writes it: the stat, a colon, the number. */
 function cell(entry, sheet)
 {
     const value = lookup(sheet, entry.key);
 
-    const line = el('div', value === undefined ? 'stat pending' : 'stat');
+    /* An empty off hand answers null and a stat this class has no line for answers undefined.
+       Both read as the dash that says "not a thing here", which a zero does not. */
+    const missing = value === undefined || value === null;
+
+    const line = el('div', missing ? 'stat pending' : 'stat');
 
     line.append(el('span', 'stat-label', `${entry.label}:`));
-    line.append(el('span', 'stat-value', value === undefined
-        ? '-'
-        : `${entry.places ? value.toFixed(entry.places) : Math.round(value)}${entry.suffix || ''}`));
+    line.append(el('span', 'stat-value', missing ? '-' : read(entry, value)));
 
     return line;
 }
 
 /** The lines this class is read for, or all of them when the box below the sheet is ticked. */
-function linesFor(cls)
+function linesFor(cls, all)
 {
-    if (state.armoryAllStats)
+    if (all)
     {
         return SHEET;
     }
@@ -839,12 +976,14 @@ async function refresh()
     }
 
     /* Equipped items travel whole. Half of what can be worn here has no entry to refer to - an
-       invented piece that was never saved is the case this exists for. */
+       invented piece that was never saved is the case this exists for. Each one carries the slot
+       it is in as well, because a weapon's damage is a different line depending on which hand
+       holds it, and the item on its own cannot say. */
     const sheet = await postJson('/api/character/sheet', {
         race: state.armoryRace,
         class: state.armoryClass,
         level: state.armoryLevel,
-        items: [...worn.values()],
+        items: [...worn].map(([slot, item]) => ({ ...item, armorySlot: slot })),
         talents: state.armoryTalents || {}
     });
 
@@ -860,7 +999,7 @@ async function refresh()
      * where six wide columns would put Fire beside Resilience and carry Frost onto the next row.
      * Same box, same lines, one break.
      */
-    const lines = linesFor(state.armoryClass);
+    const lines = linesFor(state.armoryClass, state.armoryAllStats);
 
     $('#armory-stat-grid').replaceChildren(
         ...lines.filter((entry) => entry.tag !== 'resist').map((entry) => cell(entry, sheet)));
@@ -1059,6 +1198,95 @@ function drawSets()
     }));
 }
 
+/*
+ * Forget where a slot's piece came from.
+ *
+ * A different item in the slot is a different question, so the field is asked again rather than
+ * kept: leaving the last piece's boss under the new one would be wrong and quiet about it. An
+ * absent key is what tells the filler to go and look; an empty string is a field someone cleared
+ * on purpose, and that is left alone.
+ */
+function forgetSource(slot)
+{
+    if (sourceMap()[slot] !== undefined)
+    {
+        delete sourceMap()[slot];
+    }
+}
+
+/*
+ * Where this piece comes from, as a field rather than a readout.
+ *
+ * A real item arrives with it filled in by the loot walk. An invented one arrives empty, because a
+ * piece you made up has an intended source and nothing else in the program knows it. Typing over an
+ * autofilled line is the point of the thing rather than something to refuse.
+ */
+function sourceCell(slot)
+{
+    const cell = el('td', 'source-cell');
+    const box = el('input', 'source-input');
+
+    box.type = 'text';
+    box.value = sourceMap()[slot] || '';
+    box.placeholder = 'Where it comes from';
+
+    box.addEventListener('input', () =>
+    {
+        sourceMap()[slot] = box.value;
+    });
+
+    cell.append(box);
+
+    return cell;
+}
+
+/*
+ * Fill the blanks in from the loot tables.
+ *
+ * Only for slots holding a real item that has not been asked about yet, so this settles after one
+ * pass and the redraw at the end of it cannot loop: every slot it touches comes back with a key,
+ * including the ones the walk had no answer for. A custom piece is never asked, having no entry to
+ * ask with, and stays empty for its owner to write.
+ */
+async function fillSources()
+{
+    const asking = [...worn.entries()]
+        .filter(([slot, item]) => item.entry && sourceMap()[slot] === undefined);
+
+    if (!asking.length)
+    {
+        return;
+    }
+
+    const entries = [...new Set(asking.map(([, item]) => item.entry))];
+    let answer = null;
+
+    try
+    {
+        answer = await api(`/api/item/drops?entries=${entries.join(',')}`);
+    }
+    catch
+    {
+        answer = null;
+    }
+
+    /* No database is not a failure worth saying out loud here - the field is still yours to fill,
+       and the slots stay unasked so connecting one later fills them in. */
+    if (!answer || answer.error || !answer.drops)
+    {
+        return;
+    }
+
+    for (const [slot, item] of asking)
+    {
+        const found = answer.drops[item.entry];
+
+        sourceMap()[slot] = found ? found.line : '';
+    }
+
+    drawEquipped();
+}
+
 function drawEquipped()
 {
     const rows = [...worn.entries()];
@@ -1077,18 +1305,44 @@ function drawEquipped()
     $('#armory-equipped').replaceChildren(...rows.map(([slot, item]) =>
     {
         const line = el('tr');
-        const name = el('td', '', item.name || '(no name)');
+        const name = el('td', '');
+        const label = el('span', '', item.name || '(no name)');
 
-        name.style.color = M.qualityColor(item.quality);
+        label.style.color = M.qualityColor(item.quality);
+
+        /* The entry moves in beside the name now that the fourth column is the source field. A
+           piece with no entry is one you invented, which is worth saying in the same place. */
+        name.append(label, el('span', 'hint', item.entry ? ` #${item.entry}` : ' custom'));
 
         line.append(
             name,
             el('td', '', item.itemLevel ? String(item.itemLevel) : '-'),
             el('td', '', slot),
-            el('td', 'hint', item.entry ? `#${item.entry}` : 'custom'));
+            sourceCell(slot));
 
         return line;
     }));
+
+    fillSources();
+}
+
+
+/**
+ * A character that was just loaded from the saved store, put on screen.
+ *
+ * `load()` in saved.js copies the fields into state and no further - which is enough for a window
+ * whose form is the state, and not enough here: the slots, the racials and the numbers are all
+ * drawn from it rather than bound to it.
+ */
+async function showCharacter()
+{
+    loadWorn();
+    fillPickers();
+    drawSlots();
+    showWho();
+    showSpec();
+    await loadRacials();
+    await refresh();
 }
 
 /**
@@ -1099,6 +1353,7 @@ function drawEquipped()
  */
 async function initArmory()
 {
+    loadWorn();
     drawSlots();
     drawEquipped();
     drawSets();
@@ -1122,6 +1377,7 @@ async function initArmory()
     }
 
     fillPickers();
+    drawSlots();
     showSpec();
     await loadRacials();
     await refresh();
@@ -1154,6 +1410,7 @@ async function initArmory()
     {
         state.armoryRace = Number(e.target.value);
         fillPickers();
+        drawSlots();
         loadRacials();
         refresh();
     });
@@ -1165,6 +1422,7 @@ async function initArmory()
         /* A build is a set of talent ids belonging to one class, so it does not survive a change
            of class - keeping it would leave points spent in trees that are no longer on screen. */
         clearTalents();
+        drawSlots();
         showWho();
         clampLevel();
         showSpec();
@@ -1216,4 +1474,4 @@ async function initArmory()
     });
 }
 
-export { initArmory };
+export { initArmory, showCharacter };

@@ -380,6 +380,7 @@ label.check {
 input[type="text"],
 input[type="number"],
 input[type="search"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
@@ -771,10 +772,16 @@ button.primary {
   margin-bottom: 14px;
 }
 
+/*
+ * A path or a file name in the prose, marked by the chip around it rather than by a second face:
+ * the browser default for <code> is monospace, the one thing in the window that comes from
+ * neither Figtree nor the game.
+ */
 code {
   background: var(--panel-2);
   padding: 1px 5px;
   border-radius: 4px;
+  font-family: inherit;
 }
 
 .npc-results {
@@ -1112,8 +1119,10 @@ code {
   margin-bottom: 8px;
 }
 
+/* The button and "no file chosen" inside a file input are drawn by the browser in its own face. */
 .upload-btn input[type="file"] {
   width: 190px;
+  font: inherit;
   font-size: 12px;
 }
 
@@ -2184,6 +2193,40 @@ main.armory [data-panel="armory"] {
   padding: 5px 6px;
   border-bottom: 1px solid var(--line);
 }
+/*
+ * The source column is a field, not a readout, and has to look like one without turning the row
+ * into a form. No border until it is pointed at or typed in, so a table of them reads as text and
+ * still says it can be edited the moment the pointer is over it.
+ */
+.source-cell {
+  width: 40%;
+}
+
+.source-input {
+  width: 100%;
+  padding: 2px 4px;
+  background: none;
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.source-input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.source-input:hover {
+  border-color: var(--line);
+}
+
+.source-input:focus {
+  outline: none;
+  background: var(--panel-2);
+  border-color: var(--accent);
+}
+
 
 @media (max-width: 700px) {
   .armory-body {
@@ -2521,46 +2564,4 @@ button.to-armory {
   height: 13px;
   margin: 0;
   cursor: pointer;
-}
-
-/*
- * The Armory's work-in-progress stamp.
- *
- * Fixed rather than absolute so it stays over the middle of the window however far the page is
- * scrolled, and it disappears with the panel because a hidden panel draws none of its children.
- * `pointer-events: none` is what keeps it a stamp rather than a wall - every slot, button and
- * tooltip underneath still works.
- */
-.armory-wip {
-  position: fixed;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-weight: 800;
-  font-size: clamp(56px, 11vw, 190px);
-  letter-spacing: 12px;
-  white-space: nowrap;
-  text-transform: uppercase;
-
-  color: var(--accent);
-  opacity: 0.13;
-  transform: rotate(-16deg);
-
-  /* An outline as well as a fill, so it reads over both the dark panels and the pale ones. */
-  -webkit-text-stroke: 2px var(--accent);
-}
-
-/*
- * The [WIP] beside the Armory tab. Gold from the variable, so it darkens with the light theme the
- * way the rest of the interface's gold does, and it keeps its color on the active tab too.
- */
-.wip-tag {
-  color: var(--accent);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  vertical-align: 1px;
 }

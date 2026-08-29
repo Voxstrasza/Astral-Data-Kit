@@ -14,6 +14,69 @@ database or AzerothCore's own source on 2026-08-25, not remembered.
 
 ---
 
+## Next session
+
+Written on 2026-08-29, in the order to do it. The first two are small and they close out what was
+built the day before; the third is the one that decides whether any of the numbers are right.
+
+### 1. Finish what yesterday left open
+
+- [ ] **Prove the Characters section on a raid sheet.** Every piece of it is verified on its own -
+      `pictureFor` draws standalone, the section loop is the same shape as Loot and Achievements,
+      and the endpoint it calls was tested - but the assembled path never ran. Make a raid, add a
+      boss, attach a character, export. Treat that section as untested until this is done.
+- [ ] **An attached character draws without its spec.** `specName()` in `talents.js` reads `tabs`,
+      which holds whichever class the calculator last opened, so a character that is not the one on
+      screen cannot be asked what spec it is. Either load that class's trees on demand, or derive
+      the per-tree counts from `Talent.dbc` without the calculator - the second is probably
+      smaller, since the tab of each talent id is all that is needed.
+
+### 2. The three small panel items
+
+All of them are one or two lines each, and none needs anything discovered first except the one that
+needs a look at the paper doll:
+
+- [ ] **Damage per second**, now that damage and speed are both on the sheet.
+- [ ] **Spell penetration**, once the in-game trip below confirms Wrath's spell tab shows it.
+- [ ] **The stat sheet laid out by spec** rather than by class. `CLASS_STATS` filters by class
+      today, so a ret, a holy and a prot paladin all read the same six groups.
+
+### 3. The in-game session, which is the one that matters
+
+Everything above is building on numbers that have been checked against the core's source and never
+against the game. One session in front of a character settles four things at once:
+
+- [ ] **The naked sweep.** A level 80 of each class with nothing equipped, matched column by column
+      against the real sheet. A number that disagrees there can only be one of the formulas, never
+      the gear pipeline - which is the whole reason to do it before anything is equipped.
+- [ ] Does a naked warrior really read 5% block, and a naked hunter 0% dodge? Both are what the core
+      says and neither has been seen.
+- [ ] Does Wrath fold night elf Quickness into displayed dodge?
+- [ ] Does the spell tab show spell penetration?
+
+After that: one item at a time, a full set, a set with a weapon-conditioned racial, then talents.
+And the ordering check that is worth its own test - a 5000 intellect helm on a gnome must read 5250,
+because if it reads 5000 the percentages are being applied before gear.
+
+### Housekeeping, whenever
+
+- [ ] **About a dozen boxes in this file are stale**, marked `[ ]` for work that has since landed:
+      the pickers, the layout, the racials panel, slot filling, the search filter, Save for Armory
+      and its disclaimer, the equipped list and set bonuses. Worth one pass so the file can be
+      trusted at a glance.
+
+### Not the Armory, but open
+
+Both are in `BUGS.md` with what has already been ruled out:
+
+- **Locale support.** An enGB client is not found at all, because the archive list hardcodes enUS in
+  seven of its thirteen entries and `validate()` passes anyway. A day's work was written and
+  deliberately reverted to be done properly as a feature.
+- **Generating a portrait twice turns the model.** Suspicion is on `azimuth` being applied as a
+  delta on a reused renderer. Weigh it against the live-M2 plan, which would retire the path.
+
+---
+
 ## What it should feel like
 
 Wowhead's dressing room, with the model taken out and a stat sheet standing where it was. That is
@@ -357,20 +420,72 @@ came from; enforcing that is the panel's job and is settled before a set of item
       the way `_ApplyItemMods` and `GetShieldBlockValue` both feed the one flat modifier beside
       `strength * 0.5 - 10`. Written down because it is the sort of thing that is otherwise
       discovered twice.
-- [ ] **Weapon damage and speed are missing entirely.** `hasWeapon`, `dmgMin`, `dmgMax` and `speed`
-      are item fields, the scope table lists damage and speed on both the melee and the ranged tab,
-      and neither the panel nor the pipeline has them. Equipping a weapon has to move them, and the
-      two together are what a DPS number would be built from. The one thing `equipped()` still does
-      not read.
+- [x] **Weapon damage and speed**, landed 2026-08-28. `Player::CalculateMinMaxDamage` transcribed as
+      `Character.weaponDamage`: the item's own range plus `attackPower / 14 * speed`, which is what
+      attack power is worth over one swing. Three hands, each its own pair of lines on the panel -
+      main, off and ranged - and an empty main hand still answers, with the one-to-two on a two
+      second swing `Unit.h` puts back when a weapon comes off.
+
+      **The slot travels with the item now.** A weapon is the one thing `equipped()` cannot sum:
+      two one-handers are two different lines and only the hand they were put in says which is
+      which. So the panel sends `armorySlot` beside each item and `WEAPON_HANDS` reads it, with
+      `SLOT_HANDS` as the fallback for a caller that has no slots to give.
+
+      **Three things that are easy to get wrong, each checked rather than assumed:**
+
+      - The off hand's whole line is halved, and it is halved *on the paper doll*, not only on the
+        swing: `UpdateDamagePctDoneMods` puts 0.5 into UNIT_MOD_DAMAGE_OFFHAND's TOTAL_PCT and
+        `UpdateDamagePhysical` asks for the total percentage when it fills the field the sheet reads.
+      - The speed in the attack-power term is the **hasted** one, so only that half of the range
+        shrinks with haste while the weapon's own numbers do not. A 991-1487 axe on a level 80
+        warrior reads 1137-1633 at 384.7 dps and 1124-1620 at 419.2 with ten percent haste: the
+        damage line goes slightly *down* and dps goes up.
+      - The weapons are computed after the aura pass, not in the sheet literal, because they read
+        off the finished attack power and the finished haste.
+
+      Checked by driving the real app, not by reading the code: a naked level 80 human warrior reads
+      82-83 at 2.00, and Flurry Axe (37-69 @ 1.50 in the database) in the main hand reads 98-130 at
+      1.50, which is the item plus 568/14 x 1.50.
+
+      `rangedHaste` is on the sheet now because the ranged swing is timed by it, but it has no line
+      on the panel. **Damage per second is still not shown** anywhere, and it is now one line from
+      the two numbers beside it.
+- [x] **The ranged tab does not need its own hit, crit or haste**, settled 2026-08-28 by reading the
+      core rather than the scope table. One item stat feeds all three schools -
+      `_ApplyItemMods` sends ITEM_MOD_HIT_RATING to CR_HIT_MELEE, CR_HIT_RANGED and CR_HIT_SPELL
+      together, and crit and haste the same way - and CR_*_MELEE and CR_*_RANGED convert identically
+      at 32.79 and 45.91. `UpdateAllCritPercentages` puts one `GetMeleeCritFromAgility()` into melee,
+      off hand and ranged alike. So for the one class that has a ranged tab, ranged hit, crit and
+      haste are the melee numbers under different names, and a second line would only be a second
+      place for the same figure to be read.
+
+      **Ranged attack power is the exception and is genuinely its own number**: the base formulas
+      differ per class (a level 80 hunter reads 396 melee against 327 ranged) and
+      ITEM_MOD_RANGED_ATTACK_POWER reaches only the ranged one. The reverse was a live bug -
+      ITEM_MOD_ATTACK_POWER feeds *both* pools and `sheet()` was adding `worn.ap` to melee alone, so
+      a hunter in attack-power gear read low on the ranged line. Fixed the same day.
+- [x] **The ranged slot is not the ranged slot for everyone**, 2026-08-28. It reads Ranged for
+      warrior, rogue, hunter, priest, mage and warlock; Libram for a paladin, Sigil for a death
+      knight, Totem for a shaman and Idol for a druid. Five slots rather than one with five labels:
+      `ARMORY_SLOTS` gives the ranged one InventoryTypes 15, 25 and 26 and each relic one 28, and
+      since every downstream filter is keyed by slot *name*, the picker and the search followed for
+      free.
+
+      **A relic slot needs a second filter.** All four relics are InventoryType 28 and only the armor
+      subclass tells them apart - 7, 8, 9, 10 out of ItemTemplate.h - so `searchItems` took a
+      `kind` argument. Without it a death knight is offered librams.
+
+      What is worn follows the class: `retuneRanged()` moves the piece across when the new slot would
+      take it and takes it off when it would not, which between the two halves is always.
 - [ ] **Spell penetration is probably in scope and is missing from the scope table above.** Wrath's
       spell tab shows it. It is priced and aggregated already; it is on the test's silent list only
       until the paper doll is checked, and adding it is then one line on the panel and one in
       `sheet()`.
 - [x] Deliberately reads nothing, and the test knows it: **health per 5 sec** (46) and the healing
       half of 41, because the paper doll shows neither - the same call the scope rule made in phase
-      1. Gems and enchants are out of the first version and are not on this list; they are absent
+      1. Gems and enchants are phase 7 rather than this list; they are absent
       rather than ignored.
-- [ ] An equipped list under the sheet: every filled slot as a row, with the item's name in its
+- [x] An equipped list under the sheet: every filled slot as a row, with the item's name in its
       quality color, its item level, the slot it is in, and where it comes from.
 - [ ] **No average item level.** Each equipped row carries its own item level and that is all. An
       average would need rules the client never had - which slots count, what an empty off hand is
@@ -400,14 +515,14 @@ backwards through the loot tables. Measured on the live database:
   from rather than to leave the column blank.
 - Chests are their own path, through `gameobject_loot_template` and `lib/encounter-chests.js`.
 
-- [ ] Reverse lookup in `lib/world-db.js`: item entry to the creatures and objects that drop it,
+- [x] Reverse lookup in `lib/world-db.js`, landed 2026-08-28 as `dropsForItems`: item entry to the creatures and objects that drop it,
       walking nested references, collapsing difficulty entries, and naming the instance through the
       instance browser's existing mapping.
-- [ ] **The source is a text field, not a readout.** A real item pulled from the database arrives
+- [x] **The source is a text field, not a readout.** A real item pulled from the database arrives
       with it filled in by the walk above. A custom item arrives with it empty and you write where
       it would come from, because a piece you invented has an intended source and nothing else in
       the program knows it. Editing an autofilled one overrides it rather than being refused.
-- [ ] The text lives on the character's equipped row, not on the item, so the same custom piece can
+- [x] The text lives on the character's equipped row, not on the item, so the same custom piece can
       be "Yogg-Saron 25 heroic" in one set and something else in another. A real item with no loot
       row starts empty rather than saying "not a drop" - there is nothing to correct if the field
       is yours to write.
@@ -478,7 +593,74 @@ client with a race this program never heard of still answers.
       exports as a PNG like everything else Astral makes.
 - [ ] Saved characters as a kind in the saved store, and a place on a raid sheet.
 
+**Built on 2026-08-28 and removed again on 2026-08-29**, at the request of whoever has to look at
+it: the implementation was not the wanted one. Both boxes are open again and `render.js`,
+`preview.js`, `raid-sheet.js`, `raid-boss.js` and `lib/raids.js` are back to where they were.
+
+**What went wrong is worth knowing before the next attempt.** Adding `armory` to `CANVAS_KINDS`
+turns on the preview column, and the Armory is a full-width panel - so the page it is drawn on
+fights the column beside it. Whatever draws a character next has to decide where the picture goes
+before it decides what the picture looks like.
+
+**Three things were learned doing the half that stayed**, which is the loot walk behind the source
+column:
+
+- **The example in this file was wrong.** Shadowfrost Shard does not reverse to four Icecrown
+  bosses on a stock database - it has no creature loot row at all and comes off the object
+  `Light's Vengeance`. The object half of the walk is what answers it.
+- **Difficulty variants collapse on `difficulty_entry_1..3`, not on the name.** The database
+  suffixes them - Gluth is 15932 and `Gluth (1)` is 29417 - so matching names works by accident.
+  Following the core's own link is also what makes the instance come out right, because only the
+  base row is ever spawned: a heroic-only variant has no map because nothing places it.
+- **Some answers are not sources.** Flurry Axe reverses to 391 creatures, being on a world-drop
+  reference list. Over forty droppers the field is left blank, because a blank one is honest and
+  editable where a wrong one has to be noticed first. Under forty, several droppers sharing one
+  instance read as the instance: Fragment of Val'anyr is sixteen Ulduar bosses and says Ulduar.
+
+**And one thing was fixed on the way and kept.** `worn` lived in the panel rather than in state, so saving a
+character kept its race, level and talents and quietly dropped everything it was wearing. It is
+`state.armoryWorn` now. That fix stays whatever the picture ends up looking like.
+
+**And one thing that will come back whenever the picture does:** a character that is not the one on
+screen has no spec to draw. `specName()` reads the talent trees of whichever class the calculator
+last opened, so working it out for an arbitrary build means either loading that class's trees on
+demand or deriving the per-tree counts straight from `Talent.dbc`. The second is probably smaller:
+the tab of each talent id is all it needs.
+
 ---
+## Phase 7 - gems, enchants and socket bonuses
+
+A sketch rather than a plan. Worth expanding before anything is built, but worth writing down now
+because it is the last thing standing between the sheet and a real character: a geared piece in
+Wrath is its base stats plus three gems plus an enchant plus a socket bonus, and today the Armory
+reads the first of those four.
+
+- [ ] **Gems go in sockets.** An item already carries its `sockets` and its `socketBonus` - both are
+      editor fields and both draw on the tooltip - so the sockets are there to be filled and nothing
+      new is stored on the item. What is missing is a picker for what goes in one.
+- [ ] **Light the socket bonus up when it is met**, which is the rule everyone knows and nobody
+      writes down: every socket filled, and every gem the colour its socket takes. A gem counts for
+      its own colour and for the two mixed colours it belongs to, which is what makes an orange gem
+      satisfy a red socket and a yellow one.
+- [ ] **All of it has to reach the stat sheet.** Gems, the enchant and the socket bonus are three
+      more sources of the same stats `equipped()` already sums, so they land in the same shape and
+      go through the same door. Order matters the way it always does here: they are flat gear
+      stats, so they join before the percentage auras rather than after.
+- [ ] **Enchants are their own question** and probably the harder half: an enchant is a
+      `SpellItemEnchantment` row whose effects are stat modifiers, and which enchants a slot can
+      take is not something the client says plainly.
+
+**The data is already present and parsing**, which is why this is an addition rather than a
+rewrite. `GemProperties.dbc` is 626 rows; `SpellItemEnchantment.dbc` is already read in
+`lib/items.js` for the socket bonus *name* on a tooltip, so the reader exists and only what it
+pulls out of a row has to grow.
+
+**Not settled, and worth settling first:** whether a gem is picked from the database, invented the
+way an item is, or both - which is the same question the slot picker answered for items, and the
+same answer will probably do.
+
+---
+
 
 ## Verifying it
 
@@ -535,5 +717,5 @@ built, not now.
 
 - Rendering a character model. The panel is the sheet and nothing else.
 - Combat simulation. This reads out a stat block, it does not swing at anything.
-- Gems and enchants in the first version. `GemProperties` and `SpellItemEnchantment` are both
-  present and parsing, so it is a later addition rather than a rewrite.
+- Gems and enchants **in the first version**, which is not the same as not doing them: they are
+  phase 7 above, and `GemProperties` and `SpellItemEnchantment` are both present and parsing.

@@ -32,7 +32,7 @@ It adds creature search, item search, real loot tables and real health pools.
   with boss whispers and boss announcements.
 - **Raid Wizard** - where everything you build with the previous tools can go. Exports an image
   where on one sheet you can view target frames, spells, texts and more.
-- **Armory** *(work in progress)* - build a character and simulate stats with your created gear
+- **Armory** - build a character and simulate stats with your created gear
   using the in-game stat formulas.
 
 Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports are PNG
