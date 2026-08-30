@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * Light / dark / midnight, chosen in Settings.
+ * Dark or midnight, chosen in Settings.
  *
  * The choice lives in localStorage rather than the settings file: it is a property of this
  * window, it has to be readable before the first paint, and routing it through the settings API
@@ -13,7 +13,7 @@
 import { $, $$ } from './dom.js';
 
 const KEY = 'astral-theme';
-const THEMES = ['light', 'dark', 'midnight'];
+const THEMES = ['dark', 'midnight'];
 const FALLBACK = 'dark';
 
 function current()

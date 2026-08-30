@@ -14,7 +14,7 @@
       try {
         var saved = localStorage.getItem('astral-theme');
         document.documentElement.dataset.theme =
-          ['light', 'dark', 'midnight'].indexOf(saved) === -1 ? 'dark' : saved;
+          ['dark', 'midnight'].indexOf(saved) === -1 ? 'dark' : saved;
       } catch (err) {
         document.documentElement.dataset.theme = 'dark';
       }
@@ -46,7 +46,7 @@
         <button type="button" role="tab" data-kind="achievement">Achievement</button>
         <button type="button" role="tab" data-kind="text">Texts</button>
         <button type="button" role="tab" data-kind="raid">Raid Wizard</button>
-        <button type="button" role="tab" data-kind="armory">Armory <span class="wip-tag">[WIP]</span></button>
+        <button type="button" role="tab" data-kind="armory">Armory</button>
       </div>
 
       <div class="topbar-actions">
@@ -96,15 +96,15 @@
           <fieldset>
             <legend>Initialization</legend>
             <p class="hint">
-              Open <strong>Settings</strong> and point at your 3.3.5a folder - the one
-              containing <code>Data\</code>. Indexing takes a moment the first time and is cached
-              afterwards. That one step turns on the real icons, the real fonts, the client's spell
-              and achievement tables, and the dungeon browser.
+              Open <strong>Settings</strong> and point Astral to your 3.3.5a <code>/Data</code>
+              folder. Indexing takes a few moments for first-time setup and is cached afterwards.
+              Icons, fonts, spell, achievement and dungeon browser data are all pulled from the
+              client.
             </p>
             <p class="hint">
-              Connecting a <strong>world database</strong> in the same dialog is optional and adds
-              the finders: creature search, item search, a boss's real drop list, and the health
-              and mana pools behind the dungeon browser. Everything else works without it.
+              Connecting an <strong>AzerothCore</strong> or <strong>TrinityCore</strong> world
+              database is optional, however it adds finders: creature search, item search, drop
+              lists from bosses, health and mana pools from the dungeon &amp; raid browser.
             </p>
           </fieldset>
 
@@ -137,7 +137,7 @@
               more.
             </p>
             <p class="hint">
-              <strong>Armory <span class="wip-tag">[WIP]</span></strong> - build a character and
+              <strong>Armory</strong> - build a character and
               simulate stats with your created gear using the in-game stat formulas.
             </p>
           </fieldset>
@@ -145,22 +145,22 @@
           <fieldset>
             <legend>Exporting</legend>
             <p class="hint">
-              Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports
-              are PNG format at 1x-4x. A spell carrying an aura saves two files rather than one,
-              since they are two tooltips in the game.
+              Small exports can be copied to the clipboard, bigger ones can only be downloaded.
+              Exports are PNG format, 1x to 4x. A spell with an accompanying aura saves two files
+              rather than one.
             </p>
             <p class="hint">
-              <strong>Export scale</strong> is the size of the file: 1x is what the game draws,
-              4x is the same picture at four times the pixels. <strong>Max width</strong> is where
-              a tooltip wraps, so it changes the shape of the export as well as the preview.
-              <strong>Transparent background</strong> drops the backing, an item can keep or lose
-              its <strong>quality-colored border</strong>, and an item or spell icon can sit
-              outside the frame, inside it at the top-left, or not at all.
+              <strong>Export scale</strong> is the size, 1x is in-game draw, 4x is the same
+              picture at four times. <strong>Max width</strong> is tooltip wrapping, which changes
+              the shape of the export as well as the preview. <strong>Transparent background</strong>
+              drops the backing, an item can keep or lose its <strong>quality border</strong>, and
+              an item or spell icon can sit either outside of the frame, inside at the top left, or
+              be completely removed.
             </p>
             <p class="hint">
-              <strong>Preview zoom</strong> and the <strong>checkerboard</strong> change only what
-              you are looking at - neither reaches the file. Every option here is remembered per
-              window, so a transparent target frame does not quietly change how your items export.
+              <strong>Preview zoom</strong> and <strong>checkerboard</strong> only change your
+              working copy. Neither will reflect on your export. Every option is remembered per
+              window, so a transparent target frame does not change how your items will export.
             </p>
           </fieldset>
         </div>
@@ -229,13 +229,10 @@
 
         <!-- Armory ----------------------------------------------------------------- -->
         <div data-panel="armory" hidden>
-          <!-- The Armory is not finished, and it should say so on its face rather than in a note
-               someone has to read. Drawn over everything and clickable through. -->
-          <div class="armory-wip" aria-hidden="true">WORK IN PROGRESS</div>
-
           <!-- Said once, up here, rather than on every slot: a title on a slot is a second tooltip
                that opens on top of the item's own one. -->
-          <p class="hint armory-how">Click a slot to add an item. Right click to remove.</p>
+          <p class="hint armory-how">Click a slot to add an item. Right click for gems, enchants
+            and to remove.</p>
 
           <div class="armory-top">
             <div class="armory-top-group">
@@ -250,10 +247,21 @@
           </div>
 
           <div class="armory-body">
-            <fieldset class="armory-racials">
-              <legend>Racials</legend>
-              <div id="armory-racials"></div>
-            </fieldset>
+            <!-- The left column is two boxes stacked, not two cells of the grid: the doll is
+                 taller than either of them, so a second grid row would put the sockets under it
+                 rather than under the racials. -->
+            <div class="armory-left">
+              <fieldset class="armory-racials">
+                <legend>Racials</legend>
+                <div id="armory-racials"></div>
+              </fieldset>
+
+              <!-- What is still open across everything worn, counted by color. -->
+              <fieldset class="armory-sockets">
+                <legend>Sockets</legend>
+                <div id="armory-sockets"></div>
+              </fieldset>
+            </div>
 
             <div class="armory-doll">
               <!-- Filled in by the talent calculator: the spec is whichever tree holds the
@@ -268,25 +276,60 @@
               <div class="slot-row" id="armory-slots-weapon"></div>
             </div>
 
-            <!-- For the exported picture rather than for the numbers. -->
-            <fieldset class="armory-who">
-              <legend>Customization</legend>
-              <label>Character name
-                <input type="text" id="armory-name" maxlength="24" placeholder="Unnamed" />
-              </label>
-              <label class="check">
-                <input type="checkbox" id="armory-guild-on" /> Guild name
-              </label>
-              <input type="text" id="armory-guild" maxlength="24" placeholder="Guild" hidden />
-            </fieldset>
+            <!-- Like the left column, one box with something under it rather than two grid cells:
+                 the doll is taller than the box, so a second row would put the button beneath it
+                 instead of beneath the box. -->
+            <div class="armory-right">
+              <!-- For the exported picture rather than for the numbers. -->
+              <fieldset class="armory-who">
+                <legend>Customization</legend>
+                <label>Character name
+                  <input type="text" id="armory-name" maxlength="24" placeholder="Unnamed" />
+                </label>
+                <div class="who-row">
+                  <label class="check">
+                    <input type="checkbox" id="armory-guild-on" /> Guild name
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" id="armory-title-on" /> Title
+                  </label>
+                </div>
+                <input type="text" id="armory-guild" maxlength="24" placeholder="Guild" hidden />
+
+                <!-- Prefix says which side of the name the title lands on: ticked puts it in front
+                     ("Firelord Voxstrasza"), left alone puts it behind, which is where a title
+                     written with its own leading comma belongs. -->
+                <div class="who-title" id="armory-title-row" hidden>
+                  <label class="check">
+                    <input type="checkbox" id="armory-title-prefix" /> Prefix
+                  </label>
+                  <input type="text" id="armory-title" maxlength="40"
+                         placeholder=", First of the Ebon Blade" />
+                </div>
+              </fieldset>
+
+              <!-- The sheet's own export, and the sheet's own save: this panel runs with the
+                   preview sidebar hidden, so neither of the buttons over there can reach the
+                   character. -->
+              <div class="armory-actions">
+                <button type="button" id="btn-armory-png" class="primary"
+                        title="Save this character sheet as a picture">Download PNG</button>
+                <!-- Dashed, the way Save for Armory is on the Item window: both of them put
+                     something into a saved list rather than acting on what is on screen. -->
+                <button type="button" id="btn-armory-save" class="add"
+                        title="Keep this character in the saved list">Save character</button>
+                <button type="button" id="btn-armory-load" class="add"
+                        title="Open a character from the saved list">Load character</button>
+              </div>
+            </div>
 
             <fieldset class="armory-stats">
               <legend>Stats</legend>
-              <div class="stat-grid" id="armory-stat-grid"></div>
-              <div class="stat-grid stat-resists" id="armory-resist-grid"></div>
-              <label class="check">
-                <input type="checkbox" id="armory-all-stats" /> Show all stats
-              </label>
+              <!-- Three frames across: General and Attributes never change, and the third one is
+                   whichever of Defense, Melee, Ranged or Spell its own picker is set to. The five
+                   schools sit under all three. -->
+              <div class="stat-cards" id="armory-stat-cards"></div>
+              <div class="stat-resists" id="armory-resist-card"></div>
               <p class="hint" id="armory-stat-note"></p>
             </fieldset>
           </div>
@@ -405,6 +448,10 @@
               <label class="narrow">Armor<input type="number" data-bind="armor" /></label>
               <label class="narrow">Block<input type="number" data-bind="block" /></label>
             </div>
+
+            <!-- Bonus armor is the same number printed differently: green and signed, the way the
+                 game marks armor a piece gives beyond what its slot and armor class already do. -->
+            <label class="check"><input type="checkbox" data-bind="armorBonus" /> Bonus armor</label>
           </fieldset>
 
           <fieldset>
@@ -610,7 +657,7 @@
           <legend>Find an item</legend>
           <div class="row">
             <input type="search" id="item-search" class="grow" placeholder="Search items - e.g. Shadowmourne, or 49623" autocomplete="off" disabled />
-            <button type="button" id="btn-browse-loot" class="add">Browse loot by boss &rarr;</button>
+            <button type="button" id="btn-browse-loot" class="add">Browse dungeons &amp; raids &rarr;</button>
           </div>
           <p class="hint" id="item-hint">Connect your world database in Settings to search items by name or entry id.</p>
           <div id="item-results" class="npc-results"></div>
@@ -669,7 +716,7 @@
           <div class="row">
             <input type="search" id="spell-search" class="grow" placeholder="Search spells - e.g. Frostbolt, or 116" autocomplete="off" />
           </div>
-          <p class="hint" id="spell-hint">Reads the client's Spell.dbc - no database needed. Picking one fills in the name, rank, cost, range, cast time, cooldown, icon and description.</p>
+          <p class="hint" id="spell-hint">Reads spell.dbc from the client. Fills name, rank, cost, range, cast time, cooldown, description and icon.</p>
           <div id="spell-results" class="npc-results"></div>
         </fieldset>
 
@@ -708,7 +755,7 @@
             <input type="search" id="ach-search" class="grow" placeholder="Search achievements - e.g. The Undying, or 2187" autocomplete="off" />
             <label class="finder-select">Category<select id="ach-category"></select></label>
           </div>
-          <p class="hint" id="ach-hint">Reads the client's Achievement.dbc - no database needed. Picking one fills in the title, description, reward, points, icon and criteria. Statistics are left out, as they are in the game's own achievement list.</p>
+          <p class="hint" id="ach-hint">Reads Achievement.dbc from the client. Fills title, description, reward, points, icons and criteria.</p>
           <div id="ach-results" class="npc-results"></div>
         </fieldset>
 
@@ -833,7 +880,6 @@
           <legend>Appearance</legend>
           <label>Theme</label>
           <div class="chip-row" id="theme-picker">
-            <button type="button" data-theme-choice="light">Light</button>
             <button type="button" data-theme-choice="dark">Dark</button>
             <button type="button" data-theme-choice="midnight">Midnight</button>
           </div>
@@ -920,6 +966,52 @@
       <div class="dialog-body">
         <input type="search" id="armory-picker-search" placeholder="Search the database by name or entry" />
         <div class="picker-results" id="armory-picker-results"></div>
+      </div>
+    </dialog>
+
+    <!-- The saved characters, opened by Load character. Each one reads as its own name over what
+         it is - "Level 80 Night Elf Hunter" - because a list of names alone cannot tell two
+         eighties apart. -->
+    <dialog id="character-picker">
+      <form method="dialog" class="dialog-head">
+        <strong>Saved characters</strong>
+        <span class="hint" id="character-picker-status"></span>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <div class="character-list" id="character-list"></div>
+      </div>
+    </dialog>
+
+    <!-- What goes in one socket. Opened from the slot's right click menu, and filtered to the
+         colors that socket takes, which is why it needs no color buttons of its own. -->
+    <dialog id="gem-picker">
+      <form method="dialog" class="dialog-head">
+        <strong id="gem-picker-title">Socket</strong>
+        <span class="hint" id="gem-picker-status"></span>
+        <button type="button" class="ghost" id="gem-picker-clear" hidden>Remove gem</button>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <input type="search" id="gem-picker-search" placeholder="Search gems by name" />
+        <div class="picker-results" id="gem-picker-results"></div>
+      </div>
+    </dialog>
+
+    <!-- The enchants one slot can take, worked out from the client rather than listed by hand. -->
+    <dialog id="enchant-picker">
+      <form method="dialog" class="dialog-head">
+        <strong id="enchant-picker-title">Enchant</strong>
+        <span class="hint" id="enchant-picker-status"></span>
+        <button type="button" class="ghost" id="enchant-picker-clear" hidden>Remove enchant</button>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <input type="search" id="enchant-picker-search" placeholder="Filter by name" />
+        <div class="picker-results" id="enchant-picker-results"></div>
       </div>
     </dialog>
 

@@ -12,11 +12,13 @@ Visualize your creativity and see how it would appear in-game.
 
 ## Initialization
 
-Open **Settings** and point at your 3.3.5a folder - the one containing `Data\`. That turns on the
-real icons and fonts, the client's spell and achievement tables, and the dungeon browser.
+Open **Settings** and point Astral to your 3.3.5a `/Data` folder. Indexing takes a few moments
+for first-time setup and is cached afterwards. Icons, fonts, spell, achievement and dungeon
+browser data are all pulled from the client.
 
-Connecting a **world database** (AzerothCore or TrinityCore schema) in the same dialog is optional.
-It adds creature search, item search, real loot tables and real health pools.
+Connecting an **AzerothCore** or **TrinityCore** world database is optional, however it adds
+finders: creature search, item search, drop lists from bosses, health and mana pools from the
+dungeon & raid browser.
 
 ## Tools
 
@@ -32,11 +34,21 @@ It adds creature search, item search, real loot tables and real health pools.
   with boss whispers and boss announcements.
 - **Raid Wizard** - where everything you build with the previous tools can go. Exports an image
   where on one sheet you can view target frames, spells, texts and more.
-- **Armory** *(work in progress)* - build a character and simulate stats with your created gear
+- **Armory** - build a character and simulate stats with your created gear
   using the in-game stat formulas.
 
-Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports are PNG
-format at 1x-4x.
+Small exports can be copied to the clipboard, bigger ones can only be downloaded. Exports are PNG
+format, 1x to 4x. A spell with an accompanying aura saves two files rather than one.
+
+**Export scale** is the size, 1x is in-game draw, 4x is the same picture at four times. **Max
+width** is tooltip wrapping, which changes the shape of the export as well as the preview.
+**Transparent background** drops the backing, an item can keep or lose its **quality border**, and
+an item or spell icon can sit either outside of the frame, inside at the top left, or be
+completely removed.
+
+**Preview zoom** and **checkerboard** only change your working copy. Neither will reflect on your
+export. Every option is remembered per window, so a transparent target frame does not change how
+your items will export.
 
 ## Examples
 
@@ -61,6 +73,10 @@ Example of achievement editor:
 Example of raid wizard output:
 
 ![Raid wizard sheet](art/overlord-bloodbane-25h.png)
+
+Example of armory:
+
+![Armory character sheet](art/armory-example.png)
 
 ## Future features
 

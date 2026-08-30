@@ -361,50 +361,139 @@ function cell(tab, talent)
 }
 
 /**
- * The line from a talent to the one it needs.
+ * The branch from a talent to the one it needs: its line, its bend, and its arrowhead.
  *
- * Straight only, because the trees are: a prerequisite is either directly above its dependent or
- * directly beside it, never a dogleg. Anything that is neither gets no line rather than a wrong
- * one, and the tooltip still names what it is waiting for.
+ * Returns the pieces rather than one element, because a bend is three runs and an arrow, and the
+ * arrowhead is a sprite out of the client rather than part of the line.
+ *
+ * Every run goes centre to centre, and the icons are appended after these, so a line is only ever
+ * visible in the gaps between icons. That is the whole of the rule, and it is what the old code got
+ * wrong: it spanned the *prerequisite's* track and then reached 14px further back with a negative
+ * margin to tuck under the icon. Fourteen pixels is exactly the row gap, so every downward branch
+ * grew a stub out of the top of its prerequisite pointing at whatever sat above it - Ravenous Dead
+ * over Night of the Dead, Two-Handed Weapon Specialization over Sweeping Strikes - and every
+ * sideways one grew the same stub out of the side, Anger Management beside Impale. None of those
+ * links exist. They were all the same 14 pixels.
+ *
+ * A bend turns in the row *gap* above the dependent rather than along its tier, which is what the
+ * game does and what keeps it off the talents in between: Bloodthirst reaches Bloodsurge by
+ * dropping down its own column, crossing above the last row, and coming down into it - never
+ * touching Rampage, which sits between them and is a different link entirely.
  */
-function arrow(tab, talent)
+function branch(tab, talent)
 {
     const parent = tab.talents.find((t) => t.id === talent.requires);
 
     if (!parent)
     {
-        return null;
+        return [];
     }
 
-    const sameColumn = parent.col === talent.col;
-    const sameTier = parent.tier === talent.tier;
+    const met = rankOf(parent.id) >= talent.requiresRank;
+    const pieces = [];
 
-    if (!sameColumn && !sameTier)
+    const piece = (...classes) =>
     {
-        return null;
+        const node = el('span', ['talent-branch', ...classes].join(' '));
+
+        if (met)
+        {
+            node.classList.add('is-met');
+        }
+
+        pieces.push(node);
+
+        return node;
+    };
+
+    const lowCol = Math.min(parent.col, talent.col) + 1;
+    const highCol = Math.max(parent.col, talent.col) + 2;
+
+    /* A run down one column, from one tier's centre to another's. */
+    const down = (col, fromTier, toTier) =>
+    {
+        const run = piece('run-down');
+
+        run.style.gridColumn = String(col + 1);
+        run.style.gridRow = `${Math.min(fromTier, toTier) + 1} / ${Math.max(fromTier, toTier) + 2}`;
+    };
+
+    /* A run along one tier, between the two columns. */
+    const across = (tier) =>
+    {
+        const run = piece('run-across');
+
+        run.style.gridRow = String(tier + 1);
+        run.style.gridColumn = `${lowCol} / ${highCol}`;
+    };
+
+    let sideways = parent.tier === talent.tier;
+
+    if (parent.col === talent.col)
+    {
+        down(talent.col, parent.tier, talent.tier);
     }
-
-    const line = el('span', 'talent-arrow');
-
-    if (rankOf(parent.id) >= talent.requiresRank)
+    else if (sideways)
     {
-        line.classList.add('is-met');
-    }
-
-    if (sameColumn)
-    {
-        line.classList.add('down');
-        line.style.gridColumn = String(talent.col + 1);
-        line.style.gridRow = `${Math.min(parent.tier, talent.tier) + 1} / ${Math.max(parent.tier, talent.tier) + 1}`;
+        across(talent.tier);
     }
     else
     {
-        line.classList.add('across');
-        line.style.gridRow = String(talent.tier + 1);
-        line.style.gridColumn = `${Math.min(parent.col, talent.col) + 1} / ${Math.max(parent.col, talent.col) + 1}`;
+        /*
+         * A diagonal turns once, and which way it turns is not a free choice: it is whichever way
+         * misses the talents in between. The game tries across-then-down first, and only drops down
+         * its own column when the prerequisite's own row is occupied on the way - TalentFrame_
+         * DrawLines in the client's TalentFrameBase.lua, read rather than guessed at.
+         *
+         * Turning the other way by default is what put Bloodthirst's branch to Bloodsurge straight
+         * through Rampage, which sits between them and is a different link of its own.
+         */
+        const occupied = (tier, col) =>
+            tab.talents.some((one) => one.tier === tier && one.col === col);
+
+        /* Every column the corner and the run across would sit in, at the prerequisite's tier. */
+        const from = Math.min(parent.col, talent.col) + (parent.col < talent.col ? 1 : 0);
+        const to = Math.max(parent.col, talent.col) - (parent.col < talent.col ? 0 : 1);
+
+        let blocked = false;
+
+        for (let col = from; col <= to; col++)
+        {
+            blocked = blocked || occupied(parent.tier, col);
+        }
+
+        if (!blocked)
+        {
+            across(parent.tier);
+            down(talent.col, parent.tier, talent.tier);
+        }
+        else
+        {
+            /* The prerequisite's row is taken, so drop down its own column and turn at the end.
+               The arrow then comes in from the side rather than from above. */
+            down(parent.col, parent.tier, talent.tier);
+            across(talent.tier);
+            sideways = true;
+        }
     }
 
-    return line;
+    /*
+     * The arrowhead, from the client's own UI-TalentArrows. The sheet is four quadrants: the two on
+     * top are the arrow as it reads when the prerequisite is met, the two below the greyed pair,
+     * and `left` is mirrored rather than drawn twice - which is how the game gets its right arrow
+     * too, by handing the same slice reversed texture coordinates.
+     */
+    const head = piece('branch-head',
+        sideways
+            ? (parent.col < talent.col ? 'points-right' : 'points-left')
+            : 'points-down');
+
+    head.style.gridColumn = String(talent.col + 1);
+    head.style.gridRow = String(talent.tier + 1);
+    head.style.backgroundImage = `url("/client/texture/${
+        encodeURIComponent('Interface\\TalentFrame\\UI-TalentArrows.blp')}")`;
+
+    return pieces;
 }
 
 function drawTree(tab)
@@ -440,12 +529,7 @@ function drawTree(tab)
     {
         if (talent.requires)
         {
-            const line = arrow(tab, talent);
-
-            if (line)
-            {
-                grid.append(line);
-            }
+            grid.append(...branch(tab, talent));
         }
     }
 

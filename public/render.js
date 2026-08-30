@@ -271,7 +271,7 @@ function layout(ctx, lines, opts, scale)
 
             if (index === 0 && line.kind === 'socket')
             {
-                commands.push({ type: 'socket', socket: line.socket, x: pad + indent, y, scale });
+                commands.push({ type: 'socket', socket: line.socket, gemIcon: line.gemIcon, x: pad + indent, y, scale });
             }
 
             commands.push({ type: 'text', text: segment, x, y, color: line.lc, kind: line.kind });
@@ -378,11 +378,28 @@ function opaqueCenter(image, key)
     return result;
 }
 
-function drawSocket(ctx, cmd, scale)
+function drawSocket(ctx, cmd, scale, gemIcons)
 {
     const size = LAYOUT.socketBox * scale;
     const def = window.TooltipModel.SOCKETS[cmd.socket];
     const y = cmd.y + (LAYOUT.bodySize * scale - size) / 2 + 1 * scale;
+
+    /*
+     * A filled socket shows its gem rather than the hole.
+     *
+     * The gem's icon cannot be fetched from here - this renderer draws synchronously, which is
+     * why the item's own icon is handed in already loaded - so the caller preloads the gems it is
+     * about to draw and passes them by name. An icon that has not arrived falls through to the
+     * empty art, which is the same thing an unloaded item icon does.
+     */
+    const gem = cmd.gemIcon && gemIcons && gemIcons[cmd.gemIcon];
+
+    if (gem && gem.complete && gem.naturalWidth)
+    {
+        ctx.drawImage(gem, cmd.x, y, size, size);
+        return;
+    }
+
     const texture = def && art(def.art);
 
     if (texture)
@@ -496,7 +513,7 @@ function renderTooltip(lines, opts, scale)
     {
         if (cmd.type === 'socket')
         {
-            drawSocket(ctx, cmd, scale);
+            drawSocket(ctx, cmd, scale, opts.gemIcons);
             continue;
         }
 

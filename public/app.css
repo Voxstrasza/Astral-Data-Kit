@@ -24,12 +24,12 @@
 }
 
 /*
- * Three themes, chosen in Settings and applied as data-theme on <html>.
+ * Two themes, chosen in Settings and applied as data-theme on <html>.
  *
  * Dark is the default and stays on bare :root so the app still renders if the attribute never
  * gets set. Every surface that used to be a hardcoded hex is a variable now — the top bar, the
- * preview stage and its checkerboard, and the highlighted fieldset — because those were the parts
- * that would have stayed dark under a light palette.
+ * preview stage and its checkerboard, and the highlighted fieldset — so midnight can take them
+ * a shade further down without a second copy of the rule.
  */
 :root,
 :root[data-theme="dark"] {
@@ -69,29 +69,6 @@
   --stage: #000105;
   --checker-a: #0a0c12;
   --checker-b: #12151d;
-}
-
-/*
- * The gold has to darken for light mode: #ffd100 on white is unreadable, and it is used for
- * legends and for the active tab's background behind white text.
- */
-:root[data-theme="light"] {
-  --bg: #eef0f6;
-  --panel: #ffffff;
-  --panel-2: #e9ecf4;
-  --line: #cfd4e1;
-  --text: #171a23;
-  --muted: #5a6274;
-  --accent: #7a5f14;
-  --accent-dim: #8a6d1f;
-  --focus: #2563eb;
-  --on-accent: #fff;
-  --topbar-a: #ffffff;
-  --topbar-b: #e6e9f2;
-  --highlight: #fbf5e2;
-  --stage: #dfe3ee;
-  --checker-a: #e7e9f1;
-  --checker-b: #d6dae6;
 }
 
 * {
@@ -249,8 +226,8 @@ body {
 }
 
 /*
- * The interface's own gold, taken from the variable rather than written out, so it darkens with
- * the light theme instead of staying a yellow that white cannot hold.
+ * The interface's own gold, taken from the variable rather than written out, so it tracks the
+ * theme instead of being pinned to one hex here.
  */
 .credit,
 .version {
@@ -380,6 +357,7 @@ label.check {
 input[type="text"],
 input[type="number"],
 input[type="search"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
@@ -737,6 +715,9 @@ button.primary {
 #settings-dialog,
 #instance-dialog,
 #armory-picker,
+#gem-picker,
+#enchant-picker,
+#character-picker,
 #talent-dialog {
   width: min(720px, 94vw);
   max-height: 88vh;
@@ -750,6 +731,9 @@ button.primary {
 #settings-dialog::backdrop,
 #instance-dialog::backdrop,
 #armory-picker::backdrop,
+#gem-picker::backdrop,
+#enchant-picker::backdrop,
+#character-picker::backdrop,
 #talent-dialog::backdrop {
   background: rgb(0 0 0 / 60%);
 }
@@ -759,6 +743,17 @@ button.primary {
   align-self: center;
   /* The title is the one thing here that must not wrap; the status beside it can. */
   white-space: nowrap;
+}
+
+/* The status beside the title - "48 for this slot", "12 of 60" - sits level with it rather than
+   riding at the top of the row. A flex child with no alignment of its own stretches to the whole
+   head, which puts its one line of text at the top while the title is centered beside it. */
+.dialog-head .hint {
+  align-self: center;
+
+  /* And no paragraph margins: `.hint` carries 2px over 8px for the blocks of text it usually is,
+     which would sit the centered line a few pixels high of the title. Here it is a label. */
+  margin: 0;
 }
 
 .dialog-body {
@@ -771,10 +766,16 @@ button.primary {
   margin-bottom: 14px;
 }
 
+/*
+ * A path or a file name in the prose, marked by the chip around it rather than by a second face:
+ * the browser default for <code> is monospace, the one thing in the window that comes from
+ * neither Figtree nor the game.
+ */
 code {
   background: var(--panel-2);
   padding: 1px 5px;
   border-radius: 4px;
+  font-family: inherit;
 }
 
 .npc-results {
@@ -1112,8 +1113,10 @@ code {
   margin-bottom: 8px;
 }
 
+/* The button and "no file chosen" inside a file input are drawn by the browser in its own face. */
 .upload-btn input[type="file"] {
   width: 190px;
+  font: inherit;
   font-size: 12px;
 }
 
@@ -1260,8 +1263,8 @@ button.danger[data-armed="yes"] {
  *
  * Kept faint on purpose: it should register as atmosphere and never compete with the text sitting
  * on it, so it goes in a pseudo-element behind the content at a per-theme opacity rather than as
- * a background on the panel itself. Light mode takes less of it — a dark image over a white page
- * turns gray long before it turns subtle.
+ * a background on the panel itself. Midnight takes a little less of it, to match how much further
+ * down everything else around it sits.
  */
 :root,
 :root[data-theme="dark"] {
@@ -1270,10 +1273,6 @@ button.danger[data-armed="yes"] {
 
 :root[data-theme="midnight"] {
   --home-art: 0.15;
-}
-
-:root[data-theme="light"] {
-  --home-art: 0.13;
 }
 
 /*
@@ -1910,9 +1909,16 @@ main.armory [data-panel="armory"] {
 
 /* The two side boxes sit at the outer edges and the doll centers between them, so the space to
    the left of the slots and the space to their right are the same. */
-.armory-racials,
-.armory-who {
+.armory-left,
+.armory-right {
   grid-row: 1;
+}
+
+/* Racials with the socket tally under them, as one column. */
+.armory-left {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .armory-doll {
@@ -1931,11 +1937,201 @@ main.armory [data-panel="armory"] {
   min-height: 320px;
 }
 
+/* What a gem or an enchant does, in the game's own green, under its name. */
+.extra-effect {
+  display: block;
+  font-size: 12px;
+  color: #1eff00;
+}
+
+/* And what a meta gem is waiting for, in the game's own red. */
+.extra-requires {
+  display: block;
+  font-size: 11px;
+  color: #ff2020;
+}
+
+/* ------------------------------------------------------- the slot's right click menu */
+
+/*
+ * Fixed rather than absolute: it opens at the pointer, which is a viewport coordinate, and the
+ * panel it sits over scrolls.
+ */
+.slot-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 200px;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.slot-menu-title {
+  padding: 6px 10px 8px;
+  font-size: 12px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+.slot-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.slot-menu-row:hover {
+  background: var(--panel-2);
+}
+
+.slot-menu-row.is-danger:hover {
+  background: #5a2020;
+}
+
+.slot-menu-art {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 2px;
+}
+
+/* Pushed to the right edge, so "add gem" and "change" line up down the menu. */
+.slot-menu-label {
+  flex: 1 1 auto;
+}
+
+.slot-menu-note {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* One row per color, and only for a color that has something open. The art is the client's own
+   empty-socket texture, drawn at the size the tooltip draws it rather than scaled up. */
+.socket-tally {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.socket-tally-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.socket-tally-art {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* A gem carries its name where a socket carries nothing, so the name takes the slack and the
+   count keeps to the right edge however long "Reckless Ametrine" turns out to be. */
+.socket-tally-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.socket-tally-count {
+  color: var(--muted);
+}
+
 /* What the talent calculator decided, sitting where the game puts it: over the character. */
 .armory-spec {
   font-size: 12px;
   color: var(--muted);
   text-align: center;
+}
+
+/* The box with the export button under it, as one column. */
+.armory-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 190px;
+}
+
+/*
+ * Two buttons on one line, sharing the column evenly.
+ *
+ * Their words are wider than half of 190px, so the labels break over two lines rather than being
+ * clipped - measured in the running app, where one line each cut the G off Download PNG.
+ */
+.armory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  align-items: stretch;
+}
+
+/*
+ * Three buttons as a triangle: two across, the third centered under them. Half the column each
+ * rather than growing to fill, so the odd one out stays the size of the two above it instead of
+ * stretching into a bar.
+ */
+.armory-actions button {
+  flex: 0 1 calc(50% - 3px);
+  min-width: 0;
+  padding: 8px 6px;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+/* The saved-list buttons carry margins for the rows they normally sit in; this row has its own. */
+.armory-actions button.add {
+  margin: 0;
+}
+
+/* Guild and Title side by side: two switches over the one box, not two settings of their own. */
+.who-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* Both fit the column on one line each; left to wrap, "Guild name" breaks and the row goes uneven. */
+.who-row .check {
+  white-space: nowrap;
+}
+
+/* The title's own line: which side of the name it lands on, and then the title itself. */
+.who-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.who-title input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.who-title .check {
+  white-space: nowrap;
 }
 
 /* Who the character is, for the export. */
@@ -1945,7 +2141,6 @@ main.armory [data-panel="armory"] {
   gap: 8px;
   font-size: 12px;
   color: var(--muted);
-  max-width: 190px;
 }
 
 .armory-who label {
@@ -1959,6 +2154,7 @@ main.armory [data-panel="armory"] {
   align-items: center;
   gap: 6px;
 }
+
 
 /* Narrow columns, so a slot reads as a box that holds one item rather than a wide bar. */
 .armory-slots {
@@ -2033,6 +2229,23 @@ main.armory [data-panel="armory"] {
   white-space: nowrap;
 }
 
+/* The name and its enchant, stacked. `min-width: 0` so a long name wraps inside the slot rather
+   than pushing the box wider than its column. */
+.slot-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Small, green and italic, the way an enchant reads on a character sheet. */
+.slot-enchant {
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.25;
+  color: #1eff00;
+}
+
 /* Big enough to read as the item square it will hold, rather than a bullet beside a label. */
 .slot-icon {
   flex: 0 0 42px;
@@ -2042,55 +2255,126 @@ main.armory [data-panel="armory"] {
   background: var(--panel-2);
 }
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 2px 26px;
-  margin-bottom: 10px;
-}
-
 /*
- * The five schools, on their own line under the sheet and inside the same box. Their labels are
- * short enough that the sheet's 190px columns leave a lot of air, so they get narrower ones and
- * come out as the row of five the game reads as.
- */
-.stat-resists {
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  margin-top: -6px;
-}
-
-/*
- * A line, not a box. A character sheet is a list of "Strength: 174" and reads better as one, since
- * boxes framed thirty numbers that needed no framing.
+ * The stat box: three frames across, resistances under all three.
  *
- * The font is the program's own, inherited rather than set, so the sheet matches the chrome around
- * it. This was AstralGame - the client's own FRIZQT__.TTF - on the reasoning that a sheet quoting
- * the game should be set in the game's face. It did not buy the resemblance: what makes the game's
- * sheet read the way it does is its layout, not its typeface. Reading like the game is still
- * wanted here and is still unsolved.
+ * A frame is a titled card rather than a run of lines. Thirty ungrouped "Strength: 174" lines were
+ * readable but shapeless - nothing said which numbers belonged together, so the eye had to read
+ * every one to find the four it wanted. General and Attributes are fixed; the third card's title
+ * is a picker, because a feral druid needs Defense and Melee on the same character and the sheet
+ * cannot choose between them.
  */
-.stat {
-  font-size: 15px;
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-  padding: 2px 0;
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.stat-card {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  overflow: hidden;
   min-width: 0;
 }
 
-.stat-label {
+/* The head carries its own weight so the three cards read as three things at a glance. */
+.stat-card-head {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.stat-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/*
+ * The picker is the third card's title, not a control parked beside it: it sits in the head, set
+ * like the other two titles, and only its caret says it can be changed.
+ */
+.stat-card-pick {
+  flex: 1;
+  min-width: 0;
+  margin: 0 -6px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stat-card-pick:hover,
+.stat-card-pick:focus-visible {
+  border-color: var(--accent-dim);
+  background: var(--panel-2);
+}
+
+.stat-card-rows {
+  padding: 4px 0;
+}
+
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 10px;
+  font-size: 14px;
+  min-width: 0;
+}
+
+/* Every other row a shade lighter: the eye tracks a label to its number across the card without
+   a rule drawn between them. */
+.stat-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.stat-row-label {
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.stat-value {
+.stat-row-value {
   color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* A stat the gear pipeline has not been built for yet, drawn rather than hidden. */
-.stat.pending .stat-value {
+.stat-row.pending .stat-row-value {
   color: var(--muted);
   opacity: 0.5;
+}
+
+/*
+ * The five schools, under the three frames and inside the same box. One thought and short enough
+ * that a row of five reads as the resistance line the game has, where flowing them into a card
+ * would put Shadow on its own line.
+ */
+.stat-resists .stat-card-rows {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 4px 4px;
+}
+
+.stat-resists .stat-row:nth-child(even) {
+  background: none;
 }
 
 /* ------------------------------------------------------------- armory picker */
@@ -2108,6 +2392,13 @@ main.armory [data-panel="armory"] {
   width: min(680px, 92vw);
 }
 
+/* The two extra pickers are the same box as the slot picker, because they are the same job: a
+   list you scan and click one row of. */
+#gem-picker,
+#enchant-picker {
+  width: min(680px, 92vw);
+}
+
 .picker-sources {
   display: flex;
   gap: 4px;
@@ -2121,7 +2412,9 @@ main.armory [data-panel="armory"] {
   border-color: var(--accent, var(--line));
 }
 
-#armory-picker-search {
+#armory-picker-search,
+#gem-picker-search,
+#enchant-picker-search {
   width: 100%;
   margin-bottom: 10px;
 }
@@ -2133,6 +2426,30 @@ main.armory [data-panel="armory"] {
   min-height: 220px;
   max-height: 46vh;
   overflow-y: auto;
+}
+
+/*
+ * A custom piece's row: the piece itself, then Modify and delete.
+ *
+ * Same shape as a raid card and its delete, and for the same reason — the row is already a button,
+ * so anything that acts on it has to sit beside it rather than inside it. The row takes the space
+ * and the two buttons take what they need, so a long item name does not push them off the edge.
+ */
+.picker-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.picker-row .npc-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.picker-row .raid-mini {
+  align-self: center;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 /* A filled slot stops being a label and becomes the item, so the rack reads at a glance. */
@@ -2184,13 +2501,94 @@ main.armory [data-panel="armory"] {
   padding: 5px 6px;
   border-bottom: 1px solid var(--line);
 }
+/*
+ * The source column is a field, not a readout, and has to look like one without turning the row
+ * into a form. No border until it is pointed at or typed in, so a table of them reads as text and
+ * still says it can be edited the moment the pointer is over it.
+ */
+.source-cell {
+  width: 40%;
+}
+
+.source-input {
+  width: 100%;
+  padding: 2px 4px;
+  background: none;
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.source-input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.source-input:hover {
+  border-color: var(--line);
+}
+
+.source-input:focus {
+  outline: none;
+  background: var(--panel-2);
+  border-color: var(--accent);
+}
+
+/*
+ * A settled source, reading as the answer it is.
+ *
+ * Padded and bordered to match the field it replaces, transparently, so collapsing one does not
+ * shift the row under it by a pixel.
+ */
+.source-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.source-line {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+}
+
+/*
+ * Modify stays out of the way until the row is under the pointer.
+ *
+ * Nineteen slots is nineteen of these, and a button on every line turns a list you are reading into
+ * a page of controls. It holds its space either way, so nothing moves when it appears.
+ */
+.source-modify {
+  flex: 0 0 auto;
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 7px;
+  font: inherit;
+  font-size: 11.5px;
+  visibility: hidden;
+}
+
+tr:hover .source-modify,
+.source-modify:focus-visible {
+  visibility: visible;
+}
+
+.source-modify:hover {
+  color: var(--text);
+  border-color: var(--accent-dim);
+}
+
 
 @media (max-width: 700px) {
   .armory-body {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .stat-grid {
+  .stat-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -2381,27 +2779,83 @@ main.armory [data-panel="armory"] {
  * The line from a talent to the one it waits for, drawn in the same grid so it needs no measuring:
  * it spans the cells between the two and sits behind them.
  */
-.talent-arrow {
-  align-self: stretch;
-  justify-self: center;
+/*
+ * The branches between talents.
+ *
+ * Every measurement here is half of something the grid already sets, and they have to stay in step
+ * with it: the icons are 44px, so a run reaches an icon's centre by insetting 22px, and the rows
+ * are 14px apart, so a bend turns in the middle of that gap at 7px.
+ *
+ * Runs go centre to centre and the icons are appended after them, which is what keeps a line from
+ * showing anywhere but the gaps. Reaching *past* an icon to tuck underneath it is what produced
+ * phantom links out of the top and side of half the prerequisites in the game.
+ */
+.talent-branch {
   background: var(--line);
   pointer-events: none;
 }
 
-.talent-arrow.down {
-  width: 2px;
-  margin: -14px 0;
+.talent-branch.is-met {
+  background: #3fbf5f;
 }
 
-.talent-arrow.across {
+.talent-branch.run-down {
+  width: 2px;
+  justify-self: center;
+  align-self: stretch;
+  margin: 22px 0;
+}
+
+.talent-branch.run-across {
   height: 2px;
   align-self: center;
   justify-self: stretch;
-  margin: 0 -20px;
+  margin: 0 22px;
 }
 
-.talent-arrow.is-met {
-  background: #3fbf5f;
+/*
+ * The arrowhead, sliced out of the client's UI-TalentArrows.
+ *
+ * The sheet is 64x64 in four quadrants — down and left on the top row, the greyed pair beneath —
+ * so at half scale each quadrant is a 16px arrow and the offsets are whole pixels. The right arrow
+ * is the left one mirrored, which is how the game makes it as well.
+ */
+.talent-branch.branch-head {
+  width: 16px;
+  height: 16px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: 32px 32px;
+  background-position: 0 -16px;
+  image-rendering: auto;
+}
+
+.talent-branch.branch-head.is-met {
+  background-color: transparent;
+  background-position-y: 0;
+}
+
+.talent-branch.branch-head.points-down {
+  justify-self: center;
+  align-self: start;
+  margin-top: -8px;
+}
+
+.talent-branch.branch-head.points-right,
+.talent-branch.branch-head.points-left {
+  align-self: center;
+  background-position-x: -16px;
+}
+
+.talent-branch.branch-head.points-right {
+  justify-self: start;
+  margin-left: -8px;
+}
+
+.talent-branch.branch-head.points-left {
+  justify-self: end;
+  margin-right: -8px;
+  transform: scaleX(-1);
 }
 
 /* ------------------------------------------------------------------- racials */
@@ -2523,44 +2977,80 @@ button.to-armory {
   cursor: pointer;
 }
 
+/* ---------------------------------------------------------- saved characters */
+
 /*
- * The Armory's work-in-progress stamp.
+ * The saved characters, behind Load character.
  *
- * Fixed rather than absolute so it stays over the middle of the window however far the page is
- * scrolled, and it disappears with the panel because a hidden panel draws none of its children.
- * `pointer-events: none` is what keeps it a stamp rather than a wall - every slot, button and
- * tooltip underneath still works.
+ * A row is the name over what the character is - "Level 80 Night Elf Hunter" - because two level
+ * eighties of the same name-length are indistinguishable by name alone, and the thing you actually
+ * remember about a saved build is its race and class.
  */
-.armory-wip {
-  position: fixed;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-weight: 800;
-  font-size: clamp(56px, 11vw, 190px);
-  letter-spacing: 12px;
-  white-space: nowrap;
-  text-transform: uppercase;
-
-  color: var(--accent);
-  opacity: 0.13;
-  transform: rotate(-16deg);
-
-  /* An outline as well as a fill, so it reads over both the dark panels and the pale ones. */
-  -webkit-text-stroke: 2px var(--accent);
+#character-picker {
+  width: min(520px, 94vw);
 }
 
-/*
- * The [WIP] beside the Armory tab. Gold from the variable, so it darkens with the light theme the
- * way the rest of the interface's gold does, and it keeps its color on the active tab too.
- */
-.wip-tag {
-  color: var(--accent);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  vertical-align: 1px;
+.character-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* The row and its delete button, so the button sits inside the row's frame rather than beside it. */
+.character-row-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.character-row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  text-align: left;
+}
+
+.character-row:hover {
+  border-color: var(--accent-dim);
+  background: var(--panel);
+}
+
+.character-row-name {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.character-row-what {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Quiet until the row is under the pointer: deleting is not what this list is for. */
+.character-row-drop {
+  flex: 0 0 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.35;
+}
+
+.character-row-wrap:hover .character-row-drop {
+  opacity: 1;
+}
+
+.character-row-drop:hover {
+  border-color: #b03a3a;
+  color: #ff6b6b;
 }

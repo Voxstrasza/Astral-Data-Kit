@@ -24,6 +24,11 @@ function defaultState()
         dmgMax: 0,
         speed: 0,
         armor: 0,
+
+        /* Armor over what the slot and the armor class already give: a cloak's, a ring's, the extra
+           on a tanking piece. It prints green rather than white, and that is the whole difference
+           between the two - the number is armor either way. */
+        armorBonus: false,
         block: 0,
         durability: 0,
         reqLevel: 80,
@@ -132,13 +137,49 @@ function defaultState()
         armoryGuildShow: false,
 
         /*
-         * Off by default: the sheet shows what the class is read for. On when you are checking
-         * something odd, which in a program about inventing items does happen.
+         * A title, and which side of the name it goes on. Off by default like the guild line.
+         *
+         * The title is written exactly as it should read, punctuation and all - a suffix carries
+         * its own leading comma (", First of the Ebon Blade"), a prefix does not ("Firelord") -
+         * because the titles the game hands out are not all one shape and guessing the separator
+         * would get the comma wrong on half of them.
          */
-        armoryAllStats: false,
+        armoryTitle: '',
+        armoryTitleShow: false,
+        armoryTitlePrefix: false,
+
+        /*
+         * Which frame the third stat column is showing.
+         *
+         * A switch rather than a filter by spec: a feral druid is a tank and a cat in the same
+         * build, so the sheet cannot pick one for them and should not try.
+         */
+        armoryStatFrame: 'melee',
 
         /* Talent id -> points in it. Empty until the calculator is opened. */
         armoryTalents: {},
+
+        /*
+         * Where each equipped piece comes from, by slot.
+         *
+         * On the character rather than on the item, deliberately: the same invented chest can be
+         * "Yogg-Saron 25 heroic" in one set and something else in another, and an item saved once
+         * has no business carrying one set's story. A slot with no key here has not been asked
+         * yet and gets filled in from the loot tables; a slot with an empty string was cleared on
+         * purpose and stays cleared.
+         */
+        armorySources: {},
+
+        /*
+         * What is equipped, by slot.
+         *
+         * Whole items rather than references, the same reason the sheet request sends them whole:
+         * half of what can be worn here is something you invented and has no entry to refer back
+         * to. It lives in state rather than in the panel so that a saved character keeps its gear
+         * - without it, saving one kept the race, the level and the talents and quietly dropped
+         * everything it was wearing.
+         */
+        armoryWorn: {},
 
         achIcon: 'achievement_boss_lichking',
         achTitle: '',
@@ -194,7 +235,7 @@ const CANVAS_KINDS = ['item', 'spell', 'unit', 'achievement', 'text'];
 const FIELDS_BY_KIND = {
     item: [
         'icon', 'name', 'quality', 'heroic', 'conjured', 'binding', 'unique', 'uniqueN',
-        'slot', 'itemType', 'hasWeapon', 'dmgMin', 'dmgMax', 'speed', 'armor', 'block',
+        'slot', 'itemType', 'hasWeapon', 'dmgMin', 'dmgMax', 'speed', 'armor', 'armorBonus', 'block',
         'durability', 'reqLevel', 'reqLevelShow', 'itemLevel', 'stats', 'resistances', 'sockets', 'socketBonus',
         'requires', 'effects', 'setName', 'setPieces', 'setRoster', 'setBonuses', 'flavor', 'madeBy',
         'sellGold', 'sellSilver', 'sellCopper'
@@ -215,9 +256,21 @@ const FIELDS_BY_KIND = {
     text: ['textLines'],
     armory: [
         'armoryRace', 'armoryClass', 'armoryLevel',
-        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats', 'armoryTalents'
+        'armoryName', 'armoryGuild', 'armoryGuildShow',
+        'armoryTitle', 'armoryTitleShow', 'armoryTitlePrefix',
+        'armoryStatFrame', 'armoryTalents',
+        'armorySources', 'armoryWorn'
     ]
 };
+
+/*
+ * A saved character keeps the Armory panel's own fields.
+ *
+ * The saved store calls it `character` to keep it apart from `armory`, which is a folder of single
+ * wearable pieces rather than of people. The field list is the same one either way, so it is
+ * pointed at rather than written twice and left to drift.
+ */
+FIELDS_BY_KIND.character = FIELDS_BY_KIND.armory;
 
 /**
  * The captured portrait as a PNG, or empty when there is none.
