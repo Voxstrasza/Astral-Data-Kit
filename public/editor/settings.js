@@ -72,7 +72,7 @@ async function refreshStatus()
                 : 'Connect your world database in Settings to search items by name or entry id.';
         }
         $('#npc-hint').textContent = info.db.connected
-            ? 'Search creatures by name or entry id. Picking one fills in name, level and classification.'
+            ? 'Load the target frame by searching the database for an NPC\'s name or EntryID, or browse NPCs by dungeon or raid encounter.'
             : 'Connect your world database in Settings to search creatures by name or entry id.';
 
         paintBadges(info.db);

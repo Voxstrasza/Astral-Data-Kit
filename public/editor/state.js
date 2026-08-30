@@ -24,6 +24,11 @@ function defaultState()
         dmgMax: 0,
         speed: 0,
         armor: 0,
+
+        /* Armor over what the slot and the armor class already give: a cloak's, a ring's, the extra
+           on a tanking piece. It prints green rather than white, and that is the whole difference
+           between the two - the number is armor either way. */
+        armorBonus: false,
         block: 0,
         durability: 0,
         reqLevel: 80,
@@ -216,7 +221,7 @@ const CANVAS_KINDS = ['item', 'spell', 'unit', 'achievement', 'text'];
 const FIELDS_BY_KIND = {
     item: [
         'icon', 'name', 'quality', 'heroic', 'conjured', 'binding', 'unique', 'uniqueN',
-        'slot', 'itemType', 'hasWeapon', 'dmgMin', 'dmgMax', 'speed', 'armor', 'block',
+        'slot', 'itemType', 'hasWeapon', 'dmgMin', 'dmgMax', 'speed', 'armor', 'armorBonus', 'block',
         'durability', 'reqLevel', 'reqLevelShow', 'itemLevel', 'stats', 'resistances', 'sockets', 'socketBonus',
         'requires', 'effects', 'setName', 'setPieces', 'setRoster', 'setBonuses', 'flavor', 'madeBy',
         'sellGold', 'sellSilver', 'sellCopper'

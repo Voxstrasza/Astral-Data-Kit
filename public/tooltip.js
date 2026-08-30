@@ -326,7 +326,10 @@ function buildItemLines(s)
 
     if (Number(s.armor) > 0)
     {
-        body(`${Number(s.armor)} Armor`);
+        /* The same line either way, green when it is bonus armor. The colour is the whole signal -
+           armor a cloak or a ring carries over what its slot already gives is still just armor, and
+           a sign in front of the number would be saying it twice. */
+        body(`${Number(s.armor)} Armor`, s.armorBonus ? C.green : C.white);
     }
 
     if (Number(s.block) > 0)
@@ -350,21 +353,65 @@ function buildItemLines(s)
         }
     }
 
-    for (const socket of s.sockets || [])
+    /*
+     * The enchant, in the game's own green, between the stats and the sockets.
+     *
+     * That position is the game's rather than a choice: an enchant reads as part of what the item
+     * gives you and sits with the stat lines, and the sockets are the block underneath.
+     */
+    if (s.enchant && (s.enchant.text || s.enchant.name))
+    {
+        body(s.enchant.text || s.enchant.name, C.green);
+    }
+
+    /*
+     * The sockets, each reading either its own empty label or the gem sitting in it.
+     *
+     * A filled socket is white and says what the gem does rather than what color the hole is,
+     * which is what the game shows once something is in there. A meta gem whose requirement is
+     * not met goes gray and says so on the next line: it is socketed and it is doing nothing.
+     */
+    (s.sockets || []).forEach((socket, index) =>
     {
         const def = SOCKETS[socket];
 
-        if (def)
+        if (!def)
+        {
+            return;
+        }
+
+        const gem = (s.gems || [])[index];
+
+        if (!gem)
         {
             push({ l: def.label, lc: C.socketEmpty, kind: 'socket', socket });
+            return;
         }
-    }
+
+        const lit = gem.active !== false;
+
+        push({
+            l: gem.text || gem.name,
+            lc: lit ? C.white : C.socketEmpty,
+            kind: 'socket',
+            socket,
+            gemIcon: gem.icon
+        });
+
+        if (!lit && gem.requiresText)
+        {
+            body(gem.requiresText, C.red);
+        }
+    });
 
     if (s.socketBonus)
     {
-        // Gray because an empty socket set means the bonus is not active, which is how a
-        // freshly-linked item looks in game.
-        body(`Socket Bonus: ${s.socketBonus}`, C.socketEmpty);
+        /*
+         * Green once it is earned and gray until then, which is the rule everyone knows and
+         * nobody writes down: every socket filled and every gem a color its socket takes. The
+         * panel works that out over the whole item and says so here.
+         */
+        body(`Socket Bonus: ${s.socketBonus}`, s.socketBonusMet ? C.green : C.socketEmpty);
     }
 
     if (Number(s.durability) > 0)

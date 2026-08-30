@@ -22,6 +22,7 @@ import { state, effectText } from './state.js';
 import { iconUrl } from './icons.js';
 import { M, R } from './wow.js';
 import { openTalents, talentSummary, clearTalents } from './talents.js';
+import { modifyArmoryEntry } from './saved.js';
 
 /*
  * The paper doll's own arrangement. Taking the model out is what lets the two columns sit beside
@@ -120,6 +121,12 @@ const STAT_WORDS = {
  * covers both the one and two-handed kind, and the first match is enough because every racial mask
  * that names a family names both.
  */
+/*
+ * Warrior, for Titan's Grip: the one class whose off hand takes a two-hander. Kept as a name
+ * because the number on its own reads as nothing at the call site.
+ */
+const WARRIOR = 1;
+
 const WEAPON_SUBCLASS = {
     'Axe': 0, 'Bow': 2, 'Gun': 3, 'Mace': 4, 'Polearm': 6, 'Sword': 7, 'Staff': 10,
     'Fist Weapon': 13, 'Dagger': 15, 'Thrown': 16, 'Crossbow': 18, 'Wand': 19
@@ -261,7 +268,37 @@ function hideHover()
  * lifted off the bottom of the window the same way, so a boots slot at the foot of the page does
  * not put its tooltip somewhere unreadable.
  */
-async function showHover(slotNode, item)
+/*
+ * What the sheet said about each slot's gems, kept from the last refresh.
+ *
+ * Whether a meta is lit is a question about the whole character, so it is answered once where the
+ * whole character is - in `equipped()` on the server - and read here rather than worked out again
+ * against a second copy of the rule.
+ */
+let gearState = {};
+
+/** The gem lines for one item's tooltip: what is in each socket and whether it is doing anything. */
+function gemContext(slot, item)
+{
+    const known = gearState[slot] || {};
+    const active = known.activeGems || [];
+
+    return {
+        gems: (item.gems || []).map((gem, index) => gem && { ...gem, active: active[index] !== false }),
+        socketBonusMet: !!known.socketBonusMet
+    };
+}
+
+/** Every gem icon on one item, loaded and keyed by name for the renderer. */
+async function gemImages(item)
+{
+    const names = (item.gems || []).filter(Boolean).map((gem) => gem.icon).filter(Boolean);
+    const loaded = await Promise.all(names.map((name) => iconImage(name)));
+
+    return Object.fromEntries(names.map((name, i) => [name, loaded[i]]).filter(([, img]) => img));
+}
+
+async function showHover(slotNode, item, slotName)
 {
     await ensureTooltipFont();
 
@@ -283,12 +320,24 @@ async function showHover(slotNode, item)
          * its named pieces they are. Without these it reads "0/5" with everything grey, which is
          * right for a piece in a bag and wrong for one being worn.
          */
-        ...setContext(item)
+        ...setContext(item),
+
+        /*
+         * And the same for the gems: whether a meta is lit depends on what is socketed elsewhere
+         * on the character, which one item cannot know. The sheet worked it out over the whole
+         * rack and sent it back, so this reads the answer rather than deriving it twice.
+         */
+        ...gemContext(slotName, item)
     };
+
+    /* The gems' icons, loaded before the draw. The renderer paints synchronously, so anything it
+       is going to draw has to already be in hand. */
+    const gemIcons = await gemImages(item);
 
     const canvas = R.renderTooltip(M.buildLines(prepared), {
         icon: await iconImage(item.icon),
         iconPlacement: 'outside',
+        gemIcons,
         maxWidth: 300,
         transparent: false,
         borderColor: M.qualityColor(item.quality)
@@ -336,18 +385,36 @@ function slotBox(name)
         label.style.color = M.qualityColor(item.quality);
     }
 
-    box.append(icon, label);
+    /*
+     * The name, with the enchant on a second line under it.
+     *
+     * Stacked in their own column rather than appended to the slot, because the slot is a row of
+     * icon and text and a third child would sit beside the name instead of under it.
+     *
+     * The enchantment's own line rather than the spell's, so a slot reads the same words its
+     * tooltip does - "Berserking", not "Enchant Weapon - Berserking".
+     */
+    const text = el('span', 'slot-text');
+
+    text.append(label);
+
+    if (item && item.enchant)
+    {
+        text.append(el('span', 'slot-enchant', item.enchant.text || item.enchant.name));
+    }
+
+    box.append(icon, text);
 
     box.addEventListener('click', () => openPicker(name));
 
     if (item)
     {
-        box.addEventListener('mouseenter', () => showHover(box, item));
+        box.addEventListener('mouseenter', () => showHover(box, item, name));
         box.addEventListener('mouseleave', hideHover);
     }
 
-    /* Right click empties it. A slot with no item in it has nothing to take out, so the menu is
-       only suppressed when there is something to do. */
+    /* Right click opens the menu that gems, enchants and empties it. A slot with nothing in it
+       has none of those to offer, so the browser's own menu is left alone there. */
     box.addEventListener('contextmenu', (e) =>
     {
         if (!worn.has(name))
@@ -356,15 +423,206 @@ function slotBox(name)
         }
 
         e.preventDefault();
-        worn.delete(name);
-        keepWorn();
-        forgetSource(name);
-        drawSlots();
-        refresh();
+        openSlotMenu(name, e.clientX, e.clientY);
     });
 
     return box;
 }
+
+/* ------------------------------------------------------------------- the slot menu */
+
+/*
+ * What right clicking a filled slot offers: its sockets, its enchant, and taking it off.
+ *
+ * The sockets are listed one row each rather than behind a single "add gems", because a socket is
+ * where a gem goes and which one you meant is the first thing the picker would have to ask
+ * anyway. Each row carries its own art and says what is in it, so the menu doubles as the readout
+ * of what this piece is socketed with.
+ */
+let menuNode = null;
+
+/*
+ * The three slots that take a socket you added yourself.
+ *
+ * Gloves and bracers get theirs from a blacksmith and a belt from an Eternal Belt Buckle. The
+ * Armory models no professions, so it offers the socket rather than the profession - but it
+ * offers it only where the game does, since a prismatic socket on a helm is not a thing.
+ */
+const BUCKLE_SLOTS = new Set(['Hands', 'Waist', 'Wrist']);
+
+/** Three is every socket an item can carry, added ones included. */
+const MAX_SOCKETS = 3;
+
+function menuHost()
+{
+    if (!menuNode)
+    {
+        menuNode = el('div', 'slot-menu');
+        menuNode.hidden = true;
+        document.body.append(menuNode);
+    }
+
+    return menuNode;
+}
+
+function hideMenu()
+{
+    menuHost().hidden = true;
+}
+
+/** One line of the menu: a label, an optional piece of art, and what it does. */
+function menuRow(label, onPick, { art, note, danger } = {})
+{
+    const row = el('button', danger ? 'slot-menu-row is-danger' : 'slot-menu-row');
+
+    row.type = 'button';
+
+    if (art)
+    {
+        const image = el('span', 'slot-menu-art');
+
+        image.style.backgroundImage = `url("${art}")`;
+        row.append(image);
+    }
+
+    row.append(el('span', 'slot-menu-label', label));
+
+    if (note)
+    {
+        row.append(el('span', 'slot-menu-note', note));
+    }
+
+    row.addEventListener('click', () =>
+    {
+        hideMenu();
+        onPick();
+    });
+
+    return row;
+}
+
+/** Takes the piece off, which is what right click used to do on its own. */
+function unequip(slot)
+{
+    worn.delete(slot);
+    keepWorn();
+    forgetSource(slot);
+    drawSlots();
+    drawRacials();
+    refresh();
+}
+
+/** Adds the socket a buckle or a blacksmith would, and remembers that it was added here. */
+function addPrismatic(slot)
+{
+    const item = worn.get(slot);
+
+    item.sockets = [...(item.sockets || []), 'prismatic'];
+    item.armoryPrismatic = true;
+
+    keepWorn();
+    refresh();
+}
+
+/** Takes it back out, and the gem that was in it with it. */
+function removePrismatic(slot)
+{
+    const item = worn.get(slot);
+    const index = (item.sockets || []).lastIndexOf('prismatic');
+
+    if (index < 0)
+    {
+        return;
+    }
+
+    item.sockets = item.sockets.filter((_, i) => i !== index);
+    item.gems = (item.gems || []).filter((_, i) => i !== index);
+    item.armoryPrismatic = false;
+
+    keepWorn();
+    refresh();
+}
+
+function openSlotMenu(slot, x, y)
+{
+    /* The tooltip is hanging off the slot that was just right clicked, and the menu opens on top
+       of where it is. One or the other, not both. */
+    hideHover();
+
+    const item = worn.get(slot);
+    const host = menuHost();
+    const rows = [];
+
+    rows.push(el('div', 'slot-menu-title', item.name));
+
+    /* A socket each, in the order the item carries them, so row two is socket two. */
+    (item.sockets || []).forEach((color, index) =>
+    {
+        const def = M.SOCKETS[color];
+        const gem = (item.gems || [])[index];
+
+        if (!def)
+        {
+            return;
+        }
+
+        rows.push(menuRow(gem ? gem.name : def.label, () => openGemPicker(slot, index), {
+            art: gem && gem.icon ? iconUrl(gem.icon) : `ui/${def.art}.png`,
+            note: gem ? 'change' : 'add gem'
+        }));
+    });
+
+    rows.push(menuRow(item.enchant ? item.enchant.name : 'Add enchant',
+        () => openEnchantPicker(slot),
+        { note: item.enchant ? 'change' : '' }));
+
+    /*
+     * The buckle, offered only where the game offers it and only while there is room. An item
+     * already carrying three sockets has nowhere to put a fourth, whatever slot it is in.
+     */
+    if (BUCKLE_SLOTS.has(slot))
+    {
+        if (item.armoryPrismatic)
+        {
+            rows.push(menuRow('Remove prismatic socket', () => removePrismatic(slot)));
+        }
+        else if ((item.sockets || []).length < MAX_SOCKETS)
+        {
+            rows.push(menuRow('Add prismatic socket', () => addPrismatic(slot),
+                { art: `ui/${M.SOCKETS.prismatic.art}.png` }));
+        }
+    }
+
+    rows.push(menuRow('Remove item', () => unequip(slot), { danger: true }));
+
+    host.replaceChildren(...rows);
+    host.hidden = false;
+
+    /* Opened at the pointer, pulled back inside the window where it would hang off an edge. */
+    const box = host.getBoundingClientRect();
+
+    host.style.left = `${Math.round(Math.min(x, window.innerWidth - box.width - 8))}px`;
+    host.style.top = `${Math.round(Math.min(y, window.innerHeight - box.height - 8))}px`;
+}
+
+/* Anywhere else, any key, or a scroll closes it - the three things that mean "not this menu". */
+document.addEventListener('pointerdown', (e) =>
+{
+    if (menuNode && !menuNode.hidden && !menuNode.contains(e.target))
+    {
+        hideMenu();
+    }
+});
+
+document.addEventListener('keydown', (e) =>
+{
+    if (e.key === 'Escape')
+    {
+        hideMenu();
+    }
+});
+
+window.addEventListener('scroll', hideMenu, true);
 
 /*
  * The last weapon slot's name, which is also the key it is worn under.
@@ -382,6 +640,32 @@ function rangedSlot()
 function weaponSlots()
 {
     return [...WEAPONS, rangedSlot()];
+}
+
+/*
+ * The order the Equipped table reads in.
+ *
+ * Down the character rather than in the order the slots happened to be filled: a list that reorders
+ * itself as you work cannot be scanned, and the row a piece is on should not depend on when it was
+ * put there. Armour from the head down, then the jewellery, then what is held, and the three that
+ * carry nothing - tabard and shirt - last, where they are out of the way of the gear being read.
+ *
+ * Not the rack's own order, which runs down two columns side by side and puts the shirt and tabard
+ * in the middle of the left one because that is where they fit. This is a single list and can be
+ * ordered by what it is for.
+ *
+ * The relic slot is asked for by name rather than written in, since it is a Libram or a Sigil or a
+ * Totem or an Idol depending on the class, and the word is the key it is worn under.
+ */
+function equippedOrder()
+{
+    return [
+        'Head', 'Neck', 'Shoulder', 'Back', 'Chest', 'Wrist',
+        'Hands', 'Waist', 'Legs', 'Feet',
+        'Finger 1', 'Finger 2', 'Trinket 1', 'Trinket 2',
+        'Main hand', 'Off hand', rangedSlot(),
+        'Tabard', 'Shirt'
+    ];
 }
 
 /*
@@ -417,7 +701,7 @@ function retuneRanged()
         }
 
         const item = worn.get(name);
-        const fits = ((setup && setup.slots && setup.slots[wanted]) || []).includes(item.slot);
+        const fits = slotAccepts(wanted).includes(item.slot);
 
         /* A piece keeps where it came from when it moves across; when it comes off, so does that. */
         const was = sourceMap()[name];
@@ -472,14 +756,23 @@ function equip(slot, item)
     worn.set(slot, item);
     keepWorn();
 
-    if (slot === 'Main hand' && item.slot === 'Two-Hand')
+    /*
+     * A two-hander fills both hands, and empties the other one when it goes in.
+     *
+     * Except on a warrior, who has Titan's Grip and can hold two of them. That is the whole of the
+     * exception: everyone else still loses the off hand to a two-hander, and a warrior still loses
+     * nothing to anything.
+     */
+    const titansGrip = state.armoryClass === WARRIOR;
+
+    if (!titansGrip && slot === 'Main hand' && item.slot === 'Two-Hand')
     {
         worn.delete('Off hand');
         keepWorn();
         forgetSource('Off hand');
     }
 
-    if (slot === 'Off hand')
+    if (!titansGrip && slot === 'Off hand')
     {
         const main = worn.get('Main hand');
 
@@ -536,24 +829,415 @@ function pickerStatus(text)
     $('#armory-picker-status').textContent = text;
 }
 
-/**
- * The saved side: everything in the saved store whose own slot fits the one being filled.
+
+/* ------------------------------------------------------- gems and enchants */
+
+/*
+ * The socket being gemmed and the slot being enchanted, while their dialogs are open.
  *
- * Nothing is stored twice for this. A saved item already carries the slot it was built for, so
+ * Two of them rather than one shared, because they are two dialogs and either can be opened from
+ * the same menu; a single variable would have the enchant picker writing into a socket index.
+ */
+let gemming = null;
+let enchanting = '';
+let gemTimer = 0;
+
+/*
+ * What item class and subclass an equipped piece is, for the enchants that name a weapon rather
+ * than a slot.
+ *
+ * The one and two handed kinds of axe, mace and sword share a label and are different subclasses,
+ * so the slot the piece goes in is what tells them apart - which is the same thing the tooltip's
+ * own weapon line does. `WEAPON_TYPES` in lib/items.js is this table read the other way.
+ */
+const TWO_HANDED_SUBCLASS = { 'Axe': 1, 'Mace': 5, 'Sword': 8 };
+
+/*
+ * The editor slot labels one Armory slot takes, with Titan's Grip folded in.
+ *
+ * `setup.slots` is the server's table and it is fetched once, before a class is chosen, so the
+ * one slot whose answer depends on the class is added here rather than there: a warrior's off
+ * hand takes a two-hander. The server applies the same rule to the database search by being told
+ * the class; this is the same rule for the saved pieces, which are filtered on this side.
+ */
+function slotAccepts(slot)
+{
+    const names = (setup && setup.slots && setup.slots[slot]) || [];
+
+    return slot === 'Off hand' && state.armoryClass === WARRIOR
+        ? [...names, 'Two-Hand']
+        : names;
+}
+
+function itemKind(item)
+{
+    if (!item)
+    {
+        return null;
+    }
+
+    if (item.itemType === 'Shield')
+    {
+        return { itemClass: 4, subclass: 6 };
+    }
+
+    const subclass = WEAPON_SUBCLASS[item.itemType];
+
+    if (subclass === undefined)
+    {
+        return null;
+    }
+
+    const twoHanded = item.slot === 'Two-Hand' && TWO_HANDED_SUBCLASS[item.itemType] !== undefined;
+
+    return { itemClass: 2, subclass: twoHanded ? TWO_HANDED_SUBCLASS[item.itemType] : subclass };
+}
+
+/** One gem or enchant row: an icon where there is one, the name, and what it does in green. */
+function extraRow({ icon, name, quality, note, detail, warn }, onPick)
+{
+    const row = el('button', 'npc-row item-row');
+
+    row.type = 'button';
+
+    if (icon)
+    {
+        const img = el('img', 'item-row-icon');
+
+        img.src = iconUrl(icon);
+        img.alt = '';
+        row.append(img);
+    }
+
+    const text = el('span', 'item-row-text');
+    const title = el('span', 'npc-name', name || '(no name)');
+
+    if (quality !== undefined)
+    {
+        title.style.color = M.qualityColor(quality);
+    }
+
+    text.append(title);
+
+    if (note)
+    {
+        text.append(el('span', 'extra-effect', note));
+    }
+
+    if (detail)
+    {
+        text.append(el('span', 'npc-meta', detail));
+    }
+
+    if (warn)
+    {
+        text.append(el('span', 'extra-requires', warn));
+    }
+
+    row.append(text);
+    row.addEventListener('click', onPick);
+
+    return row;
+}
+
+/** Puts a gem in a socket, or takes one out when handed nothing. */
+function setGem(slot, index, gem)
+{
+    const item = worn.get(slot);
+
+    if (!item)
+    {
+        return;
+    }
+
+    /* Kept as a sparse array beside `sockets`, so socket two being filled while one and three are
+       open stays true however the gems were put in. */
+    const gems = [...(item.gems || [])];
+
+    gems[index] = gem || null;
+    item.gems = gems;
+
+    keepWorn();
+    refresh();
+}
+
+async function showGems()
+{
+    const results = $('#gem-picker-results');
+    const query = $('#gem-picker-search').value.trim();
+    const socket = gemming ? gemming.color : '';
+
+    $('#gem-picker-status').textContent = 'searching...';
+
+    const answer = await api(
+        `/api/gem/search?socket=${encodeURIComponent(socket)}&q=${encodeURIComponent(query)}`);
+
+    if (answer.error)
+    {
+        $('#gem-picker-status').textContent = answer.error === 'not-connected'
+            ? 'No database configured, so there are no gems to list.'
+            : answer.error === 'no-client'
+                ? 'Point Astral at your client to read gems.'
+                : answer.error;
+        results.replaceChildren();
+        return;
+    }
+
+    $('#gem-picker-status').textContent = `${answer.results.length} found`;
+
+    if (!answer.results.length)
+    {
+        results.replaceChildren(el('p', 'hint', query
+            ? `No gems match "${query}".`
+            : 'No gems fit that socket.'));
+        return;
+    }
+
+    results.replaceChildren(...answer.results.map((gem) => extraRow({
+        icon: gem.icon,
+        name: gem.name,
+        quality: gem.quality,
+
+        /* What it is worth, which is the line people actually pick on. */
+        note: gem.text,
+        detail: [gem.color, gem.itemLevel ? `ilvl ${gem.itemLevel}` : ''].filter(Boolean).join(' · '),
+        warn: gem.requiresText
+    }, () =>
+    {
+        setGem(gemming.slot, gemming.index, gem);
+        $('#gem-picker').close();
+    })));
+}
+
+function openGemPicker(slot, index)
+{
+    const item = worn.get(slot);
+
+    if (!item)
+    {
+        return;
+    }
+
+    const color = (item.sockets || [])[index];
+    const def = M.SOCKETS[color];
+
+    gemming = { slot, index, color };
+
+    $('#gem-picker-title').textContent = `${def ? def.label : 'Socket'} - ${slot}`;
+    $('#gem-picker-search').value = '';
+    $('#gem-picker-status').textContent = '';
+
+    /* Only offered when there is something to remove. */
+    $('#gem-picker-clear').hidden = !(item.gems || [])[index];
+
+    $('#gem-picker').showModal();
+    showGems();
+    $('#gem-picker-search').focus();
+}
+
+/** Sets or clears the slot's enchant. */
+function setEnchant(slot, enchant)
+{
+    const item = worn.get(slot);
+
+    if (!item)
+    {
+        return;
+    }
+
+    if (enchant)
+    {
+        item.enchant = enchant;
+    }
+    else
+    {
+        delete item.enchant;
+    }
+
+    keepWorn();
+
+    /* The slot draws the enchant under the item name, so the row has to be rebuilt here.
+       `refresh()` only recomputes the stat sheet, which is why the line used to wait for the
+       next equip to appear. */
+    drawSlots();
+    refresh();
+}
+
+/*
+ * The whole slot's list, fetched once and filtered in the box.
+ *
+ * A slot has fifty or so and they all come from the client rather than a search, so there is
+ * nothing to go back to the server for as you type.
+ */
+let enchantList = [];
+
+function drawEnchants()
+{
+    const results = $('#enchant-picker-results');
+    const query = $('#enchant-picker-search').value.trim().toLowerCase();
+
+    const shown = query
+        ? enchantList.filter((one) =>
+            one.name.toLowerCase().includes(query) || one.text.toLowerCase().includes(query))
+        : enchantList;
+
+    $('#enchant-picker-status').textContent = query
+        ? `${shown.length} of ${enchantList.length}`
+        : `${enchantList.length} for this slot`;
+
+    if (!shown.length)
+    {
+        results.replaceChildren(el('p', 'hint', enchantList.length
+            ? `No enchants match "${query}".`
+            : 'The client lists no enchants for this slot.'));
+        return;
+    }
+
+    results.replaceChildren(...shown.map((one) => extraRow({
+        name: one.name,
+
+        /* The enchantment's own line, which is what the item's tooltip will read. A proc says its
+           name twice rather than a number, and that is the honest answer for one. */
+        note: one.text
+    }, () =>
+    {
+        setEnchant(enchanting, one);
+        $('#enchant-picker').close();
+    })));
+}
+
+async function openEnchantPicker(slot)
+{
+    const item = worn.get(slot);
+
+    if (!item)
+    {
+        return;
+    }
+
+    enchanting = slot;
+    enchantList = [];
+
+    $('#enchant-picker-title').textContent = `Enchant - ${slot}`;
+    $('#enchant-picker-search').value = '';
+    $('#enchant-picker-status').textContent = 'reading the client...';
+    $('#enchant-picker-results').replaceChildren();
+    $('#enchant-picker-clear').hidden = !item.enchant;
+    $('#enchant-picker').showModal();
+
+    /* What is in the slot goes with the question: a weapon enchant names the weapons it fits
+       rather than the hand, so Mongoose is offered for a sword and not for a wand. */
+    const kind = itemKind(item);
+    const kindQuery = kind ? `&itemClass=${kind.itemClass}&subclass=${kind.subclass}` : '';
+
+    const answer = await api(`/api/enchant/list?slot=${encodeURIComponent(slot)}`
+        + `&class=${state.armoryClass}${kindQuery}`);
+
+    if (answer.error)
+    {
+        $('#enchant-picker-status').textContent = answer.error === 'no-client'
+            ? 'Point Astral at your client to read enchants.'
+            : answer.error;
+        return;
+    }
+
+    enchantList = answer.results || [];
+    drawEnchants();
+    $('#enchant-picker-search').focus();
+}
+
+/**
+ * Modify and delete, for a piece of your own.
+ *
+ * Only the custom side gets these. A database row is the server's, and neither button has anything
+ * to say about it; a piece you invented is yours to correct or to throw away, and this picker is
+ * the only place it is ever listed, so it is the only place those can live.
+ *
+ * The whole row is wrapped rather than the buttons being put inside it, because the row *is* a
+ * button — equipping the piece — and a button inside a button is not a thing a browser will build.
+ */
+function customRow(entry, item)
+{
+    const row = el('div', 'picker-row');
+    const pick = pickerRow(item, () =>
+    {
+        equip(picking, item);
+        $('#armory-picker').close();
+    });
+
+    const modify = el('button', 'raid-mini', 'Modify');
+
+    modify.type = 'button';
+    modify.title = `Open ${item.name || 'this piece'} in the Item window to edit it`;
+    modify.addEventListener('click', (event) =>
+    {
+        event.stopPropagation();
+
+        $('#armory-picker').close();
+
+        /* The real tab button rather than a reach into state: switching windows reloads the icon
+           and redraws the preview, and that is all wired to the click. */
+        modifyArmoryEntry(entry);
+        $('.kind-switch button[data-kind="item"]').click();
+    });
+
+    /* Armed once before it fires, the way deleting a raid is. Losing an invented piece to a
+       mis-aimed click is not something a saved file can be talked back out of. */
+    const remove = el('button', 'raid-mini raid-delete', '×');
+
+    remove.type = 'button';
+    remove.title = `Delete ${item.name || 'this piece'}`;
+    remove.addEventListener('click', async (event) =>
+    {
+        event.stopPropagation();
+
+        if (remove.dataset.armed !== 'yes')
+        {
+            remove.dataset.armed = 'yes';
+            remove.textContent = 'Delete?';
+            remove.title = 'Press again to delete this piece for good';
+
+            setTimeout(() =>
+            {
+                remove.dataset.armed = '';
+                remove.textContent = '×';
+                remove.title = `Delete ${item.name || 'this piece'}`;
+            }, 4000);
+
+            return;
+        }
+
+        await postJson('/api/saved/delete', { kind: 'armory', id: entry.id });
+        showCustom();
+    });
+
+    row.append(pick, modify, remove);
+
+    return row;
+}
+
+/**
+ * The saved side: everything in the Armory's own store whose slot fits the one being filled.
+ *
+ * Its own store, not the saved-items list the Item window draws. That list is work waiting to be
+ * drawn as a sheet, and gear kept so a character can wear it was never going into a picture.
+ *
+ * Nothing is stored twice for this. A saved piece already carries the slot it was built for, so
  * the filter is read at open time and cannot go stale the way a folder chosen at save time would.
  */
 async function showCustom()
 {
-    const fits = (setup.slots && setup.slots[picking]) || [];
+    const fits = slotAccepts(picking);
     const query = $('#armory-picker-search').value.trim().toLowerCase();
     const results = $('#armory-picker-results');
 
     /* A saved entry is a wrapper - id, name, icon, then the window's own fields underneath. The
-       item is `fields`, and everything from the slot to the stat rows is in there. */
-    const answer = await api('/api/saved?kind=item');
+       item is `fields`, and everything from the slot to the stat rows is in there. The wrapper is
+       kept as well as the item, because Modify and delete both need the id off it. */
+    const answer = await api('/api/saved?kind=armory');
     const forSlot = (answer.saved || [])
-        .map((entry) => entry.fields || {})
-        .filter((item) => fits.includes(item.slot));
+        .map((entry) => ({ entry, item: entry.fields || {} }))
+        .filter(({ item }) => fits.includes(item.slot));
 
     /*
      * Searched like the database side, and listed unsearched when the box is empty. This store is
@@ -561,7 +1245,7 @@ async function showCustom()
      * has to be asked a question first.
      */
     const mine = query
-        ? forSlot.filter((item) => (item.name || '').toLowerCase().includes(query))
+        ? forSlot.filter(({ item }) => (item.name || '').toLowerCase().includes(query))
         : forSlot;
 
     pickerStatus(forSlot.length ? `${mine.length} of ${forSlot.length} saved` : '');
@@ -576,11 +1260,7 @@ async function showCustom()
         return;
     }
 
-    results.replaceChildren(...mine.map((item) => pickerRow(item, () =>
-    {
-        equip(picking, item);
-        $('#armory-picker').close();
-    })));
+    results.replaceChildren(...mine.map(({ entry, item }) => customRow(entry, item)));
 }
 
 /** The database side, filtered to what the slot takes so a boots search cannot answer with a helm. */
@@ -601,8 +1281,11 @@ async function showDatabase()
 
     pickerStatus('searching...');
 
+    /* The class goes with the slot, for the one slot whose answer depends on it: a warrior's off
+       hand takes two-handers. */
     const answer = await api(
-        `/api/item/search?q=${encodeURIComponent(query)}&slot=${encodeURIComponent(picking)}`);
+        `/api/item/search?q=${encodeURIComponent(query)}&slot=${encodeURIComponent(picking)}`
+        + `&class=${state.armoryClass}`);
 
     if (answer.error)
     {
@@ -765,6 +1448,76 @@ function drawRacials()
 
         return row;
     }));
+}
+
+/* ------------------------------------------------------------------- the socket tally */
+
+/*
+ * The order the colors are counted in, which is the order the game lists them in and the order
+ * `SOCKETS` in tooltip.js is written in. Prismatic is last because it is the one you added
+ * yourself rather than one the item came with.
+ */
+const SOCKET_ORDER = ['red', 'yellow', 'blue', 'meta', 'prismatic'];
+
+/*
+ * Every socket on everything worn, by color, less the ones that already hold a gem.
+ *
+ * Counted across the whole rack rather than per item, because what it is for is the question you
+ * ask before going shopping: how many red gems do I still need. `gems` is a sparse array beside
+ * `sockets`, so socket two being filled while one and three are open counts the way it looks.
+ */
+function emptySockets()
+{
+    const counts = new Map();
+
+    for (const item of worn.values())
+    {
+        const gems = item.gems || [];
+
+        (item.sockets || []).forEach((color, index) =>
+        {
+            if (!gems[index] && SOCKET_ORDER.includes(color))
+            {
+                counts.set(color, (counts.get(color) || 0) + 1);
+            }
+        });
+    }
+
+    return counts;
+}
+
+/** The box under the racials: one row per color that still has something open. */
+function drawSockets()
+{
+    const host = $('#armory-sockets');
+    const counts = emptySockets();
+    const rows = SOCKET_ORDER.filter((color) => counts.get(color));
+
+    if (!rows.length)
+    {
+        /* Two different nothings, and the box says which. Nothing worn has a socket at all is
+           not the same as every socket being full, and only one of them is an achievement. */
+        host.replaceChildren(el('p', 'hint',
+            worn.size ? 'No empty sockets.' : 'Nothing worn has a socket.'));
+        return;
+    }
+
+    const tally = el('div', 'socket-tally');
+
+    tally.append(...rows.map((color) =>
+    {
+        const row = el('div', 'socket-tally-row');
+        const art = el('span', 'socket-tally-art');
+
+        art.style.backgroundImage = `url("ui/${M.SOCKETS[color].art}.png")`;
+        art.title = M.SOCKETS[color].label;
+
+        row.append(art, el('span', 'socket-tally-count', `x ${counts.get(color)}`));
+
+        return row;
+    }));
+
+    host.replaceChildren(tally);
 }
 
 /** Whether a weapon condition is met by what is in the weapon slots right now. */
@@ -1007,8 +1760,12 @@ async function refresh()
     $('#armory-resist-grid').replaceChildren(
         ...lines.filter((entry) => entry.tag === 'resist').map((entry) => cell(entry, sheet)));
 
+    /* What the sheet worked out about each slot's gems, for the tooltips to read. */
+    gearState = sheet.gear || {};
+
     drawEquipped();
     drawSets();
+    drawSockets();
 
     /* The line under the sheet is for what went wrong, and nothing did. */
     $('#armory-stat-note').textContent = '';
@@ -1083,6 +1840,51 @@ function wornSets()
     return [...sets.values()];
 }
 
+/** A name reduced to its letters and numbers, so punctuation and case stop mattering. */
+function plainName(value)
+{
+    return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/**
+ * Does a worn piece answer for a roster line?
+ *
+ * Either name containing the other, which is the shape the game's own upgrades take: Sanctified
+ * Ymirjar Lord's Helmet over Ymirjar Lord's Helmet, and the same trick anyone inventing a tier
+ * plays - a Consecrated Ebon Vindicator's Helmet belongs on the Ebon Vindicator's Helmet row.
+ *
+ * Both directions, because the roster is as likely to hold the longer name as the shorter one. It
+ * is a containment rather than a word-by-word comparison so that the slot word carries it: Helm
+ * and Helmet agree, and nothing in a set's own roster is close enough for that to reach the wrong
+ * row.
+ */
+function namesAgree(a, b)
+{
+    return Boolean(a && b) && (a.includes(b) || b.includes(a));
+}
+
+/**
+ * The worn piece that answers for one roster name, removed from the pool so it cannot answer twice.
+ *
+ * Exact first, then containment, longest before shortest. Without the ordering a Helm on the roster
+ * could claim the Helmet that the Helmet row wanted, purely by being listed above it.
+ */
+function claimFor(pool, name)
+{
+    const wanted = plainName(name);
+    const exact = pool.findIndex((one) => plainName(one) === wanted);
+
+    const at = exact !== -1
+        ? exact
+        : pool
+            .map((one, index) => ({ index, length: plainName(one).length }))
+            .filter(({ index }) => namesAgree(plainName(pool[index]), wanted))
+            .sort((x, y) => y.length - x.length)
+            .map(({ index }) => index)[0];
+
+    return at === undefined || at === -1 ? null : pool.splice(at, 1)[0];
+}
+
 /**
  * One set's roster as it should read, with each row lit or not.
  *
@@ -1090,15 +1892,24 @@ function wornSets()
  * put a Sanctified Ymirjar Lord's Helmet on and the Ymirjar Lord's Helmet row becomes the
  * sanctified name. The slot is what joins them - the roster names the un-sanctified piece and the
  * heroic variants are in the set without being in its list, so names never match and slots always
- * do. A custom set has no slots on its roster, so there it falls back to names.
+ * do. A custom set has no slots on its roster, so there it goes by name instead, and the names it
+ * is given are rarely the names on the roster: an invented tier is written the way the real ones
+ * are, with a word on the front of the upgraded piece. So the rows are claimed by agreement rather
+ * than by equality, one piece to one row.
  */
 function rosterFor(set)
 {
     if (!set.roster.length)
     {
         const names = set.pieces.length ? set.pieces : set.worn;
+        const pool = [...set.worn];
 
-        return names.map((name) => ({ name, on: set.worn.includes(name) }));
+        return names.map((name) =>
+        {
+            const claimed = claimFor(pool, name);
+
+            return { name: claimed || name, on: Boolean(claimed) };
+        });
     }
 
     const mine = [...worn.values()].filter((item) => (item.setName || '').trim() === set.name);
@@ -1215,27 +2026,126 @@ function forgetSource(slot)
 }
 
 /*
- * Where this piece comes from, as a field rather than a readout.
+ * Where this piece comes from: a line to read, with the field kept out of the way until it is
+ * wanted.
  *
  * A real item arrives with it filled in by the loot walk. An invented one arrives empty, because a
  * piece you made up has an intended source and nothing else in the program knows it. Typing over an
  * autofilled line is the point of the thing rather than something to refuse.
+ *
+ * So a source that has something to say reads as a line of text, the same as the ones the walk
+ * answered — a boss's name in a text box, with a box around it, announces that it is a form when
+ * what it is is an answer. Modify puts the field back. Enter takes it away again, which is the
+ * gesture people already make when they have finished typing into something.
+ *
+ * The two halves are swapped inside this cell rather than by redrawing the table. drawEquipped()
+ * rebuilds every row and starts the loot walk over, which on Enter would throw away the focus and
+ * blink the whole list for the sake of one cell.
  */
 function sourceCell(slot)
 {
     const cell = el('td', 'source-cell');
-    const box = el('input', 'source-input');
 
-    box.type = 'text';
-    box.value = sourceMap()[slot] || '';
-    box.placeholder = 'Where it comes from';
+    /*
+     * The open field's listeners, dropped the moment it is finished with.
+     *
+     * Enter has to take the field away, and taking away the focused element makes the browser fire
+     * blur on the way out — which ran the collapse a second time, inside the first one, and threw
+     * when the outer replaceChildren went looking for a child that the inner one had already
+     * removed. Checking whether the node is still connected does not help: blur arrives while it
+     * still is. Ending the session is the honest version of what is meant, so the handlers of a
+     * field that is going away simply stop existing.
+     */
+    let session = null;
 
-    box.addEventListener('input', () =>
+    const show = () =>
     {
-        sourceMap()[slot] = box.value;
-    });
+        if (session)
+        {
+            session.abort();
+            session = null;
+        }
 
-    cell.append(box);
+        const value = sourceMap()[slot] || '';
+
+        /* Nothing to read yet, so there is nothing to collapse into: an empty source goes straight
+           to the field, which is also what a piece you invented needs on the way in. */
+        if (!value)
+        {
+            edit();
+            return;
+        }
+
+        /* A wrapper rather than laying the cell out directly: a <td> told to be a flex container
+           stops being a table cell, and the column widths go with it. */
+        const wrap = el('div', 'source-row');
+        const line = el('span', 'source-line', value);
+        const modify = el('button', 'source-modify', 'Modify');
+
+        modify.type = 'button';
+        modify.title = 'Change where this piece comes from';
+        modify.addEventListener('click', () => edit(true));
+
+        wrap.append(line, modify);
+        cell.replaceChildren(wrap);
+    };
+
+    const edit = (focus) =>
+    {
+        const box = el('input', 'source-input');
+        const before = sourceMap()[slot] || '';
+
+        session = new AbortController();
+
+        const until = { signal: session.signal };
+
+        box.type = 'text';
+        box.value = before;
+        box.placeholder = 'Where it comes from';
+
+        box.addEventListener('input', () =>
+        {
+            sourceMap()[slot] = box.value;
+        }, until);
+
+        box.addEventListener('keydown', (event) =>
+        {
+            if (event.key === 'Enter')
+            {
+                /* The table sits in the page's form, and a bare Enter in a text input submits it. */
+                event.preventDefault();
+                show();
+            }
+
+            /* Escape is the way out of a change you did not mean to start. */
+            if (event.key === 'Escape')
+            {
+                event.preventDefault();
+                sourceMap()[slot] = before;
+                show();
+            }
+        }, until);
+
+        /* Clicking away is finishing too. Left open, the field is exactly the clutter collapsing
+           it was meant to clear — and an empty one has nothing to collapse into, so it stays. */
+        box.addEventListener('blur', () =>
+        {
+            if (sourceMap()[slot])
+            {
+                show();
+            }
+        }, until);
+
+        cell.replaceChildren(box);
+
+        if (focus)
+        {
+            box.focus();
+            box.select();
+        }
+    };
+
+    show();
 
     return cell;
 }
@@ -1289,7 +2199,20 @@ async function fillSources()
 
 function drawEquipped()
 {
-    const rows = [...worn.entries()];
+    const order = equippedOrder();
+
+    /* A slot the order does not name goes to the end rather than to the front, which is where a
+       -1 from indexOf would have put it. That is the relic a class change has not retuned yet:
+       still worn, still worth showing, just not anywhere the list has an opinion about. Sorting is
+       stable, so any of those keep the order they went on in. */
+    const rank = (slot) =>
+    {
+        const at = order.indexOf(slot);
+
+        return at === -1 ? order.length : at;
+    };
+
+    const rows = [...worn.entries()].sort(([a], [b]) => rank(a) - rank(b));
 
     if (!rows.length)
     {
@@ -1310,9 +2233,17 @@ function drawEquipped()
 
         label.style.color = M.qualityColor(item.quality);
 
-        /* The entry moves in beside the name now that the fourth column is the source field. A
-           piece with no entry is one you invented, which is worth saying in the same place. */
-        name.append(label, el('span', 'hint', item.entry ? ` #${item.entry}` : ' custom'));
+        /* The entry moves in beside the name now that the fourth column is the source field.
+           A piece with no entry says nothing: "custom" was a label on the only rows that had no
+           number to show, and next to a name you typed yourself it was never news. */
+        if (item.entry)
+        {
+            name.append(label, el('span', 'hint', ` #${item.entry}`));
+        }
+        else
+        {
+            name.append(label);
+        }
 
         line.append(
             name,
@@ -1339,6 +2270,7 @@ async function initArmory()
     drawSlots();
     drawEquipped();
     drawSets();
+    drawSockets();
 
     try
     {
@@ -1386,6 +2318,28 @@ async function initArmory()
     {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(showSource, 250);
+    });
+
+    /* The gem search goes to the database, so it is debounced the same way. */
+    $('#gem-picker-search').addEventListener('input', () =>
+    {
+        clearTimeout(gemTimer);
+        gemTimer = setTimeout(showGems, 250);
+    });
+
+    $('#gem-picker-clear').addEventListener('click', () =>
+    {
+        setGem(gemming.slot, gemming.index, null);
+        $('#gem-picker').close();
+    });
+
+    /* The enchant list is already in hand, so its box filters rather than searches. */
+    $('#enchant-picker-search').addEventListener('input', drawEnchants);
+
+    $('#enchant-picker-clear').addEventListener('click', () =>
+    {
+        setEnchant(enchanting, null);
+        $('#enchant-picker').close();
     });
 
     $('#armory-race').addEventListener('change', (e) =>

@@ -358,12 +358,40 @@ function customStatus(message)
 }
 
 /**
- * Reads a chosen PNG and hands it to the server.
+ * Redraws an already-decoded image at the icon size, as a PNG data URL.
  *
- * The dimensions are checked here rather than server-side because this is where an <img> decodes
- * it for free, and a warning is more useful attached to the file you just picked than to a list
- * afterwards. Off-size art is still accepted — the game scales icons — but 64x64 is what the
- * client ships and what stays sharp.
+ * Straight to 64x64 rather than fitted inside it: icon art is square, and the one case where it is
+ * not — a sprite sheet or a screenshot picked by mistake — is better off looking obviously squashed
+ * than quietly letterboxed into something that passes for an icon.
+ *
+ * Smoothing is asked for explicitly. Most of these are downscales from 128 or 256, where the
+ * browser's default nearest-ish path leaves the edges crawling.
+ */
+function redrawAtIconSize(image, size)
+{
+    const canvas = document.createElement('canvas');
+
+    canvas.width = size;
+    canvas.height = size;
+
+    const ctx = canvas.getContext('2d');
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(image, 0, 0, size, size);
+
+    return canvas.toDataURL('image/png');
+}
+
+/**
+ * Reads a chosen icon and hands it to the server, at 64x64.
+ *
+ * The resize happens here rather than server-side because this is where the browser decodes the
+ * file for free — there is no PNG decoder in lib/, only an encoder, and adding one to scale a
+ * picture the window has already got in memory would be work for its own sake.
+ *
+ * A file the browser cannot decode goes up untouched and is dealt with on the other side: that is
+ * TGA, which no browser reads and which lib/custom-icons.js already converts. It resizes there.
  */
 async function uploadFiles(files)
 {
@@ -377,12 +405,12 @@ async function uploadFiles(files)
     }
 
     const native = runtime.iconNativeSize || 64;
-    const odd = [];
+    const resized = [];
     let saved = 0;
 
     for (const file of files)
     {
-        const dataUrl = await new Promise((resolve) =>
+        let dataUrl = await new Promise((resolve) =>
         {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result);
@@ -395,17 +423,18 @@ async function uploadFiles(files)
             continue;
         }
 
-        const size = await new Promise((resolve) =>
+        const decoded = await new Promise((resolve) =>
         {
             const probe = new Image();
-            probe.onload = () => resolve({ w: probe.naturalWidth, h: probe.naturalHeight });
+            probe.onload = () => resolve(probe);
             probe.onerror = () => resolve(null);
             probe.src = dataUrl;
         });
 
-        if (size && (size.w !== native || size.h !== native))
+        if (decoded && (decoded.naturalWidth !== native || decoded.naturalHeight !== native))
         {
-            odd.push(`${file.name} is ${size.w}x${size.h}`);
+            resized.push(`${file.name} was ${decoded.naturalWidth}x${decoded.naturalHeight}`);
+            dataUrl = redrawAtIconSize(decoded, native);
         }
 
         const result = await postJson('api/custom/upload', {
@@ -427,11 +456,13 @@ async function uploadFiles(files)
     await loadCustomIcons();
     renderIconGrid($('#icon-search').value);
 
-    const warning = odd.length
-        ? ` In-game icons are ${native}x${native} - ${odd.join(', ')}.`
+    /* Said rather than warned about. The file is already the right size by the time this reads,
+       so the only thing left worth knowing is which ones were not and what they were. */
+    const note = resized.length
+        ? ` Scaled to ${native}x${native}: ${resized.join(', ')}.`
         : '';
 
-    customStatus(`${saved} icon${saved === 1 ? '' : 's'} added.${warning}`);
+    customStatus(`${saved} icon${saved === 1 ? '' : 's'} added.${note}`);
 }
 
 /**

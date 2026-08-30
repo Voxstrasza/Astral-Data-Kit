@@ -673,37 +673,74 @@ the tab of each talent id is all it needs.
 ---
 ## Phase 7 - gems, enchants and socket bonuses
 
-A sketch rather than a plan. Worth expanding before anything is built, but worth writing down now
-because it is the last thing standing between the sheet and a real character: a geared piece in
-Wrath is its base stats plus three gems plus an enchant plus a socket bonus, and today the Armory
-reads the first of those four.
+**Built on 2026-08-29.** A geared piece in Wrath is its base stats plus its gems plus an enchant
+plus a socket bonus, and the Armory now reads all four. Every layout below was read out of a real
+client on the day rather than taken from a wiki, and the numbers were driven through the running
+app rather than judged by eye.
 
-- [ ] **Gems go in sockets.** An item already carries its `sockets` and its `socketBonus` - both are
-      editor fields and both draw on the tooltip - so the sockets are there to be filled and nothing
-      new is stored on the item. What is missing is a picker for what goes in one.
-- [ ] **Light the socket bonus up when it is met**, which is the rule everyone knows and nobody
-      writes down: every socket filled, and every gem the colour its socket takes. A gem counts for
-      its own colour and for the two mixed colours it belongs to, which is what makes an orange gem
-      satisfy a red socket and a yellow one.
-- [ ] **All of it has to reach the stat sheet.** Gems, the enchant and the socket bonus are three
-      more sources of the same stats `equipped()` already sums, so they land in the same shape and
-      go through the same door. Order matters the way it always does here: they are flat gear
-      stats, so they join before the percentage auras rather than after.
-- [ ] **Enchants are their own question** and probably the harder half: an enchant is a
-      `SpellItemEnchantment` row whose effects are stat modifiers, and which enchants a slot can
-      take is not something the client says plainly.
+- [x] **Gems go in sockets.** Right clicking a filled slot opens a menu listing that item's sockets
+      one row each, with its art and what is in it. A row opens a picker filtered to the colors
+      that socket takes. Database gems only, which was the open question: `item_template.class = 3`
+      with a `GemProperties` id, joined to the client for the color and the numbers.
+- [x] **Light the socket bonus up when it is met.** Every socket filled, and every gem a color its
+      socket takes. A gem's color is a *mask*, which is the whole of the rule - an orange gem is
+      red and yellow at once, so the test is that the two masks overlap. Counted in the client:
+      53 meta, 94 red, 77 yellow, 138 orange, 47 blue, 91 purple, 116 green and 10 prismatic, so
+      the mixed colors are more than half of every gem there is.
+- [x] **Meta gems light up too**, which the sketch never mentioned.
+      `SpellItemEnchantmentCondition.dbc` is what decides it: 49 rows, byte packed at 64 bytes a
+      record where the header claims 31 fields, which is why `Dbc` refuses it and it is read by
+      hand. Field 34 of the enchantment row points at it. Relentless Earthsiege Diamond comes back
+      as one red, one yellow and one blue - and a single Nightmare Tear lights it, because at mask
+      14 it counts once toward each of the three. Counted across the whole character, not per item.
+- [x] **All of it reaches the stat sheet**, through `extrasOf` in `equipped()`, as flat gear stats
+      before the percentage auras.
+- [x] **Enchants**, derived rather than listed. The client never says "these go on gloves"; what it
+      says is that a spell has effect 53 and carries a mask of the inventory types it may go on, so
+      a slot's list is every such spell whose mask overlaps `slotTypes`. 601 spells enchant an item;
+      430 name inventory types and the other 171 name an item class and subclass mask instead,
+      which is how every *weapon* enchant is written - reading only the first kind lost all of them,
+      which is how it was noticed. Blizzard's own `QAEnchant` test rows are dropped.
+- [x] **A prismatic socket** on gloves, belt and bracers, which is where the game puts one. Offered
+      only on those three and only while the item has fewer than three sockets.
 
-**The data is already present and parsing**, which is why this is an addition rather than a
-rewrite. `GemProperties.dbc` is 626 rows; `SpellItemEnchantment.dbc` is already read in
-`lib/items.js` for the socket bonus *name* on a tooltip, so the reader exists and only what it
-pulls out of a row has to grow.
+**Two things neither source alone gets right**, both measured rather than assumed:
 
-**Not settled, and worth settling first:** whether a gem is picked from the database, invented the
-way an item is, or both - which is the same question the slot picker answered for items, and the
-same answer will probably do.
+- A socket bonus read off its enchantment row misses the handful written as an equip spell -
+  "+6 Block Value" carries a spell id and no number - and read off its text misses the ones whose
+  wording drifted, like "+12 mana every 5 sec." beside "+2 mana per 5 sec.". So the row goes first
+  and the sentence is the fallback. Of the 158 socket bonuses in use, the two readings agree on 148.
+- A gem's numbers are not always in its row either. A Nightmare Tear's "+10 All Stats" is an equip
+  spell, and the spell is the same shape a racial is - so it goes through `auraStats` in
+  `lib/auras.js`, the same door racials and talents use. A proc comes back empty from there, which
+  is the honest answer for Mongoose on a stat sheet.
+
+### Still open on this phase
+
+- [ ] **Nothing here has been checked against the game**, same as the rest of the Armory. The
+      arithmetic was driven through the running app and agrees with itself; that is not the same as
+      agreeing with a character. This belongs in the same in-game session as the naked sweep.
+- [ ] **The split pre-3.0 ratings.** `ITEM_MOD` 16-18, 19-21 and 28-30 are melee/ranged/spell hit,
+      crit and haste from before 3.0 merged them. The enchant reader maps them onto the merged
+      `hit`, `crit` and `haste` so an old socket bonus is not silently worth nothing, which
+      slightly overstates a melee-only line as all three schools. `budgetStats` still ignores them
+      entirely, so an *item* carrying stat_type 19 reads as nothing on the sheet - that one is a
+      real gap and predates this work.
+- [ ] **Lightweave Embroidery reads +1 spirit.** Its enchantment row carries a one-point stat
+      effect beside the proc. Worth a look at whether the row means it.
+- [ ] **A gem you invented.** Database gems only, as decided. Inventing one is the same question
+      the slot picker answered for items and the same answer would probably do.
+
+### Built alongside it, and not really part of the phase
+
+- [x] **Titan's Grip.** A warrior's off hand takes a two-hander: the slot offers them, the search
+      finds them, and putting one in either hand no longer empties the other. Gated on the class
+      rather than on the talent deliberately - an empty off hand list on a warrior who has not
+      spent the points yet reads as broken, where an offered two-hander is only ever a build you
+      have not finished. It is the one slot whose answer depends on who is wearing it, which is
+      why `slotTypes` grew a class argument and the panel has `slotAccepts` beside it.
 
 ---
-
 
 ## Verifying it
 

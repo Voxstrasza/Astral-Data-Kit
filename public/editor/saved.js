@@ -78,6 +78,37 @@ const cache = new Map();
 /** The entry the window is currently editing, so saving again corrects it rather than copying it. */
 const editing = new Map();
 
+/**
+ * The Armory piece a save would land on: the one already under this name, if there is one.
+ *
+ * There is deliberately no remembered id here. Holding on to the last piece saved meant the button
+ * quietly became an overwrite: build a helm, save it, build a ring in the same window, press again
+ * and the ring was written over the helm. Nothing on screen said so, and the helm was gone.
+ *
+ * The name is the identity instead, which is what the Armory already sorts and searches by, and
+ * what is in front of you while you press the button. A ring is not called what the helm was
+ * called, so it cannot land on it; the same piece saved twice corrects itself rather than
+ * collecting duplicates; and renaming a piece and saving makes the new piece the name says it is.
+ */
+async function armoryEntryNamed(name)
+{
+    const wanted = name.trim().toLowerCase();
+
+    try
+    {
+        const answer = await api('api/saved?kind=armory');
+
+        return (answer.saved || []).find((one) => (one.name || '').trim().toLowerCase() === wanted)
+            || null;
+    }
+    catch
+    {
+        /* Unreadable store: save as new rather than refuse. A duplicate can be deleted; a piece
+           that would not save is work lost. */
+        return null;
+    }
+}
+
 async function refresh(kind)
 {
     try
@@ -112,6 +143,36 @@ function load(kind, entry)
     render(kind);
 
     status(`Loaded ${entry.name}`);
+}
+
+/**
+ * Opens an Armory piece in the Item window, sent over by Modify in the gear picker.
+ *
+ * The reverse of Save for Armory. Nothing is remembered about where it came from: Save for Armory
+ * finds it again by its name, so putting it back is the same act as saving it in the first place,
+ * and leaving the name alone is what keeps it one piece. Renaming it and saving makes a second
+ * piece under the new name, which is the honest reading of having renamed it.
+ *
+ * The saved-items list is deliberately left out of it — this piece is not in that store, and
+ * pressing Save this item would be a different act entirely, so the entry that list was editing is
+ * dropped rather than silently inherited by a piece from somewhere else.
+ */
+function modifyArmoryEntry(entry)
+{
+    for (const [field, value] of Object.entries(entry.fields || {}))
+    {
+        state[field] = value;
+    }
+
+    editing.delete('item');
+
+    syncForm();
+    renderLists();
+    setIcon(state.icon || '');
+    update();
+    render('item');
+
+    status(`Editing ${entry.name} from the Armory - Save for Armory puts it back.`);
 }
 
 async function saveCurrent(kind)
@@ -158,14 +219,42 @@ async function saveCurrent(kind)
  * into another window would be deciding for you that this piece is the one you want on right now,
  * which is rarely true while a set is being built.
  *
- * The store is the ordinary saved-items folder rather than a second one per slot. A saved item
- * already carries the slot it was built for, so the picker finds it by reading that; a per-slot
- * folder would only add a second place for the same item to live, chosen when it was saved and
- * wrong the moment its slot is edited.
+ * The store is the Armory's own folder, not the saved-items list this panel draws underneath. That
+ * list is the one you tick and build a sheet from; a piece kept so a character can wear it is not
+ * work waiting to be drawn, and putting it there padded the count with things nobody was going to
+ * export. Deleting it lives with the Armory picker now, beside the piece it removes.
+ *
+ * One store rather than one per slot, though. A saved piece already carries the slot it was built
+ * for, so the picker filters on that and cannot go stale; a per-slot folder would be chosen at save
+ * time and wrong the moment the slot is edited.
  */
 async function saveForArmory()
 {
-    const entry = await saveCurrent('item');
+    const fields = fieldsOf('item');
+    const name = (fields.name || '').trim();
+
+    if (!name)
+    {
+        status('Give it a name first - the Armory finds a piece by its name.');
+        return;
+    }
+
+    /* Only a piece already going by this name is corrected. Anything else is a new piece. */
+    const already = await armoryEntryNamed(name);
+    let entry = null;
+
+    try
+    {
+        const result = await postJson('api/saved/save',
+            { kind: 'armory', id: already ? already.id : '', fields });
+
+        entry = result.entry;
+    }
+    catch (err)
+    {
+        status(`Could not save: ${err.message}`);
+        return;
+    }
 
     if (!entry)
     {
@@ -185,7 +274,7 @@ async function saveForArmory()
         ? `under Custom gear in the ${item.slot} slot`
         : 'under Custom gear, though with no slot set nothing will offer it';
 
-    status(`Saved ${entry.name} ${where}.`
+    status(`${already ? 'Updated' : 'Saved'} ${entry.name} ${where}.`
         + (written
             ? ` ${written} hand-written line${written === 1 ? '' : 's'} will not be read`
                 + ' - only the preset ones move the sheet.'
@@ -262,9 +351,10 @@ function render(kind)
     if (kind === 'item')
     {
         const armory = button('Save for Armory', 'add', saveForArmory,
-            'Saves this item where the Armory can find it, under the slot it is built for. Only'
-            + ' the preset stat lines are read - a stat written as its own sentence will not move'
-            + ' the sheet.');
+            'Saves this item where the Armory can find it, under the slot it is built for. A piece'
+            + ' already saved under this name is corrected; any other name is a new piece. Only the'
+            + ' preset stat lines are read - a stat written as its own sentence will not move the'
+            + ' sheet.');
 
         armory.classList.add('to-armory');
         bar.appendChild(armory);
@@ -402,4 +492,4 @@ function refreshSaved(kind)
     }
 }
 
-export { bindSaved, refreshSaved };
+export { bindSaved, refreshSaved, modifyArmoryEntry };
