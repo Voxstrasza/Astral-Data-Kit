@@ -14,7 +14,7 @@
       try {
         var saved = localStorage.getItem('astral-theme');
         document.documentElement.dataset.theme =
-          ['light', 'dark', 'midnight'].indexOf(saved) === -1 ? 'dark' : saved;
+          ['dark', 'midnight'].indexOf(saved) === -1 ? 'dark' : saved;
       } catch (err) {
         document.documentElement.dataset.theme = 'dark';
       }
@@ -96,15 +96,15 @@
           <fieldset>
             <legend>Initialization</legend>
             <p class="hint">
-              Open <strong>Settings</strong> and point at your 3.3.5a folder - the one
-              containing <code>Data\</code>. Indexing takes a moment the first time and is cached
-              afterwards. That one step turns on the real icons, the real fonts, the client's spell
-              and achievement tables, and the dungeon browser.
+              Open <strong>Settings</strong> and point Astral to your 3.3.5a <code>/Data</code>
+              folder. Indexing takes a few moments for first-time setup and is cached afterwards.
+              Icons, fonts, spell, achievement and dungeon browser data are all pulled from the
+              client.
             </p>
             <p class="hint">
-              Connecting a <strong>world database</strong> in the same dialog is optional and adds
-              the finders: creature search, item search, a boss's real drop list, and the health
-              and mana pools behind the dungeon browser. Everything else works without it.
+              Connecting an <strong>AzerothCore</strong> or <strong>TrinityCore</strong> world
+              database is optional, however it adds finders: creature search, item search, drop
+              lists from bosses, health and mana pools from the dungeon &amp; raid browser.
             </p>
           </fieldset>
 
@@ -231,7 +231,8 @@
         <div data-panel="armory" hidden>
           <!-- Said once, up here, rather than on every slot: a title on a slot is a second tooltip
                that opens on top of the item's own one. -->
-          <p class="hint armory-how">Click a slot to add an item. Right click to remove.</p>
+          <p class="hint armory-how">Click a slot to add an item. Right click for gems, enchants
+            and to remove.</p>
 
           <div class="armory-top">
             <div class="armory-top-group">
@@ -246,10 +247,21 @@
           </div>
 
           <div class="armory-body">
-            <fieldset class="armory-racials">
-              <legend>Racials</legend>
-              <div id="armory-racials"></div>
-            </fieldset>
+            <!-- The left column is two boxes stacked, not two cells of the grid: the doll is
+                 taller than either of them, so a second grid row would put the sockets under it
+                 rather than under the racials. -->
+            <div class="armory-left">
+              <fieldset class="armory-racials">
+                <legend>Racials</legend>
+                <div id="armory-racials"></div>
+              </fieldset>
+
+              <!-- What is still open across everything worn, counted by color. -->
+              <fieldset class="armory-sockets">
+                <legend>Sockets</legend>
+                <div id="armory-sockets"></div>
+              </fieldset>
+            </div>
 
             <div class="armory-doll">
               <!-- Filled in by the talent calculator: the spec is whichever tree holds the
@@ -401,6 +413,10 @@
               <label class="narrow">Armor<input type="number" data-bind="armor" /></label>
               <label class="narrow">Block<input type="number" data-bind="block" /></label>
             </div>
+
+            <!-- Bonus armor is the same number printed differently: green and signed, the way the
+                 game marks armor a piece gives beyond what its slot and armor class already do. -->
+            <label class="check"><input type="checkbox" data-bind="armorBonus" /> Bonus armor</label>
           </fieldset>
 
           <fieldset>
@@ -606,7 +622,7 @@
           <legend>Find an item</legend>
           <div class="row">
             <input type="search" id="item-search" class="grow" placeholder="Search items - e.g. Shadowmourne, or 49623" autocomplete="off" disabled />
-            <button type="button" id="btn-browse-loot" class="add">Browse loot by boss &rarr;</button>
+            <button type="button" id="btn-browse-loot" class="add">Browse dungeons &amp; raids &rarr;</button>
           </div>
           <p class="hint" id="item-hint">Connect your world database in Settings to search items by name or entry id.</p>
           <div id="item-results" class="npc-results"></div>
@@ -665,7 +681,7 @@
           <div class="row">
             <input type="search" id="spell-search" class="grow" placeholder="Search spells - e.g. Frostbolt, or 116" autocomplete="off" />
           </div>
-          <p class="hint" id="spell-hint">Reads the client's Spell.dbc - no database needed. Picking one fills in the name, rank, cost, range, cast time, cooldown, icon and description.</p>
+          <p class="hint" id="spell-hint">Reads spell.dbc from the client. Fills name, rank, cost, range, cast time, cooldown, description and icon.</p>
           <div id="spell-results" class="npc-results"></div>
         </fieldset>
 
@@ -829,7 +845,6 @@
           <legend>Appearance</legend>
           <label>Theme</label>
           <div class="chip-row" id="theme-picker">
-            <button type="button" data-theme-choice="light">Light</button>
             <button type="button" data-theme-choice="dark">Dark</button>
             <button type="button" data-theme-choice="midnight">Midnight</button>
           </div>
@@ -916,6 +931,37 @@
       <div class="dialog-body">
         <input type="search" id="armory-picker-search" placeholder="Search the database by name or entry" />
         <div class="picker-results" id="armory-picker-results"></div>
+      </div>
+    </dialog>
+
+    <!-- What goes in one socket. Opened from the slot's right click menu, and filtered to the
+         colors that socket takes, which is why it needs no color buttons of its own. -->
+    <dialog id="gem-picker">
+      <form method="dialog" class="dialog-head">
+        <strong id="gem-picker-title">Socket</strong>
+        <span class="hint" id="gem-picker-status"></span>
+        <button type="button" class="ghost" id="gem-picker-clear" hidden>Remove gem</button>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <input type="search" id="gem-picker-search" placeholder="Search gems by name" />
+        <div class="picker-results" id="gem-picker-results"></div>
+      </div>
+    </dialog>
+
+    <!-- The enchants one slot can take, worked out from the client rather than listed by hand. -->
+    <dialog id="enchant-picker">
+      <form method="dialog" class="dialog-head">
+        <strong id="enchant-picker-title">Enchant</strong>
+        <span class="hint" id="enchant-picker-status"></span>
+        <button type="button" class="ghost" id="enchant-picker-clear" hidden>Remove enchant</button>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <input type="search" id="enchant-picker-search" placeholder="Filter by name" />
+        <div class="picker-results" id="enchant-picker-results"></div>
       </div>
     </dialog>
 

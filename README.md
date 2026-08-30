@@ -12,11 +12,13 @@ Visualize your creativity and see how it would appear in-game.
 
 ## Initialization
 
-Open **Settings** and point at your 3.3.5a folder - the one containing `Data\`. That turns on the
-real icons and fonts, the client's spell and achievement tables, and the dungeon browser.
+Open **Settings** and point Astral to your 3.3.5a `/Data` folder. Indexing takes a few moments
+for first-time setup and is cached afterwards. Icons, fonts, spell, achievement and dungeon
+browser data are all pulled from the client.
 
-Connecting a **world database** (AzerothCore or TrinityCore schema) in the same dialog is optional.
-It adds creature search, item search, real loot tables and real health pools.
+Connecting an **AzerothCore** or **TrinityCore** world database is optional, however it adds
+finders: creature search, item search, drop lists from bosses, health and mana pools from the
+dungeon & raid browser.
 
 ## Tools
 

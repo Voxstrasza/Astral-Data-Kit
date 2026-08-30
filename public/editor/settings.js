@@ -68,7 +68,7 @@ async function refreshStatus()
         {
             itemSearch.disabled = !info.db.connected;
             $('#item-hint').textContent = info.db.connected
-                ? 'Search items by name or entry id, or browse a boss\'s drops. Picking one loads it into the editor.'
+                ? 'Load the editor by searching the database for items by name or EntryID, or browse drops by dungeon or raid encounter.'
                 : 'Connect your world database in Settings to search items by name or entry id.';
         }
         $('#npc-hint').textContent = info.db.connected
