@@ -37,7 +37,8 @@ All of them are one or two lines each, and none needs anything discovered first 
 needs a look at the paper doll:
 
 - [ ] **Damage per second**, now that damage and speed are both on the sheet.
-- [ ] **Spell penetration**, once the in-game trip below confirms Wrath's spell tab shows it.
+- [x] **Spell penetration.** Confirmed in the game on 2026-08-30 and added: the spell tab shows it
+      under spell hit, so the panel does too.
 - [ ] **The stat sheet laid out by spec** rather than by class. `CLASS_STATS` filters by class
       today, so a ret, a holy and a prot paladin all read the same six groups.
 
@@ -49,14 +50,78 @@ against the game. One session in front of a character settles four things at onc
 - [ ] **The naked sweep.** A level 80 of each class with nothing equipped, matched column by column
       against the real sheet. A number that disagrees there can only be one of the formulas, never
       the gear pipeline - which is the whole reason to do it before anything is equipped.
-- [ ] Does a naked warrior really read 5% block, and a naked hunter 0% dodge? Both are what the core
-      says and neither has been seen.
-- [ ] Does Wrath fold night elf Quickness into displayed dodge?
-- [ ] Does the spell tab show spell penetration?
+- [ ] Does a naked warrior really read 5% block? **Attempted 2026-08-30 and thrown out. Read it on
+      a character that was made at level 1, never on one boosted with `.level`.**
+
+      A level 80 warrior in starting gear read 0.00% block, and 0.00% again with a shield equipped
+      - but **parry and dodge were also 0.00%**, and that is what condemns the reading. Dodge is
+      computed from agility rather than granted by a spell, so a level 80 warrior cannot honestly
+      read zero. The character was missing the passives the paper doll reads, and every defense
+      number it showed is meaningless.
+
+      **This is a trap for the naked sweep below**, which is the whole point of the in-game
+      session: a boosted 80 reads 0.00% across the entire defense tab and looks exactly like a
+      catastrophic disagreement with these formulas. Level normally, or `.learn all_myclass` after
+      boosting.
+
+      **What to read instead, on a freshly made level 1 warrior** - this program's prediction, so
+      the comparison is one glance: human 7.49% dodge, gnome/troll/blood elf 7.87, night elf 8.25,
+      undead 7.11, orc/draenei 6.91, dwarf/tauren 6.72, and **5.00% parry and 5.00% block for all
+      of them**. Block bare-handed at 5% means the base is unconditional; 0.00% bare-handed rising
+      to 5% with a shield on means it is shield-gated, which is what `BLOCKS` at
+      `lib/character.js:169` would then need to say.
+
+- [x] **Block rating converts correctly.** The game said "block rating of 106 adds 6.47% block" on
+      2026-08-30; this program turns the same 106 into 6.47%, to the digit. `gtCombatRatings` is
+      being read right, so a block disagreement is in the base, never in the rating.
+- [x] Hunter dodge, measured in the game on 2026-08-30. **Two level 1 hunters in starting gear:**
+
+      | hunter | agility | game | this program | difference |
+      |---|---|---|---|---|
+      | orc | 20 | 1.24% | 1.40% | -0.16 |
+      | night elf | 27 | 3.15% | 3.31% | -0.16 |
+
+      **Three things fall out of those two rows:**
+
+      - **The base stat table is right.** Both agilities are exactly what `base()` says.
+      - **The agility slope is right.** The readings give 1.91/7 = 0.2729% per point; this program
+        uses 0.2725.
+      - **The base dodge is 0.16 too high**, identically at both agilities - so the error is the
+        constant in `dodgeFromAgility`, not the agility term.
+
+      **Still open: is the 0.16 fixed, or does it scale with level?** At level 1 a wrong constant
+      and a wrong per-level ratio are indistinguishable. The same orc hunter at 80 separates them.
+- [x] Does Wrath fold night elf Quickness into displayed dodge? **No.** Measured 2026-08-30: a
+      level 1 night elf hunter at 27 agility sits exactly on the line a level 1 orc hunter at 20
+      agility defines. Quickness is +2% dodge, so if the paper doll showed it that point would be
+      two whole percent above the line. It is not. Racial dodge stays out of the displayed number.
+- [x] Does the spell tab show spell penetration? **Yes, under spell hit** - seen 2026-08-30, and
+      the panel now puts it in the same place. It is flat rather than a rating: there is no
+      `gtCombatRatings` column for it, so `sheet()` passes `worn.spellPen` straight through.
+      *Open, and worth a glance next time: does the game print a % on that line or a bare number?
+      The reading was of a zero, where the two look the same.*
 
 After that: one item at a time, a full set, a set with a weapon-conditioned racial, then talents.
 And the ordering check that is worth its own test - a 5000 intellect helm on a gnome must read 5250,
 because if it reads 5000 the percentages are being applied before gear.
+
+### 4. Two things to look at, neither of them started
+
+- [ ] **Check what WoWhead does with their gear planner**, specifically how it reads stats off a
+      piece and how it distributes them onto the sheet. Worth doing next to the in-game session
+      above rather than instead of it: the game is the authority on what a number should be, but
+      a planner that already solved this is the cheapest place to find out *which* numbers are
+      worth reading and where a piece's stats are expected to land. Read it as a second opinion
+      on the pipeline, not as a source to copy.
+- [ ] **The arrows in the talent frame - is the current shape actually right?** They are drawn
+      today: `branchPieces` in `talents.js` runs every line centre to centre and turns in the row
+      gap above the dependent, and the arrowhead is sliced out of the client's own
+      `UI-TalentArrows`. What has never happened is a comparison against the real talent frame,
+      so the layout rule is derived rather than captured. Open the game beside it, screenshot a
+      tree with a sideways branch and a tree with a blocked row, and see whether the bends land
+      where the game puts them. The question on the tracker is whether the last of it is even
+      possible from what the client gives us, or whether some of it is drawn by the game's own
+      code rather than described in the data.
 
 ### Housekeeping, whenever
 
@@ -324,6 +389,18 @@ hunter, shaman and druid.
       optional guild name, off by default with its field appearing only when it is ticked. These do
       not touch a single number - they are for the exported picture, drawn in the game's own font,
       the way the sheet builders already use AstralGame for text quoting the game.
+- [x] **A title, on either side of the name.** Built 2026-08-30. A Title tick beside the Guild name
+      one opens a field with a **Prefix** tick in front of it: ticked puts the title before the
+      name, left alone puts it after.
+
+      **The title is written exactly as it should read, punctuation and all**, and `titledName()`
+      joins it with nothing in between. A suffix carries its own leading comma - "Voxstrasza" plus
+      ", First of the Ebon Blade" - and a prefix does not: "Firelord" plus "Voxstrasza" reads
+      "Firelord Voxstrasza". Inserting the comma for the user would get it wrong on every title
+      that does not want one, and the game hands out both shapes. The placeholder follows the tick
+      so the field says which shape it wants. Both were driven through the running app rather than
+      reasoned about; `state.armoryTitle`, `armoryTitleShow` and `armoryTitlePrefix` hold it, and
+      it rides the permalink like the rest of the armory fields.
 - [x] Level starts at 80 and drops as far as 1, and a death knight's field floors at 55 rather than
       answering with an error.
 - [x] The stat panel is one wide box under the weapon row, not a tall column and not tabbed, with
@@ -589,22 +666,116 @@ client with a race this program never heard of still answers.
 
 ## Phase 6 - the sheet as a picture
 
-- [ ] **A character sheet as a picture, laid out like the character creation screen.** Said on
-      2026-08-29, and it is the design rather than a hint at one:
+**Built 2026-08-30, whole design standing.** `public/editor/armory-sheet.js` draws the backdrop,
+the name, the guild, the doll, the gear's real tooltips at 1x down both sides and the stats along
+the bottom. Proven by pressing the real button on a sixteen-slot character: 3000x3746, no
+exceptions. `characterForPicture()` in `armory.js` is the handover - a plain object carrying the
+slots, the stat lines already read, and `wornTooltip` as a function, so the sheet never imports the
+panel back and the picture's tooltips are the panel's own.
 
-      - The **race art from the character creation screen** behind it, one per race, with death
-        knights getting their own rather than borrowing their race's.
-      - The **name across the top**.
-      - The **loot drawn as its real tooltips** - not a list of names, the tooltips the program
-        already renders everywhere else.
-      - The **stats underneath** them.
+**Four things learned drawing it**, each of which cost a render to see:
+
+- **The picture cannot be a fixed height.** Sixteen tooltips at 1x is taller than any number that
+  could be chosen up front, so the doll and both stacks are measured first and the canvas is made
+  as tall as the tallest. `minHeight` is only the floor for a character wearing nothing.
+- **The plate cannot cover the whole picture.** Covering 1500x2000 with a 16:9 screenshot is a 2.5x
+  zoom into its middle - the sides of every shot thrown away and a blurred wash behind the
+  tooltips. It keeps its own shape in a band across the top and fades into flat ground under the
+  tooltips instead.
+- **The weapons belong on the left.** Sending them right with the eight armor slots made ten
+  tooltips against six, a thousand pixels of overhang for nothing. Left carries the eight armor
+  slots (two usually empty) plus the weapons; right carries its eight.
+- **The tooltips have to be opaque.** Drawn transparent, the way the raid sheet draws them onto its
+  own dark panel, the backdrop comes through their background and a stat line over a lit sky is
+  unreadable.
+
+**Still open, and all of them cosmetic:** the doll ends well above the tooltips on a geared
+character, leaving a hole in the middle of the picture; the stats could move up under the doll
+rather than waiting for the tallest stack; and a full sheet is a 10 MB PNG at scale 2.
+
+- [ ] **A character sheet as a picture, laid out like the character creation screen.** Said on
+      2026-08-29 and laid out properly on 2026-08-30, and it is the design rather than a hint at
+      one. Top to bottom:
+
+      - The **race art from the character creation screen** behind the whole thing, one per race,
+        with death knights getting their own rather than borrowing their race's. **They are the
+        only class that gets one** - see the art note below, which is where this stops being easy.
+      - The **name across the top**, with the guild name, both of them already in the panel.
+      - The **doll in the middle, exactly as it is on screen** - the same slot columns, unchanged.
+      - The **gear as its real tooltips at 1x, down both sides** - not a list of names, the
+        tooltips the program already renders everywhere else, and at their natural size rather
+        than scaled to fit.
+      - The **stats along the bottom**.
 
       The tooltip half is machinery that exists: `renderTooltip` draws an item from the same lines
       the Item window uses, and the raid sheet already flows a row of them. What is new is the art
       and the arrangement.
 
-      **The art is in the client and was checked on 2026-08-29**, under
-      `Interface\Glues\CharacterCreate\`:
+      **The race backdrop is not a picture in the client. It is a 3D scene** - read out of the
+      archives on 2026-08-30, and it is the one thing in this phase that has no cheap answer.
+      `Interface\Glues\Models\` holds a folder per backdrop, each an `.m2` with its own `.skin` and
+      textures, and **nothing anywhere is a flat per-race background**:
+
+      | scene | textures | covers |
+      |---|---|---|
+      | `UI_HUMAN\UI_HUMAN.M2` | 7 | human |
+      | `UI_DWARF\UI_DWARF.M2` | 5 | dwarf, and gnome in the game |
+      | `UI_NIGHTELF\UI_NIGHTELF.M2` | 10 | night elf |
+      | `UI_DRAENEI\UI_DRAENEI.M2` | 12 | draenei |
+      | `UI_ORC\UI_ORC.M2` | 9 | orc, and troll in the game |
+      | `UI_SCOURGE\UI_SCOURGE.M2` | 11 | undead |
+      | `UI_TAUREN\UI_TAUREN.M2` | 9 | tauren |
+      | `UI_BLOODELF\UI_BLOODELF.M2` | 13 | blood elf |
+      | `UI_DEATHKNIGHT\UI_DEATHKNIGHT.M2` | 15 | death knights of every race |
+
+      **Eight scenes for ten races, plus the death knight one.** Gnome and troll having no folder
+      of their own is why the game reuses Ironforge and Durotar for them - *that pairing is from
+      the game rather than from a file, and it is the one line here that has not been proven; look
+      at a real character creation screen before it goes in.* The death knight scene confirms what
+      was assumed: it is the only class with one, and `CharacterCreate_DeathKnightSwap` in the Lua
+      is what swaps to it.
+
+      **Which scene goes with which race is decided in the client binary, not in a file we can
+      read.** `CharacterCreate.lua` line 292 calls `GetCreateBackgroundModel()`, a C function, and
+      hands the answer to `SetBackgroundModel`. So the mapping has to be written out by hand
+      whatever else happens. (Correcting this file: the Lua **does** extract - 17,889 bytes of it,
+      and the XML another 33,021. The earlier note saying it came back empty was wrong.)
+
+      **Decided 2026-08-30: none of the three below. The backdrops are in-game screenshots taken
+      with the UI hidden, one per race plus the death knight one, and they live in
+      `art/creation/` - see the README there for the list and the framing rules.** The creation
+      screen itself cannot be photographed (the model and the glue panels sit exactly where the
+      export puts its doll) and cannot be extracted (the scenes are assembled from tiles at run
+      time), so the camera had to become ours. Gnome and troll get their own shots, since the only
+      reason they share a screen in the game is that Blizzard never drew them one.
+
+      **The three that were priced and not taken**, kept because the M2 route is the one to come
+      back to if the screenshots ever look wrong:
+
+      1. **Render the `.m2` scenes.** Truest, and much the largest: `lib/wow` reads MPQ, BLP and
+         DBC but has no model code at all, and the app's existing viewer is the upstream Zam one
+         driven by display id, which cannot load a glue scene. This is a renderer, not a feature.
+
+         **Costed from the headers on 2026-08-30**, so a later attempt starts from facts. All nine
+         are `MD20` v264 and **each holds exactly one camera**, which is the game's own framing for
+         free, and **one animation**, so a still at frame zero is the scene as intended. Geometry
+         is small: 2,428 verts for night elf up to 14,217 for blood elf. Texture names are stored
+         in the M2 as full paths and most point **outside** `INTERFACE\` - the human scene draws
+         `STORMWINDCRATE01.BLP` - so `readAnywhere` fetches them without widening
+         `INDEX_PREFIXES`. Two parts are expensive and skippable: **particles** (0 in human and
+         dwarf, 12 night elf, 18 draenei, 28 death knight) and **the characters baked into some
+         scenes** (the blood elf one carries guard armor and hair textures, the tauren one has 244
+         bones), which need their pose from the animation or they render in bind pose. **Human and
+         dwarf are the spike** - no particles, 6 and 19 bones.
+      2. **Capture the nine screens once and ship them as PNGs.** Small and it looks right, but the
+         program's whole shape is that it ships no Blizzard art and reads the user's own client
+         instead - nine background plates in `art/` is the first exception to that.
+      3. **Do not use the scenes.** A backdrop keyed to the race's own colors, drawn from the flat
+         art that *is* there - `UI-CharacterCreate-Background.BLP`, the race and class icons - and
+         the picture stops claiming to be the creation screen.
+
+      **The flat art under `Interface\Glues\CharacterCreate\`, all of which is there** and is worth
+      having whichever way the backdrop goes:
 
       | file | what it holds |
       |---|---|
@@ -617,20 +788,33 @@ client with a race this program never heard of still answers.
       **The grids are the thing to establish first, not to assume.** `Interface\GlueXML\`
       `CharacterCreate.lua` and `.xml` are both in the client index, and between them they hold the
       real `SetTexCoord` numbers - which beats measuring a sprite sheet by eye, the way the talent
-      tree art had to be. One attempt to read the Lua out of the archive came back empty, so
-      whether it extracts is the first thing to find out. Note also that these sheets are not
+      tree art had to be. **Both extract** - checked on 2026-08-30, 17,889 and 33,021 bytes - so
+      the numbers are there to be read. Note also that these sheets are not
       fully painted: the talent backgrounds were 256x256 of file holding a 300x331 image, and
       there is no reason to expect these to be tidier.
 
       Since the panel is full width, **decide where the picture goes before deciding what it looks
       like** - see below.
 
-- [ ] Saved characters as a kind in the saved store, and a place on a raid sheet.
+- [x] **Saved characters. Built 2026-08-30**, and driven end to end: saved a night elf hunter,
+      wiped the panel to a dwarf warrior, opened the list, clicked the row, and got the name,
+      guild, title, race, class, level and gear back.
 
-      **The kind does not exist yet, whatever `FIELDS_BY_KIND` suggests.** `fieldsOf('armory')`
-      works, so it is easy to conclude the saved half is done - it is not. `KINDS` in
-      `public/editor/saved.js` lists item, spell, unit and achievement and nothing else, so nothing
-      saves or loads a character, and that is on purpose until someone asks for it.
+      - **Its own kind, `character`**, in its own folder. Not `armory`, which is the folder of
+        single wearable pieces - one is a person, the other is a gauntlet, and a list of characters
+        that filled up with individual gauntlets would be useless. `FIELDS_BY_KIND.character`
+        points at the armory field list rather than repeating it.
+      - **A row is the name over what the character is** - "Level 80 Night Elf Hunter" - because a
+        list of names alone cannot tell two level eighties apart. There is no icon: a race and a
+        class say more about which character this is than any one icon could.
+      - **Saving a name that is already saved corrects it**, rather than leaving two rows with the
+        same name and no way to tell which is newer. `editingCharacter` only remembers within one
+        run, so the name is what decides. Same rule Save for Armory follows.
+      - **Loading goes through `initArmory()`**, which is the path a permalink already takes: it
+        reloads the worn map out of state and redraws the whole panel, rather than each piece being
+        poked back into place one at a time.
+      - The × on a row deletes it. That is the only place saved characters are ever looked at, so
+        it is the only place the question is ever asked.
 
       What a character *does* survive today is the permalink: `encodeState` takes the whole state,
       and `state.armoryWorn` puts the gear in it. Measured - a link with a trinket in it comes back

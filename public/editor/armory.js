@@ -18,11 +18,12 @@
 
 import { $, el } from './dom.js';
 import { api, postJson } from './api.js';
-import { state, effectText } from './state.js';
+import { state, effectText, fieldsOf } from './state.js';
 import { iconUrl } from './icons.js';
 import { M, R } from './wow.js';
 import { openTalents, talentSummary, clearTalents } from './talents.js';
 import { modifyArmoryEntry } from './saved.js';
+import { exportCharacterSheet } from './armory-sheet.js';
 
 /*
  * The paper doll's own arrangement. Taking the model out is what lets the two columns sit beside
@@ -40,48 +41,67 @@ const WEAPONS = ['Main hand', 'Off hand'];
  * zero, which is how a warrior's mana reads when every stat is shown.
  */
 const SHEET = [
-    { label: 'Health', key: 'health', tag: 'core' },
-    { label: 'Mana', key: 'mana', tag: 'mana' },
-    { label: 'Strength', key: 'str', tag: 'core' },
-    { label: 'Agility', key: 'agi', tag: 'core' },
-    { label: 'Stamina', key: 'sta', tag: 'core' },
-    { label: 'Intellect', key: 'int', tag: 'mana' },
-    { label: 'Spirit', key: 'spi', tag: 'mana' },
-    { label: 'Armor', key: 'armor', tag: 'core' },
+    { label: 'Health', key: 'health', tag: 'core', group: 'general' },
+    { label: 'Mana', key: 'mana', tag: 'mana', group: 'general' },
 
-    { label: 'Damage', key: 'mainHand', part: 'damage', tag: 'melee' },
-    { label: 'Speed', key: 'mainHand', part: 'speed', tag: 'melee' },
-    { label: 'Off hand damage', key: 'offHand', part: 'damage', tag: 'melee' },
-    { label: 'Off hand speed', key: 'offHand', part: 'speed', tag: 'melee' },
-    { label: 'Attack power', key: 'attackPower', tag: 'melee' },
-    { label: 'Melee crit', key: 'meleeCrit', suffix: '%', places: 2, tag: 'melee' },
-    { label: 'Melee hit', key: 'meleeHit', suffix: '%', places: 2, tag: 'melee' },
-    { label: 'Melee haste', key: 'meleeHaste', suffix: '%', places: 2, tag: 'melee' },
-    { label: 'Expertise', key: 'expertise', tag: 'melee' },
-    { label: 'Armor pen', key: 'armorPen', suffix: '%', places: 2, tag: 'melee' },
+    { label: 'Strength', key: 'str', tag: 'core', group: 'attributes' },
+    { label: 'Agility', key: 'agi', tag: 'core', group: 'attributes' },
+    { label: 'Stamina', key: 'sta', tag: 'core', group: 'attributes' },
+    { label: 'Intellect', key: 'int', tag: 'mana', group: 'attributes' },
+    { label: 'Spirit', key: 'spi', tag: 'mana', group: 'attributes' },
 
-    { label: 'Ranged damage', key: 'ranged', part: 'damage', tag: 'ranged' },
-    { label: 'Ranged speed', key: 'ranged', part: 'speed', tag: 'ranged' },
-    { label: 'Ranged power', key: 'rangedPower', tag: 'ranged' },
+    { label: 'Damage', key: 'mainHand', part: 'damage', tag: 'melee', group: 'melee' },
+    { label: 'Speed', key: 'mainHand', part: 'speed', tag: 'melee', group: 'melee' },
+    { label: 'Off hand damage', key: 'offHand', part: 'damage', tag: 'melee', group: 'melee' },
+    { label: 'Off hand speed', key: 'offHand', part: 'speed', tag: 'melee', group: 'melee' },
+    { label: 'Attack power', key: 'attackPower', tag: 'melee', group: 'melee' },
+    { label: 'Melee crit', key: 'meleeCrit', suffix: '%', places: 2, tag: 'melee', group: 'melee' },
+    { label: 'Melee hit', key: 'meleeHit', suffix: '%', places: 2, tag: 'melee', group: 'melee' },
+    { label: 'Melee haste', key: 'meleeHaste', suffix: '%', places: 2, tag: 'melee', group: 'melee' },
+    { label: 'Expertise', key: 'expertise', tag: 'melee', group: 'melee' },
+    { label: 'Armor pen', key: 'armorPen', suffix: '%', places: 2, tag: 'melee', group: 'melee' },
 
-    { label: 'Spell power', key: 'spellPower', tag: 'spell' },
-    { label: 'Spell crit', key: 'spellCrit', suffix: '%', places: 2, tag: 'spell' },
-    { label: 'Spell hit', key: 'spellHit', suffix: '%', places: 2, tag: 'spell' },
-    { label: 'Spell haste', key: 'spellHaste', suffix: '%', places: 2, tag: 'spell' },
-    { label: 'Mana regen', key: 'manaRegen', suffix: ' /5s', places: 1, tag: 'mana' },
-    { label: 'While casting', key: 'manaRegenCasting', suffix: ' /5s', places: 1, tag: 'mana' },
+    { label: 'Ranged damage', key: 'ranged', part: 'damage', tag: 'ranged', group: 'ranged' },
+    { label: 'Ranged speed', key: 'ranged', part: 'speed', tag: 'ranged', group: 'ranged' },
+    { label: 'Ranged power', key: 'rangedPower', tag: 'ranged', group: 'ranged' },
 
-    { label: 'Dodge', key: 'dodge', suffix: '%', places: 2, tag: 'defense' },
-    { label: 'Parry', key: 'parry', suffix: '%', places: 2, tag: 'defense' },
-    { label: 'Block', key: 'block', suffix: '%', places: 2, tag: 'defense' },
-    { label: 'Block value', key: 'blockValue', tag: 'defense' },
-    { label: 'Defense', key: 'defense', tag: 'defense' },
-    { label: 'Resilience', key: 'resilience', suffix: '%', places: 2, tag: 'defense' },
+    { label: 'Spell power', key: 'spellPower', tag: 'spell', group: 'spell' },
+    { label: 'Spell crit', key: 'spellCrit', suffix: '%', places: 2, tag: 'spell', group: 'spell' },
+    { label: 'Spell hit', key: 'spellHit', suffix: '%', places: 2, tag: 'spell', group: 'spell' },
+    { label: 'Spell penetration', key: 'spellPen', tag: 'spell', group: 'spell' },
+    { label: 'Spell haste', key: 'spellHaste', suffix: '%', places: 2, tag: 'spell', group: 'spell' },
+    { label: 'Mana regen', key: 'manaRegen', suffix: ' /5s', places: 1, tag: 'mana', group: 'spell' },
+    { label: 'While casting', key: 'manaRegenCasting', suffix: ' /5s', places: 1, tag: 'mana', group: 'spell' },
 
-    { label: 'Arcane', key: 'arcane', tag: 'resist' }, { label: 'Fire', key: 'fire', tag: 'resist' },
-    { label: 'Frost', key: 'frost', tag: 'resist' }, { label: 'Nature', key: 'nature', tag: 'resist' },
-    { label: 'Shadow', key: 'shadow', tag: 'resist' }
+    { label: 'Armor', key: 'armor', tag: 'core', group: 'defense' },
+    { label: 'Defense', key: 'defense', tag: 'defense', group: 'defense' },
+    { label: 'Dodge', key: 'dodge', suffix: '%', places: 2, tag: 'defense', group: 'defense' },
+    { label: 'Parry', key: 'parry', suffix: '%', places: 2, tag: 'defense', group: 'defense' },
+    { label: 'Block', key: 'block', suffix: '%', places: 2, tag: 'defense', group: 'defense' },
+    { label: 'Block value', key: 'blockValue', tag: 'defense', group: 'defense' },
+    { label: 'Resilience', key: 'resilience', suffix: '%', places: 2, tag: 'defense', group: 'defense' },
+
+    { label: 'Arcane', key: 'arcane', tag: 'resist', group: 'resist' },
+    { label: 'Fire', key: 'fire', tag: 'resist', group: 'resist' },
+    { label: 'Frost', key: 'frost', tag: 'resist', group: 'resist' },
+    { label: 'Nature', key: 'nature', tag: 'resist', group: 'resist' },
+    { label: 'Shadow', key: 'shadow', tag: 'resist', group: 'resist' }
 ];
+
+/** What each frame is called, and the order the switch walks them in. */
+const GROUP_TITLES = {
+    general: 'General',
+    attributes: 'Attributes',
+    defense: 'Defense',
+    melee: 'Melee',
+    ranged: 'Ranged',
+    spell: 'Spell',
+    resist: 'Resistances'
+};
+
+/* The frames the third column can show. General and Attributes are not among them: they are the
+   two that never change, which is the point of putting everything else behind one switch. */
+const SWITCHED = ['defense', 'melee', 'ranged', 'spell'];
 
 /*
  * What each class is actually read for.
@@ -276,6 +296,9 @@ function hideHover()
  * against a second copy of the rule.
  */
 let gearState = {};
+
+/* The last sheet the server sent back, so the picture prints the numbers the panel is showing. */
+let lastSheet = null;
 
 /** The gem lines for one item's tooltip: what is in each socket and whether it is doing anything. */
 function gemContext(slot, item)
@@ -1486,14 +1509,75 @@ function emptySockets()
     return counts;
 }
 
+/*
+ * The order gems are listed in, which is not the order the empty sockets are counted in.
+ *
+ * Meta first, because there is only ever one and every other gem is chosen around it. Then the
+ * prismatic you added yourself, then the three plain colors, and the mixed ones last as a group
+ * of their own - they are more than half of every gem in the game and reading them as three
+ * more colors between blue and the end would bury the plain ones.
+ */
+const GEM_ORDER = ['meta', 'prismatic', 'red', 'yellow', 'blue', 'orange', 'purple', 'green'];
+
+/*
+ * Every gem socketed across the rack, counted by name.
+ *
+ * By name rather than by entry, because the same gem in two items is the one line
+ * "Fierce Ametrine x 2" rather than two lines that look like a mistake. Same reason the empty
+ * sockets above are counted across everything worn: the question is what is in the character,
+ * not what is in the helm.
+ */
+function wornGems()
+{
+    const counts = new Map();
+
+    for (const item of worn.values())
+    {
+        for (const gem of item.gems || [])
+        {
+            /* `gems` is sparse - socket two filled while one and three are open - so the holes
+               in it are the empty sockets and are counted by `emptySockets` instead. */
+            if (!gem || !gem.name)
+            {
+                continue;
+            }
+
+            const already = counts.get(gem.name);
+
+            if (already)
+            {
+                already.count += 1;
+            }
+            else
+            {
+                counts.set(gem.name,
+                    { name: gem.name, icon: gem.icon, color: gem.color, count: 1 });
+            }
+        }
+    }
+
+    /* A color the client grew since this list was written sorts to the end rather than to the
+       front, which is what `indexOf` alone would do with its -1. */
+    const rank = (color) =>
+    {
+        const found = GEM_ORDER.indexOf(color);
+
+        return found < 0 ? GEM_ORDER.length : found;
+    };
+
+    return [...counts.values()].sort((a, b) =>
+        rank(a.color) - rank(b.color) || a.name.localeCompare(b.name));
+}
+
 /** The box under the racials: one row per color that still has something open. */
 function drawSockets()
 {
     const host = $('#armory-sockets');
     const counts = emptySockets();
     const rows = SOCKET_ORDER.filter((color) => counts.get(color));
+    const gems = wornGems();
 
-    if (!rows.length)
+    if (!rows.length && !gems.length)
     {
         /* Two different nothings, and the box says which. Nothing worn has a socket at all is
            not the same as every socket being full, and only one of them is an achievement. */
@@ -1513,6 +1597,31 @@ function drawSockets()
         art.title = M.SOCKETS[color].label;
 
         row.append(art, el('span', 'socket-tally-count', `x ${counts.get(color)}`));
+
+        return row;
+    }));
+
+    /*
+     * What went into the holes, under the holes that are left.
+     *
+     * The two halves move against each other as you gem: a color above loses a count and a name
+     * appears down here, so a fully gemmed character has no socket rows left at all and the box
+     * has turned from a shopping list into what is actually worn.
+     */
+    tally.append(...gems.map((gem) =>
+    {
+        const row = el('div', 'socket-tally-row');
+        const art = el('span', 'socket-tally-art');
+
+        if (gem.icon)
+        {
+            art.style.backgroundImage = `url("${iconUrl(gem.icon)}")`;
+        }
+
+        row.append(
+            art,
+            el('span', 'socket-tally-name', gem.name),
+            el('span', 'socket-tally-count', `x ${gem.count}`));
 
         return row;
     }));
@@ -1624,7 +1733,272 @@ function showWho()
     $('#armory-guild').value = state.armoryGuild || '';
     $('#armory-guild-on').checked = !!state.armoryGuildShow;
     $('#armory-guild').hidden = !state.armoryGuildShow;
-    $('#armory-all-stats').checked = !!state.armoryAllStats;
+    $('#armory-title').value = state.armoryTitle || '';
+    $('#armory-title-on').checked = !!state.armoryTitleShow;
+    $('#armory-title-row').hidden = !state.armoryTitleShow;
+    $('#armory-title-prefix').checked = !!state.armoryTitlePrefix;
+    showTitleHint();
+}
+
+/*
+ * The placeholder is the whole explanation of the Prefix tick, so it follows it: a suffix is shown
+ * carrying its own comma, a prefix without one. Saying it in the field beats a line of help text
+ * nobody reads, and the two examples are the two shapes the game's own titles come in.
+ */
+function showTitleHint()
+{
+    $('#armory-title').placeholder = state.armoryTitlePrefix
+        ? 'Firelord'
+        : ', First of the Ebon Blade';
+}
+
+/**
+ * Everything the exported picture needs, in one plain object.
+ *
+ * Handed to the sheet rather than imported by it: the picture is drawn from the panel's own state,
+ * and passing it across keeps `armory-sheet.js` from importing this file back.
+ */
+function characterForPicture()
+{
+    const race = setup && setup.races.find((r) => r.id === state.armoryRace);
+    const cls = setup && setup.classes.find((c) => c.id === state.armoryClass);
+    const talents = talentSummary();
+
+    const entry = (slot) => ({ slot, item: worn.get(slot) || null });
+    const parts = [
+        `Level ${state.armoryLevel}`,
+        race ? race.name : '',
+        cls ? cls.name : ''
+    ];
+
+    if (talents.spent)
+    {
+        parts.splice(1, 0, talents.spec);
+    }
+
+    return {
+        name: titledName() || 'Unnamed',
+        guild: state.armoryGuildShow ? (state.armoryGuild || '').trim() : '',
+        subtitle: parts.filter(Boolean).join(' '),
+        raceId: state.armoryRace,
+        classId: state.armoryClass,
+        left: LEFT.map(entry),
+        right: RIGHT.map(entry),
+        weapons: weaponSlots().map(entry),
+        stats: statModel()
+    };
+}
+
+/* ------------------------------------------------------------- saved characters */
+
+/*
+ * The character being edited, if it came out of the saved list.
+ *
+ * Saving again corrects that entry rather than leaving a second copy of the same character behind,
+ * the same way the Item window's own save works. Loading one sets it; nothing clears it, because a
+ * loaded character whose race you then changed is still that character.
+ */
+let editingCharacter = '';
+
+/** The line under a saved character's name: what they are, since the name alone cannot say. */
+function characterLine(fields)
+{
+    const race = setup && setup.races.find((r) => r.id === fields.armoryRace);
+    const cls = setup && setup.classes.find((c) => c.id === fields.armoryClass);
+
+    return [`Level ${fields.armoryLevel || 80}`, race && race.name, cls && cls.name]
+        .filter(Boolean).join(' ');
+}
+
+/** The line under the stat box, which is where this panel says what just happened. */
+function armoryStatus(text)
+{
+    $('#armory-stat-note').textContent = text;
+}
+
+/**
+ * Keeps this character.
+ *
+ * The name is the handle, so there has to be one: an unnamed row in a list of characters is one
+ * nobody can pick out again.
+ */
+async function saveCharacter()
+{
+    const fields = fieldsOf('character');
+
+    if (!(fields.armoryName || '').trim())
+    {
+        armoryStatus('Give the character a name first - the saved list is read by name.');
+        return;
+    }
+
+    try
+    {
+        /*
+         * A character already saved under this name is corrected rather than duplicated.
+         *
+         * `editingCharacter` only remembers within one run of the program, so without this, saving
+         * Voxstrasza today and again tomorrow left two rows called Voxstrasza and no way to tell
+         * which was the newer. The name is how a character is found here, so the name is what
+         * decides whether this is the same one. Same rule Save for Armory follows on the Item
+         * window.
+         */
+        const id = editingCharacter || await idNamed(fields.armoryName);
+
+        const result = await postJson('api/saved/save', { kind: 'character', id, fields });
+
+        if (result.entry)
+        {
+            editingCharacter = result.entry.id;
+            armoryStatus(`Saved ${result.entry.name}.`);
+        }
+    }
+    catch (err)
+    {
+        armoryStatus(`Could not save: ${err.message}`);
+    }
+}
+
+/** The id of the saved character with this name, or empty for one that is new. */
+async function idNamed(name)
+{
+    const wanted = (name || '').trim().toLowerCase();
+
+    if (!wanted)
+    {
+        return '';
+    }
+
+    try
+    {
+        const saved = (await api('api/saved?kind=character')).saved || [];
+        const match = saved.find((entry) => (entry.name || '').trim().toLowerCase() === wanted);
+
+        return match ? match.id : '';
+    }
+    catch
+    {
+        /* Not being able to read the list is not a reason to refuse to save; it just means this
+           one is written as new. */
+        return '';
+    }
+}
+
+/** Puts a saved character back on the panel, gear and all. */
+async function loadCharacter(entry)
+{
+    for (const [field, value] of Object.entries(entry.fields || {}))
+    {
+        state[field] = value;
+    }
+
+    editingCharacter = entry.id;
+
+    /* The same path a permalink takes: it reloads the worn map out of state and redraws every part
+       of the panel, rather than each piece being poked back into place one at a time. */
+    await initArmory();
+    armoryStatus(`Loaded ${entry.name}.`);
+}
+
+/** One row of the saved list: the character, and a way to be rid of it. */
+function characterRow(entry, reopen)
+{
+    const held = el('div', 'character-row-wrap');
+    const row = el('button', 'character-row');
+
+    row.type = 'button';
+    row.append(el('span', 'character-row-name', entry.name));
+    row.append(el('span', 'character-row-what', characterLine(entry.fields || {})));
+
+    row.addEventListener('click', async () =>
+    {
+        $('#character-picker').close();
+        await loadCharacter(entry);
+    });
+
+    /* Deleting from the list rather than from a menu of its own: this is the only place the saved
+       characters are ever looked at, so it is the only place the answer is ever wanted. */
+    const drop = el('button', 'character-row-drop', '×');
+
+    drop.type = 'button';
+    drop.title = `Delete ${entry.name}`;
+
+    drop.addEventListener('click', async (e) =>
+    {
+        e.stopPropagation();
+
+        await postJson('api/saved/delete', { kind: 'character', id: entry.id });
+
+        if (editingCharacter === entry.id)
+        {
+            editingCharacter = '';
+        }
+
+        reopen();
+    });
+
+    held.append(row, drop);
+
+    return held;
+}
+
+/** Draws the saved list, newest first, and opens it. */
+async function openCharacters()
+{
+    const dialog = $('#character-picker');
+    const list = $('#character-list');
+
+    list.replaceChildren(el('p', 'hint', 'Reading the saved characters...'));
+    $('#character-picker-status').textContent = '';
+
+    if (!dialog.open)
+    {
+        dialog.showModal();
+    }
+
+    let entries = [];
+
+    try
+    {
+        entries = (await api('api/saved?kind=character')).saved || [];
+    }
+    catch (err)
+    {
+        list.replaceChildren(el('p', 'hint', `Could not read them: ${err.message}`));
+        return;
+    }
+
+    if (!entries.length)
+    {
+        list.replaceChildren(el('p', 'hint',
+            'Nothing saved yet. Build a character, give it a name, and press Save character.'));
+        $('#character-picker-status').textContent = '';
+        return;
+    }
+
+    list.replaceChildren(...entries.map((entry) => characterRow(entry, openCharacters)));
+    $('#character-picker-status').textContent =
+        `${entries.length} saved`;
+}
+
+/**
+ * The character's name as the picture will print it, title and all.
+ *
+ * The title is joined with nothing between it and the name, because it is written with whatever
+ * punctuation it needs: the comma in ", First of the Ebon Blade" belongs to the title, and a
+ * prefix like "Firelord" carries its own trailing space here rather than in the field.
+ */
+export function titledName()
+{
+    const name = (state.armoryName || '').trim();
+    const title = state.armoryTitleShow ? (state.armoryTitle || '').trim() : '';
+
+    if (!title)
+    {
+        return name;
+    }
+
+    return state.armoryTitlePrefix ? `${title} ${name}` : `${name}${title}`;
 }
 
 /**
@@ -1691,34 +2065,176 @@ function read(entry, value)
     return `${entry.places ? value.toFixed(entry.places) : Math.round(value)}${entry.suffix || ''}`;
 }
 
-/** One line, the way the game writes it: the stat, a colon, the number. */
-function cell(entry, sheet)
+/** One row of a frame: the stat on the left, its number hard right. */
+function statRow(row)
 {
-    const value = lookup(sheet, entry.key);
+    const line = el('div', row.value === '-' ? 'stat-row pending' : 'stat-row');
 
-    /* An empty off hand answers null and a stat this class has no line for answers undefined.
-       Both read as the dash that says "not a thing here", which a zero does not. */
-    const missing = value === undefined || value === null;
-
-    const line = el('div', missing ? 'stat pending' : 'stat');
-
-    line.append(el('span', 'stat-label', `${entry.label}:`));
-    line.append(el('span', 'stat-value', missing ? '-' : read(entry, value)));
+    line.append(el('span', 'stat-row-label', row.label));
+    line.append(el('span', 'stat-row-value', row.value));
 
     return line;
 }
 
-/** The lines this class is read for, or all of them when the box below the sheet is ticked. */
-function linesFor(cls, all)
+/**
+ * One frame: a titled head over its rows.
+ *
+ * The third one's head is a picker rather than a label, which is the whole idea - a feral druid
+ * flips between Defense and Melee on the same character instead of the sheet guessing which of the
+ * two they meant.
+ */
+function statCard(group, { frames, selected } = {})
 {
-    if (all)
+    const card = el('div', 'stat-card');
+    const head = el('div', 'stat-card-head');
+
+    if (frames)
     {
-        return SHEET;
+        const pick = el('select', 'stat-card-pick');
+
+        pick.id = 'armory-stat-frame';
+
+        for (const frame of frames)
+        {
+            const choice = el('option', '', frame.title);
+
+            choice.value = frame.key;
+            choice.selected = frame.key === selected;
+            pick.append(choice);
+        }
+
+        pick.addEventListener('change', (e) =>
+        {
+            state.armoryStatFrame = e.target.value;
+            drawStats();
+        });
+
+        head.append(pick);
+    }
+    else
+    {
+        head.append(el('span', 'stat-card-title', group.title));
     }
 
+    card.append(head);
+
+    const rows = el('div', 'stat-card-rows');
+
+    rows.append(...group.rows.map(statRow));
+    card.append(rows);
+
+    return card;
+}
+
+/**
+ * The stat box: General and Attributes fixed, one switchable frame beside them, resistances under
+ * all three.
+ *
+ * Drawn from `statModel()`, which is the same model the exported picture draws - so what the
+ * picture shows is what the panel is showing, frame and all.
+ */
+function drawStats()
+{
+    const model = statModel();
+    const cards = $('#armory-stat-cards');
+
+    if (!model)
+    {
+        cards.replaceChildren();
+        $('#armory-resist-card').replaceChildren();
+        return;
+    }
+
+    const built = [statCard(model.general), statCard(model.attributes)];
+
+    if (model.frame)
+    {
+        built.push(statCard(model.frame, { frames: model.frames, selected: model.frame.key }));
+    }
+
+    cards.replaceChildren(...built);
+
+    /* The five schools sit under the three frames rather than inside one of them. They are one
+       thought, and short enough that a row of five reads as the resistance line the game has. */
+    $('#armory-resist-card').replaceChildren(statCard(model.resist));
+}
+
+/**
+ * The lines this class is read for.
+ *
+ * There is no "show all stats" escape hatch any more: the frames replaced it. What it was for was
+ * reaching a category the class filter had hidden, and the picker reaches all four of them.
+ */
+function linesFor(cls)
+{
     const tags = CLASS_STATS[cls] || Object.keys(CLASS_STATS);
 
     return SHEET.filter((entry) => tags.includes(entry.tag));
+}
+
+/**
+ * The lines of one frame.
+ *
+ * The two fixed columns are filtered to what the class is read for, so a warrior's General has no
+ * mana line and its Attributes have no intellect or spirit. **The four switchable frames are not
+ * filtered at all**: the picker offers every one of them to every class and spec, so a frame has
+ * to have something in it when it is picked - a Melee frame that opened empty on a mage would be
+ * worse than no picker.
+ */
+function groupLines(group, cls)
+{
+    if (SWITCHED.includes(group))
+    {
+        return SHEET.filter((entry) => entry.group === group);
+    }
+
+    return linesFor(cls).filter((entry) => entry.group === group);
+}
+
+/**
+ * Which frame the third column is showing.
+ *
+ * Every class reaches every frame. A feral druid is a tank and a cat in the same build, and even
+ * where the class is not in question the numbers are worth looking at - so nothing here narrows by
+ * class or by spec, and the only correction is for a stored frame that is no longer a frame.
+ */
+function currentFrame()
+{
+    return SWITCHED.includes(state.armoryStatFrame) ? state.armoryStatFrame : SWITCHED[0];
+}
+
+/**
+ * The stats as three frames and a resistance line, which is what both the panel and the exported
+ * picture draw. One shape, read once, so the two can never disagree about it.
+ */
+function statModel()
+{
+    if (!lastSheet)
+    {
+        return null;
+    }
+
+    const cls = state.armoryClass;
+
+    const rows = (group) => groupLines(group, cls).map((entry) =>
+    {
+        const value = lookup(lastSheet, entry.key);
+        const missing = value === undefined || value === null;
+
+        /* An empty off hand answers null and a stat this class has no line for answers undefined.
+           Both read as the dash that says "not a thing here", which a zero does not. */
+        return { label: entry.label, value: missing ? '-' : read(entry, value) };
+    });
+
+    const frame = currentFrame();
+
+    return {
+        general: { title: GROUP_TITLES.general, rows: rows('general') },
+        attributes: { title: GROUP_TITLES.attributes, rows: rows('attributes') },
+        frame: { key: frame, title: GROUP_TITLES[frame], rows: rows(frame) },
+        frames: SWITCHED.map((key) => ({ key, title: GROUP_TITLES[key] })),
+        resist: { title: GROUP_TITLES.resist, rows: rows('resist') }
+    };
 }
 
 async function refresh()
@@ -1752,16 +2268,14 @@ async function refresh()
      * where six wide columns would put Fire beside Resilience and carry Frost onto the next row.
      * Same box, same lines, one break.
      */
-    const lines = linesFor(state.armoryClass, state.armoryAllStats);
-
-    $('#armory-stat-grid').replaceChildren(
-        ...lines.filter((entry) => entry.tag !== 'resist').map((entry) => cell(entry, sheet)));
-
-    $('#armory-resist-grid').replaceChildren(
-        ...lines.filter((entry) => entry.tag === 'resist').map((entry) => cell(entry, sheet)));
-
     /* What the sheet worked out about each slot's gems, for the tooltips to read. */
     gearState = sheet.gear || {};
+
+    /* Kept for the frames and for the exported picture, which draw the same numbers rather than
+       asking for them again. */
+    lastSheet = sheet;
+
+    drawStats();
 
     drawEquipped();
     drawSets();
@@ -2380,12 +2894,6 @@ async function initArmory()
         refresh();
     });
 
-    $('#armory-all-stats').addEventListener('change', (e) =>
-    {
-        state.armoryAllStats = e.target.checked;
-        refresh();
-    });
-
     $('#armory-name').addEventListener('input', (e) =>
     {
         state.armoryName = e.target.value;
@@ -2400,6 +2908,44 @@ async function initArmory()
     {
         state.armoryGuildShow = e.target.checked;
         $('#armory-guild').hidden = !e.target.checked;
+    });
+
+    $('#armory-title').addEventListener('input', (e) =>
+    {
+        state.armoryTitle = e.target.value;
+    });
+
+    $('#armory-title-on').addEventListener('change', (e) =>
+    {
+        state.armoryTitleShow = e.target.checked;
+        $('#armory-title-row').hidden = !e.target.checked;
+    });
+
+    $('#armory-title-prefix').addEventListener('change', (e) =>
+    {
+        state.armoryTitlePrefix = e.target.checked;
+        showTitleHint();
+    });
+
+    $('#btn-armory-save').addEventListener('click', saveCharacter);
+    $('#btn-armory-load').addEventListener('click', openCharacters);
+
+    $('#btn-armory-png').addEventListener('click', async () =>
+    {
+        const button = $('#btn-armory-png');
+
+        /* Icons and the backdrop are both fetched, so this is not instant on a cold cache and a
+           second click would draw a second picture on top of the first one's work. */
+        button.disabled = true;
+
+        try
+        {
+            await exportCharacterSheet(characterForPicture());
+        }
+        finally
+        {
+            button.disabled = false;
+        }
     });
 
     $('#armory-level').addEventListener('change', (e) =>

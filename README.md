@@ -37,8 +37,18 @@ dungeon & raid browser.
 - **Armory** - build a character and simulate stats with your created gear
   using the in-game stat formulas.
 
-Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports are PNG
-format at 1x-4x.
+Small exports can be copied to the clipboard, bigger ones can only be downloaded. Exports are PNG
+format, 1x to 4x. A spell with an accompanying aura saves two files rather than one.
+
+**Export scale** is the size, 1x is in-game draw, 4x is the same picture at four times. **Max
+width** is tooltip wrapping, which changes the shape of the export as well as the preview.
+**Transparent background** drops the backing, an item can keep or lose its **quality border**, and
+an item or spell icon can sit either outside of the frame, inside at the top left, or be
+completely removed.
+
+**Preview zoom** and **checkerboard** only change your working copy. Neither will reflect on your
+export. Every option is remembered per window, so a transparent target frame does not change how
+your items will export.
 
 ## Examples
 

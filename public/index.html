@@ -145,22 +145,22 @@
           <fieldset>
             <legend>Exporting</legend>
             <p class="hint">
-              Small exports can be copied to the clipboard, bigger ones can be downloaded. Exports
-              are PNG format at 1x-4x. A spell carrying an aura saves two files rather than one,
-              since they are two tooltips in the game.
+              Small exports can be copied to the clipboard, bigger ones can only be downloaded.
+              Exports are PNG format, 1x to 4x. A spell with an accompanying aura saves two files
+              rather than one.
             </p>
             <p class="hint">
-              <strong>Export scale</strong> is the size of the file: 1x is what the game draws,
-              4x is the same picture at four times the pixels. <strong>Max width</strong> is where
-              a tooltip wraps, so it changes the shape of the export as well as the preview.
-              <strong>Transparent background</strong> drops the backing, an item can keep or lose
-              its <strong>quality-colored border</strong>, and an item or spell icon can sit
-              outside the frame, inside it at the top-left, or not at all.
+              <strong>Export scale</strong> is the size, 1x is in-game draw, 4x is the same
+              picture at four times. <strong>Max width</strong> is tooltip wrapping, which changes
+              the shape of the export as well as the preview. <strong>Transparent background</strong>
+              drops the backing, an item can keep or lose its <strong>quality border</strong>, and
+              an item or spell icon can sit either outside of the frame, inside at the top left, or
+              be completely removed.
             </p>
             <p class="hint">
-              <strong>Preview zoom</strong> and the <strong>checkerboard</strong> change only what
-              you are looking at - neither reaches the file. Every option here is remembered per
-              window, so a transparent target frame does not quietly change how your items export.
+              <strong>Preview zoom</strong> and <strong>checkerboard</strong> only change your
+              working copy. Neither will reflect on your export. Every option is remembered per
+              window, so a transparent target frame does not change how your items will export.
             </p>
           </fieldset>
         </div>
@@ -276,25 +276,60 @@
               <div class="slot-row" id="armory-slots-weapon"></div>
             </div>
 
-            <!-- For the exported picture rather than for the numbers. -->
-            <fieldset class="armory-who">
-              <legend>Customization</legend>
-              <label>Character name
-                <input type="text" id="armory-name" maxlength="24" placeholder="Unnamed" />
-              </label>
-              <label class="check">
-                <input type="checkbox" id="armory-guild-on" /> Guild name
-              </label>
-              <input type="text" id="armory-guild" maxlength="24" placeholder="Guild" hidden />
-            </fieldset>
+            <!-- Like the left column, one box with something under it rather than two grid cells:
+                 the doll is taller than the box, so a second row would put the button beneath it
+                 instead of beneath the box. -->
+            <div class="armory-right">
+              <!-- For the exported picture rather than for the numbers. -->
+              <fieldset class="armory-who">
+                <legend>Customization</legend>
+                <label>Character name
+                  <input type="text" id="armory-name" maxlength="24" placeholder="Unnamed" />
+                </label>
+                <div class="who-row">
+                  <label class="check">
+                    <input type="checkbox" id="armory-guild-on" /> Guild name
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" id="armory-title-on" /> Title
+                  </label>
+                </div>
+                <input type="text" id="armory-guild" maxlength="24" placeholder="Guild" hidden />
+
+                <!-- Prefix says which side of the name the title lands on: ticked puts it in front
+                     ("Firelord Voxstrasza"), left alone puts it behind, which is where a title
+                     written with its own leading comma belongs. -->
+                <div class="who-title" id="armory-title-row" hidden>
+                  <label class="check">
+                    <input type="checkbox" id="armory-title-prefix" /> Prefix
+                  </label>
+                  <input type="text" id="armory-title" maxlength="40"
+                         placeholder=", First of the Ebon Blade" />
+                </div>
+              </fieldset>
+
+              <!-- The sheet's own export, and the sheet's own save: this panel runs with the
+                   preview sidebar hidden, so neither of the buttons over there can reach the
+                   character. -->
+              <div class="armory-actions">
+                <button type="button" id="btn-armory-png" class="primary"
+                        title="Save this character sheet as a picture">Download PNG</button>
+                <!-- Dashed, the way Save for Armory is on the Item window: both of them put
+                     something into a saved list rather than acting on what is on screen. -->
+                <button type="button" id="btn-armory-save" class="add"
+                        title="Keep this character in the saved list">Save character</button>
+                <button type="button" id="btn-armory-load" class="add"
+                        title="Open a character from the saved list">Load character</button>
+              </div>
+            </div>
 
             <fieldset class="armory-stats">
               <legend>Stats</legend>
-              <div class="stat-grid" id="armory-stat-grid"></div>
-              <div class="stat-grid stat-resists" id="armory-resist-grid"></div>
-              <label class="check">
-                <input type="checkbox" id="armory-all-stats" /> Show all stats
-              </label>
+              <!-- Three frames across: General and Attributes never change, and the third one is
+                   whichever of Defense, Melee, Ranged or Spell its own picker is set to. The five
+                   schools sit under all three. -->
+              <div class="stat-cards" id="armory-stat-cards"></div>
+              <div class="stat-resists" id="armory-resist-card"></div>
               <p class="hint" id="armory-stat-note"></p>
             </fieldset>
           </div>
@@ -931,6 +966,21 @@
       <div class="dialog-body">
         <input type="search" id="armory-picker-search" placeholder="Search the database by name or entry" />
         <div class="picker-results" id="armory-picker-results"></div>
+      </div>
+    </dialog>
+
+    <!-- The saved characters, opened by Load character. Each one reads as its own name over what
+         it is - "Level 80 Night Elf Hunter" - because a list of names alone cannot tell two
+         eighties apart. -->
+    <dialog id="character-picker">
+      <form method="dialog" class="dialog-head">
+        <strong>Saved characters</strong>
+        <span class="hint" id="character-picker-status"></span>
+        <button value="cancel" class="ghost">Close</button>
+      </form>
+
+      <div class="dialog-body">
+        <div class="character-list" id="character-list"></div>
       </div>
     </dialog>
 

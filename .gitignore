@@ -13,3 +13,9 @@ custom_icon/
 *.log
 .DS_Store
 Thumbs.db
+
+# The Armory's backdrop screenshots are dropped in art/creation and served from
+# public/art/creation. The two copies are identical, so only the served one is kept:
+# carrying 17 MB of the same JPEGs twice buys nothing. art/creation/README.md stays,
+# because it is what says where they came from and how to take more.
+art/creation/*.jpg

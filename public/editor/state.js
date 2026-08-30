@@ -137,10 +137,24 @@ function defaultState()
         armoryGuildShow: false,
 
         /*
-         * Off by default: the sheet shows what the class is read for. On when you are checking
-         * something odd, which in a program about inventing items does happen.
+         * A title, and which side of the name it goes on. Off by default like the guild line.
+         *
+         * The title is written exactly as it should read, punctuation and all - a suffix carries
+         * its own leading comma (", First of the Ebon Blade"), a prefix does not ("Firelord") -
+         * because the titles the game hands out are not all one shape and guessing the separator
+         * would get the comma wrong on half of them.
          */
-        armoryAllStats: false,
+        armoryTitle: '',
+        armoryTitleShow: false,
+        armoryTitlePrefix: false,
+
+        /*
+         * Which frame the third stat column is showing.
+         *
+         * A switch rather than a filter by spec: a feral druid is a tank and a cat in the same
+         * build, so the sheet cannot pick one for them and should not try.
+         */
+        armoryStatFrame: 'melee',
 
         /* Talent id -> points in it. Empty until the calculator is opened. */
         armoryTalents: {},
@@ -242,10 +256,21 @@ const FIELDS_BY_KIND = {
     text: ['textLines'],
     armory: [
         'armoryRace', 'armoryClass', 'armoryLevel',
-        'armoryName', 'armoryGuild', 'armoryGuildShow', 'armoryAllStats', 'armoryTalents',
+        'armoryName', 'armoryGuild', 'armoryGuildShow',
+        'armoryTitle', 'armoryTitleShow', 'armoryTitlePrefix',
+        'armoryStatFrame', 'armoryTalents',
         'armorySources', 'armoryWorn'
     ]
 };
+
+/*
+ * A saved character keeps the Armory panel's own fields.
+ *
+ * The saved store calls it `character` to keep it apart from `armory`, which is a folder of single
+ * wearable pieces rather than of people. The field list is the same one either way, so it is
+ * pointed at rather than written twice and left to drift.
+ */
+FIELDS_BY_KIND.character = FIELDS_BY_KIND.armory;
 
 /**
  * The captured portrait as a PNG, or empty when there is none.
