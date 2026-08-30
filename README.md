@@ -74,6 +74,10 @@ Example of raid wizard output:
 
 ![Raid wizard sheet](art/overlord-bloodbane-25h.png)
 
+Example of armory:
+
+![Armory character sheet](art/armory-example.png)
+
 ## Future features
 
 - **Item wizard** - build upon the gear formula and create gear beyond Icecrown Citadel, or create
