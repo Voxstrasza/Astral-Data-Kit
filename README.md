@@ -90,6 +90,8 @@ Example of armory:
   is built and verified; a local renderer is the work left.
 - **Quest Wizard** - build a series of quests, with in-progress and completion dialog, from any NPC
   you choose and any rewards you choose, using the in-game assets.
+- **Custom Gems/Enchants** - create custom gems and enchants for the Armory, place it on your gear
+  and have it reflect on the stat sheet. 
 
 ## Getting it
 
